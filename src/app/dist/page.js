@@ -58,12 +58,21 @@ function LoginPage() {
         }
     }, []);
     var handleSubmit = function (e) { return __awaiter(_this, void 0, void 0, function () {
-        var res, data, err_1;
+        var validPattern, res, data, err_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     e.preventDefault();
                     setMessage("");
+                    validPattern = /^[a-zA-Z0-9]+$/;
+                    if (!validPattern.test(username)) {
+                        setMessage("Username must contain only letters or numbers.");
+                        return [2 /*return*/];
+                    }
+                    if (!validPattern.test(password)) {
+                        setMessage("Password must contain only letters or numbers.");
+                        return [2 /*return*/];
+                    }
                     setLoading(true);
                     _a.label = 1;
                 case 1:
@@ -82,17 +91,18 @@ function LoginPage() {
                     return [4 /*yield*/, res.json()];
                 case 3:
                     data = _a.sent();
+                    // Show result from API to user
                     if (data.status) {
-                        setMessage("เข้าสู่ระบบสำเร็จ!");
+                        setMessage("Login successful!");
                         router.push("/home");
                     }
                     else {
-                        setMessage("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
+                        setMessage("Incorrect username or password.");
                     }
                     return [3 /*break*/, 5];
                 case 4:
                     err_1 = _a.sent();
-                    setMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์");
+                    setMessage("Failed to connect to the server.");
                     return [3 /*break*/, 5];
                 case 5:
                     setLoading(false);
@@ -101,26 +111,26 @@ function LoginPage() {
         });
     }); };
     return (React.createElement("div", { className: "min-h-screen flex items-center justify-center bg-base-200" },
-        React.createElement("div", { className: "card w-full max-w-md bg-white shadow-xl rounded-xl" },
+        React.createElement("div", { className: "card w-full max-w-3xl bg-white shadow-xl rounded-xl" },
             React.createElement("div", { className: "card-body" },
-                React.createElement("h2", { className: "card-title justify-center mb-6 text-2xl font-bold text-gray-800" }, "\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A"),
+                React.createElement("h2", { className: "card-title justify-center mb-6 text-2xl font-bold text-gray-800" }, "Login"),
                 React.createElement("form", { onSubmit: handleSubmit, className: "space-y-5" },
                     React.createElement("div", null,
-                        React.createElement("label", { htmlFor: "username", className: "block text-base font-bold mb-1 text-gray-800" }, "\u0E0A\u0E37\u0E48\u0E2D\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49"),
+                        React.createElement("label", { htmlFor: "username", className: "block text-base font-bold mb-1 text-gray-800" }, "Username"),
                         React.createElement("input", { id: "username", type: "text", value: username, onChange: function (e) { return setUsername(e.target.value); }, className: "input input-bordered w-full text-base", required: true })),
                     React.createElement("div", null,
-                        React.createElement("label", { htmlFor: "password", className: "block text-base font-bold mb-1 text-gray-800" }, "\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19"),
+                        React.createElement("label", { htmlFor: "password", className: "block text-base font-bold mb-1 text-gray-800" }, "Password"),
                         React.createElement("input", { id: "password", type: "password", value: password, onChange: function (e) { return setPassword(e.target.value); }, className: "input input-bordered w-full text-base", required: true })),
                     React.createElement("div", { className: "flex items-center gap-2 mb-2" },
                         React.createElement("label", { htmlFor: "rememberMe", className: "flex items-center cursor-pointer" },
                             React.createElement("input", { id: "rememberMe", type: "checkbox", checked: rememberMe, onChange: function (e) { return setRememberMe(e.target.checked); }, className: "checkbox checkbox-primary" }),
-                            React.createElement("span", { className: "ml-2 text-base text-gray-800" }, "\u0E08\u0E33\u0E09\u0E31\u0E19\u0E44\u0E27\u0E49"))),
+                            React.createElement("span", { className: "ml-2 text-base text-gray-800" }, "Remember me"))),
                     React.createElement("div", { className: "bg-white p-6 rounded-lg" },
                         React.createElement("button", { type: "submit", disabled: loading, className: "btn btn-primary w-full text-lg font-bold", style: {
                                 minHeight: "3rem",
                                 boxShadow: "0 2px 8px 0 rgba(37,99,235,0.10)",
                                 border: "none"
-                            } }, loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"))),
-                message && (React.createElement("p", { className: "mt-4 text-sm text-center " + (message.includes("สำเร็จ") ? "text-black-600" : "text-red-500") }, message))))));
+                            } }, loading ? "Logging in..." : "Login"))),
+                message && (React.createElement("p", { className: "mt-4 text-sm text-center " + (message.includes("successful") ? "text-black-600" : "text-red-500") }, message))))));
 }
 exports["default"] = LoginPage;
