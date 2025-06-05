@@ -6,6 +6,5 @@ module.exports = {
   theme: {
     extend: {}
   },
-  plugins: [require("daisyui")] // ✅ เพิ่ม DaisyUI
-
+  plugins: [require("daisyui")]
 };
