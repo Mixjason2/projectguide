@@ -64,7 +64,7 @@ input[type="text"], input[type="password"] {
 }
 
 .btn-primary:active, button[type="submit"]:active {
-  background-color: #1e40af;      /* น้ำเงินเข้มสุดเมื่อกด */
+  background-color: #243059;      /* น้ำเงินเข้มสุดเมื่อกด */
   box-shadow: 0 1px 4px 0 rgba(30,64,175,0.15);
 }
 

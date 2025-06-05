@@ -1,0 +1,11 @@
+"use strict";
+
+// tailwind.config.js
+module.exports = {
+  content: ["./src/**/*.{js,ts,jsx,tsx}"],
+  theme: {
+    extend: {}
+  },
+  plugins: [require("daisyui")] // ✅ เพิ่ม DaisyUI
+
+};
