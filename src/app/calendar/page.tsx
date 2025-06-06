@@ -1,10 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import CssgGuide from '../cssguide'
 
 export default function Calendar() {
-
   return (
     <CssgGuide>
     <div>

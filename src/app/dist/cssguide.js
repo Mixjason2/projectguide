@@ -1,8 +1,10 @@
 "use strict";
 exports.__esModule = true;
 var react_1 = require("react");
+var navigation_1 = require("next/navigation");
 function CssgGuide(_a) {
     var children = _a.children;
+    var router = navigation_1.useRouter();
     var _b = react_1.useState(false), open = _b[0], setOpen = _b[1];
     return (react_1["default"].createElement(react_1["default"].Fragment, null,
         react_1["default"].createElement("header", { className: "navbar bg-base-300 py-8 px-12 text-3xl font-bold shadow-lg" },
@@ -27,22 +29,25 @@ function CssgGuide(_a) {
                                 react_1["default"].createElement("svg", { className: "w-7 h-7 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white", "aria-hidden": "true", xmlns: "http://www.w3.org/2000/svg", fill: "currentColor", viewBox: "0 0 22 21" },
                                     react_1["default"].createElement("path", { d: "M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z" }),
                                     react_1["default"].createElement("path", { d: "M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z" })),
-                                react_1["default"].createElement("span", { className: "ms-4 font-semibold" }, "Dashboard"))),
+                                react_1["default"].createElement("span", { className: "ms-4 font-semibold" }, "Calendar"))),
                         react_1["default"].createElement("li", null,
                             react_1["default"].createElement("a", { href: "#", className: "flex items-center p-4 text-lg text-gray-900 rounded-xl dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" },
                                 react_1["default"].createElement("svg", { className: "w-7 h-7 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white", "aria-hidden": "true", xmlns: "http://www.w3.org/2000/svg", fill: "currentColor", viewBox: "0 0 22 21" },
                                     react_1["default"].createElement("path", { d: "M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z" }),
                                     react_1["default"].createElement("path", { d: "M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z" })),
-                                react_1["default"].createElement("span", { className: "ms-4 font-semibold" }, "HOME"))),
+                                react_1["default"].createElement("span", { className: "ms-4 font-semibold" }, "Jods List"))),
                         react_1["default"].createElement("li", null,
                             react_1["default"].createElement("a", { href: "#", className: "flex items-center p-4 text-lg text-gray-900 rounded-xl dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" },
                                 react_1["default"].createElement("svg", { className: "w-7 h-7 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white", "aria-hidden": "true", xmlns: "http://www.w3.org/2000/svg", fill: "currentColor", viewBox: "0 0 22 21" },
                                     react_1["default"].createElement("path", { d: "M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z" }),
                                     react_1["default"].createElement("path", { d: "M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z" })),
-                                react_1["default"].createElement("span", { className: "ms-4 font-semibold" }, "Settings"))))),
+                                react_1["default"].createElement("span", { className: "ms-4 font-semibold" }, "Assignment"))))),
                 react_1["default"].createElement("div", { className: "mb-2" },
-                    react_1["default"].createElement("a", { href: "#", className: "flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" },
-                        react_1["default"].createElement("svg", { className: "w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white", "aria-hidden": "true", xmlns: "http://www.w3.org/2000/svg", fill: "currentColor", viewBox: "0 0 22 21" },
+                    react_1["default"].createElement("a", { href: "/", onClick: function () {
+                            // ลบเฉพาะ token หรือ session อื่นๆ ถ้ามี
+                            router.push("/");
+                        }, className: "flex items-center p-2 text-red-600 rounded-lg dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-700 group" },
+                        react_1["default"].createElement("svg", { className: "w-5 h-5 text-red-500 transition duration-75 dark:text-red-400 group-hover:text-red-700 dark:group-hover:text-white", "aria-hidden": "true", xmlns: "http://www.w3.org/2000/svg", fill: "currentColor", viewBox: "0 0 22 21" },
                             react_1["default"].createElement("path", { d: "M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z" }),
                             react_1["default"].createElement("path", { d: "M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z" })),
                         react_1["default"].createElement("span", { className: "ms-3" }, "logout")))))),
