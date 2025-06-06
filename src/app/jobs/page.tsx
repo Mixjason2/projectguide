@@ -67,7 +67,7 @@ export default function JobsList() {
     <CssgGuide>
       <div className="overflow-x-auto flex justify-center py-8">
         <div className="bg-base-100 rounded-xl shadow-xl border border-base-300 w-full max-w-5xl">
-          <div className="p-4">
+          <div className="p-4 w-full min-h-screen">
             <h1 className="text-2xl font-bold mb-4">Jobs List</h1>
             <div className="mb-4 flex gap-2">
               <select
@@ -88,18 +88,23 @@ export default function JobsList() {
               />
             </div>
             {loading ? (
-              <div className="p-4">Loading jobs...</div>
+              <div className="p-4 ">Loading jobs...</div>
             ) : error ? (
               <div className="p-4 text-red-600">Error: {error}</div>
             ) : !jobs.length ? (
               <div className="p-4">No jobs found</div>
             ) : (
               <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
-                <table className="table table-zebra table-bordered w-full divide-y divide-base-300">
+                <table className="table table-zebra table-bordered table-auto divide-y divide-base-300">
                   <thead className="divide-y divide-base-300">
                     <tr>
                       {columns.map(key => (
-                        <th key={key} className="border border-base-300">{key}</th>
+                        <th
+                          key={key}
+                          className="border border-base-300 whitespace-nowrap px-8 py-4 bg-base-200 text-lg font-semibold text-gray-700"
+                        >
+                          {key}
+                        </th>
                       ))}
                     </tr>
                   </thead>
@@ -107,7 +112,12 @@ export default function JobsList() {
                     {filteredJobs.map(job => (
                       <tr key={job.key} className="divide-x divide-base-300">
                         {columns.map(key => (
-                          <td key={key} className="border border-base-300">{String(job[key as keyof Job])}</td>
+                          <td
+                            key={key}
+                            className="border border-base-300 whitespace-nowrap px-8 py-4 text-base"
+                          >
+                            {String(job[key as keyof Job])}
+                          </td>
                         ))}
                       </tr>
                     ))}
