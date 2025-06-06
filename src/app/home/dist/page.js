@@ -1,5 +1,23 @@
 'use client';
 "use strict";
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+var __spreadArrays = (this && this.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
 exports.__esModule = true;
 var react_1 = require("react");
 var navigation_1 = require("next/navigation");
@@ -31,14 +49,23 @@ function JobsList() {
             return res.json();
         })
             .then(function (data) {
-            setJobs(data);
+            // Add Remark field to each job if not present
+            setJobs(data.map(function (job) {
+                var _a;
+                return (__assign(__assign({}, job), { Remark: (_a = job.Remark) !== null && _a !== void 0 ? _a : '' }));
+            }));
             setLoading(false);
         })["catch"](function (err) {
             setError(err.message);
             setLoading(false);
         });
     }, []);
-    var columns = jobs.length > 0 ? Object.keys(jobs[0]) : [];
+    // Move "Remark" to the last column, "Photo" before it
+    var columns = jobs.length > 0
+        ? __spreadArrays(Object.keys(jobs[0]).filter(function (k) { return k !== 'Photo' && k !== 'Remark'; }), [
+            'Photo',
+            'Remark'
+        ]) : ['Photo', 'Remark'];
     // Filter jobs by date range (PickupDate or DropoffDate within range)
     var filteredJobs = jobs.filter(function (job) {
         var pickup = job.PickupDate;
@@ -52,6 +79,38 @@ function JobsList() {
         return ((pickup >= startDate && pickup <= endDate) ||
             (dropoff >= startDate && dropoff <= endDate));
     });
+    // Handle photo upload (optional, for demo only, not persistent)
+    var handlePhotoChange = function (jobKey, file) {
+        if (!file)
+            return;
+        setJobs(function (prev) {
+            return prev.map(function (job) {
+                return job.key === jobKey ? __assign(__assign({}, job), { Photo: URL.createObjectURL(file) }) : job;
+            });
+        });
+    };
+    // Handle remark change
+    var handleRemarkChange = function (jobKey, remark) {
+        setJobs(function (prev) {
+            return prev.map(function (job) {
+                return job.key === jobKey ? __assign(__assign({}, job), { Remark: remark }) : job;
+            });
+        });
+    };
+    // Example function to send remark to API server
+    var sendRemark = function (jobKey, remark) {
+        fetch('/api/guide/remark', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ jobKey: jobKey, remark: remark })
+        })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+            alert('Remark sent!');
+        })["catch"](function (err) {
+            alert('Failed to send remark');
+        });
+    };
     return (React.createElement(cssguide_1["default"], null,
         React.createElement("div", { className: "overflow-x-auto flex justify-center py-8" },
             React.createElement("div", { className: "bg-base-100 rounded-xl shadow-xl border border-base-300 w-full max-w-5xl" },
@@ -67,6 +126,23 @@ function JobsList() {
                         React.createElement("table", { className: "table table-zebra table-bordered table-auto divide-y divide-base-300" },
                             React.createElement("thead", { className: "divide-y divide-base-300" },
                                 React.createElement("tr", null, columns.map(function (key) { return (React.createElement("th", { key: key, className: "border border-base-300 whitespace-nowrap px-8 py-4 bg-base-200 text-lg font-semibold text-gray-700" }, key)); }))),
-                            React.createElement("tbody", { className: "divide-y divide-base-300" }, filteredJobs.map(function (job) { return (React.createElement("tr", { key: job.key, className: "divide-x divide-base-300" }, columns.map(function (key) { return (React.createElement("td", { key: key, className: "border border-base-300 whitespace-nowrap px-8 py-4 text-base" }, String(job[key]))); }))); }))))))))));
+                            React.createElement("tbody", { className: "divide-y divide-base-300" }, filteredJobs.map(function (job) { return (React.createElement("tr", { key: job.key, className: "divide-x divide-base-300" },
+                                columns.map(function (key) {
+                                    var _a, _b, _c;
+                                    return key === 'Photo' ? (React.createElement("td", { key: key, className: "border border-base-300 whitespace-nowrap px-8 py-4 text-base" }, job.Photo ? (React.createElement("img", { src: job.Photo, alt: "Job Photo", className: "w-16 h-16 object-cover rounded" })) : (React.createElement("input", { type: "file", accept: "image/*", onChange: function (e) {
+                                            return handlePhotoChange(job.key, e.target.files ? e.target.files[0] : null);
+                                        } })))) : key === 'Remark' ? (React.createElement("td", { key: key, className: "border border-base-300 whitespace-nowrap px-8 py-4 text-base" },
+                                        React.createElement("div", { className: "flex gap-2 items-center" },
+                                            React.createElement("input", { type: "text", value: (_a = job.Remark) !== null && _a !== void 0 ? _a : '', onChange: function (e) {
+                                                    return handleRemarkChange(job.key, e.target.value);
+                                                }, className: "input input-bordered", placeholder: "Remark" }),
+                                            React.createElement("button", { className: "btn btn-sm btn-primary", onClick: function () { var _a; return sendRemark(job.key, (_a = job.Remark) !== null && _a !== void 0 ? _a : ''); } }, "Send")))) : key === 'NotAvailable' ? (React.createElement("td", { key: key, className: "border border-base-300 whitespace-nowrap px-8 py-4 text-base" }, typeof job.NotAvailable === 'object'
+                                        ? JSON.stringify(job.NotAvailable)
+                                        : String((_b = job.NotAvailable) !== null && _b !== void 0 ? _b : ''))) : (React.createElement("td", { key: key, className: "border border-base-300 whitespace-nowrap px-8 py-4 text-base" }, String((_c = job[key]) !== null && _c !== void 0 ? _c : '')));
+                                }),
+                                React.createElement("td", { className: "border border-base-300 whitespace-nowrap px-8 py-4 text-base" },
+                                    React.createElement("div", { className: "flex gap-2" },
+                                        React.createElement("button", { className: "px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition", onClick: function () { return alert("Accepted job #" + job.key); } }, "Accept"),
+                                        React.createElement("button", { className: "px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition", onClick: function () { return alert("Rejected job #" + job.key); } }, "Reject"))))); }))))))))));
 }
 exports["default"] = JobsList;
