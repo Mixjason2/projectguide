@@ -24,8 +24,13 @@ export default function JobsList() {
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [searchKey, setSearchKey] = useState<string>('PNR')
-  const [searchTerm, setSearchTerm] = useState<string>('')
+
+  // Set your default start and end date here (YYYY-MM-DD)
+  const defaultStart = '2025-01-01'   // <-- change as needed
+  const defaultEnd = '2025-01-31'     // <-- change as needed
+
+  const [startDate, setStartDate] = useState<string>(defaultStart)
+  const [endDate, setEndDate] = useState<string>(defaultEnd)
 
   const router = useRouter()
 
@@ -57,15 +62,20 @@ export default function JobsList() {
 
   const columns = jobs.length > 0 ? Object.keys(jobs[0]) : []
 
+  // Filter jobs by date range (PickupDate or DropoffDate within range)
   const filteredJobs = jobs.filter(job => {
-    const value = job[searchKey as keyof Job]
-    if (value === null || value === undefined) return false
-    return String(value).toLowerCase().includes(searchTerm.toLowerCase())
+    const pickup = job.PickupDate
+    const dropoff = job.DropoffDate
+    if (!startDate && !endDate) return true
+    if (startDate && !endDate)
+      return (pickup >= startDate || dropoff >= startDate)
+    if (!startDate && endDate)
+      return (pickup <= endDate || dropoff <= endDate)
+    return (
+      (pickup >= startDate && pickup <= endDate) ||
+      (dropoff >= startDate && dropoff <= endDate)
+    )
   })
-
-  // Example: You can set this to true when you want to show a new message alert
-  const hasNewMessage = true
-  const newMessageText = "You have 1 unread message"
 
   return (
     <CssgGuide>
@@ -73,22 +83,23 @@ export default function JobsList() {
         <div className="bg-base-100 rounded-xl shadow-xl border border-base-300 w-full max-w-5xl">
           <div className="p-4 w-full min-h-screen">
             <h1 className="text-2xl font-bold mb-4">Jobs List</h1>
-            <div className="mb-4 flex gap-2">
-              <select
-                value={searchKey}
-                onChange={e => setSearchKey(e.target.value)}
-                className="input input-bordered"
-              >
-                {columns.map(key => (
-                  <option key={key} value={key}>{key}</option>
-                ))}
-              </select>
+            <div className="mb-4 flex gap-2 items-center">
               <input
-                type="text"
-                placeholder="Search"
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
+                type="date"
+                value={startDate}
+                max={endDate}
+                onChange={e => setStartDate(e.target.value)}
                 className="input input-bordered"
+                placeholder="Start date"
+              />
+              <span className="mx-2">to</span>
+              <input
+                type="date"
+                value={endDate}
+                min={startDate}
+                onChange={e => setEndDate(e.target.value)}
+                className="input input-bordered"
+                placeholder="End date"
               />
             </div>
             {loading ? (

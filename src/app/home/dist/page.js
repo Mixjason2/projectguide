@@ -8,8 +8,11 @@ function JobsList() {
     var _a = react_1.useState([]), jobs = _a[0], setJobs = _a[1];
     var _b = react_1.useState(false), loading = _b[0], setLoading = _b[1];
     var _c = react_1.useState(null), error = _c[0], setError = _c[1];
-    var _d = react_1.useState('PNR'), searchKey = _d[0], setSearchKey = _d[1];
-    var _e = react_1.useState(''), searchTerm = _e[0], setSearchTerm = _e[1];
+    // Set your default start and end date here (YYYY-MM-DD)
+    var defaultStart = '2025-01-01'; // <-- change as needed
+    var defaultEnd = '2025-01-31'; // <-- change as needed
+    var _d = react_1.useState(defaultStart), startDate = _d[0], setStartDate = _d[1];
+    var _e = react_1.useState(defaultEnd), endDate = _e[0], setEndDate = _e[1];
     var router = navigation_1.useRouter();
     react_1.useEffect(function () {
         setLoading(true);
@@ -36,20 +39,28 @@ function JobsList() {
         });
     }, []);
     var columns = jobs.length > 0 ? Object.keys(jobs[0]) : [];
+    // Filter jobs by date range (PickupDate or DropoffDate within range)
     var filteredJobs = jobs.filter(function (job) {
-        var value = job[searchKey];
-        if (value === null || value === undefined)
-            return false;
-        return String(value).toLowerCase().includes(searchTerm.toLowerCase());
+        var pickup = job.PickupDate;
+        var dropoff = job.DropoffDate;
+        if (!startDate && !endDate)
+            return true;
+        if (startDate && !endDate)
+            return (pickup >= startDate || dropoff >= startDate);
+        if (!startDate && endDate)
+            return (pickup <= endDate || dropoff <= endDate);
+        return ((pickup >= startDate && pickup <= endDate) ||
+            (dropoff >= startDate && dropoff <= endDate));
     });
     return (React.createElement(cssguide_1["default"], null,
         React.createElement("div", { className: "overflow-x-auto flex justify-center py-8" },
             React.createElement("div", { className: "bg-base-100 rounded-xl shadow-xl border border-base-300 w-full max-w-5xl" },
                 React.createElement("div", { className: "p-4 w-full min-h-screen" },
                     React.createElement("h1", { className: "text-2xl font-bold mb-4" }, "Jobs List"),
-                    React.createElement("div", { className: "mb-4 flex gap-2" },
-                        React.createElement("select", { value: searchKey, onChange: function (e) { return setSearchKey(e.target.value); }, className: "input input-bordered" }, columns.map(function (key) { return (React.createElement("option", { key: key, value: key }, key)); })),
-                        React.createElement("input", { type: "text", placeholder: "Search", value: searchTerm, onChange: function (e) { return setSearchTerm(e.target.value); }, className: "input input-bordered" })),
+                    React.createElement("div", { className: "mb-4 flex gap-2 items-center" },
+                        React.createElement("input", { type: "date", value: startDate, max: endDate, onChange: function (e) { return setStartDate(e.target.value); }, className: "input input-bordered", placeholder: "Start date" }),
+                        React.createElement("span", { className: "mx-2" }, "to"),
+                        React.createElement("input", { type: "date", value: endDate, min: startDate, onChange: function (e) { return setEndDate(e.target.value); }, className: "input input-bordered", placeholder: "End date" })),
                     loading ? (React.createElement("div", { className: "p-4 " }, "Loading jobs...")) : error ? (React.createElement("div", { className: "p-4 text-red-600" },
                         "Error: ",
                         error)) : !jobs.length ? (React.createElement("div", { className: "p-4" }, "No jobs found")) : (React.createElement("div", { className: "overflow-x-auto overflow-y-auto max-h-[500px]" },
