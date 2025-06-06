@@ -18,6 +18,8 @@ type Job = {
   IsConfirmed: boolean
   IsCancel: boolean
   NotAvailable: any
+  Photo?: string // Add Photo field (URL or file name)
+  Remark?: string // Add Remark field
 }
 
 export default function JobsList() {
@@ -51,7 +53,13 @@ export default function JobsList() {
         return res.json()
       })
       .then(data => {
-        setJobs(data)
+        // Add Remark field to each job if not present
+        setJobs(
+          data.map((job: Job) => ({
+            ...job,
+            Remark: job.Remark ?? '',
+          }))
+        )
         setLoading(false)
       })
       .catch(err => {
@@ -60,7 +68,14 @@ export default function JobsList() {
       })
   }, [])
 
-  const columns = jobs.length > 0 ? Object.keys(jobs[0]) : []
+  // Move "Remark" to the last column, "Photo" before it
+  const columns = jobs.length > 0
+    ? [
+        ...Object.keys(jobs[0]).filter(k => k !== 'Photo' && k !== 'Remark'),
+        'Photo',
+        'Remark'
+      ]
+    : ['Photo', 'Remark']
 
   // Filter jobs by date range (PickupDate or DropoffDate within range)
   const filteredJobs = jobs.filter(job => {
@@ -76,6 +91,41 @@ export default function JobsList() {
       (dropoff >= startDate && dropoff <= endDate)
     )
   })
+
+  // Handle photo upload (optional, for demo only, not persistent)
+  const handlePhotoChange = (jobKey: number, file: File | null) => {
+    if (!file) return
+    setJobs(prev =>
+      prev.map(job =>
+        job.key === jobKey ? { ...job, Photo: URL.createObjectURL(file) } : job
+      )
+    )
+  }
+
+  // Handle remark change
+  const handleRemarkChange = (jobKey: number, remark: string) => {
+    setJobs(prev =>
+      prev.map(job =>
+        job.key === jobKey ? { ...job, Remark: remark } : job
+      )
+    )
+  }
+
+  // Example function to send remark to API server
+  const sendRemark = (jobKey: number, remark: string) => {
+    fetch('/api/guide/remark', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jobKey, remark }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        alert('Remark sent!')
+      })
+      .catch(err => {
+        alert('Failed to send remark')
+      })
+  }
 
   return (
     <CssgGuide>
@@ -129,14 +179,72 @@ export default function JobsList() {
                   <tbody className="divide-y divide-base-300">
                     {filteredJobs.map(job => (
                       <tr key={job.key} className="divide-x divide-base-300">
-                        {columns.map(key => (
-                          <td
-                            key={key}
-                            className="border border-base-300 whitespace-nowrap px-8 py-4 text-base"
-                          >
-                            {String(job[key as keyof Job])}
-                          </td>
-                        ))}
+                        {columns.map(key =>
+                          key === 'Photo' ? (
+                            <td
+                              key={key}
+                              className="border border-base-300 whitespace-nowrap px-8 py-4 text-base"
+                            >
+                              {job.Photo ? (
+                                <img
+                                  src={job.Photo}
+                                  alt="Job Photo"
+                                  className="w-16 h-16 object-cover rounded"
+                                />
+                              ) : (
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={e =>
+                                    handlePhotoChange(
+                                      job.key,
+                                      e.target.files ? e.target.files[0] : null
+                                    )
+                                  }
+                                />
+                              )}
+                            </td>
+                          ) : key === 'Remark' ? (
+                            <td
+                              key={key}
+                              className="border border-base-300 whitespace-nowrap px-8 py-4 text-base"
+                            >
+                              <div className="flex gap-2 items-center">
+                                <input
+                                  type="text"
+                                  value={job.Remark ?? ''}
+                                  onChange={e =>
+                                    handleRemarkChange(job.key, e.target.value)
+                                  }
+                                  className="input input-bordered"
+                                  placeholder="Remark"
+                                />
+                                <button
+                                  className="btn btn-sm btn-primary"
+                                  onClick={() => sendRemark(job.key, job.Remark ?? '')}
+                                >
+                                  Send
+                                </button>
+                              </div>
+                            </td>
+                          ) : key === 'NotAvailable' ? (
+                            <td
+                              key={key}
+                              className="border border-base-300 whitespace-nowrap px-8 py-4 text-base"
+                            >
+                              {typeof job.NotAvailable === 'object'
+                                ? JSON.stringify(job.NotAvailable)
+                                : String(job.NotAvailable ?? '')}
+                            </td>
+                          ) : (
+                            <td
+                              key={key}
+                              className="border border-base-300 whitespace-nowrap px-8 py-4 text-base"
+                            >
+                              {String(job[key as keyof Job] ?? '')}
+                            </td>
+                          )
+                        )}
                         <td className="border border-base-300 whitespace-nowrap px-8 py-4 text-base">
                           <div className="flex gap-2">
                             <button
