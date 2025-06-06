@@ -66,14 +66,7 @@ function JobsList() {
                         error)) : !jobs.length ? (React.createElement("div", { className: "p-4" }, "No jobs found")) : (React.createElement("div", { className: "overflow-x-auto overflow-y-auto max-h-[500px]" },
                         React.createElement("table", { className: "table table-zebra table-bordered table-auto divide-y divide-base-300" },
                             React.createElement("thead", { className: "divide-y divide-base-300" },
-                                React.createElement("tr", null,
-                                    columns.map(function (key) { return (React.createElement("th", { key: key, className: "border border-base-300 whitespace-nowrap px-8 py-4 bg-base-200 text-lg font-semibold text-gray-700" }, key)); }),
-                                    React.createElement("th", { className: "border border-base-300 whitespace-nowrap px-8 py-4 bg-base-200 text-lg font-semibold text-gray-700" }, "Action"))),
-                            React.createElement("tbody", { className: "divide-y divide-base-300" }, filteredJobs.map(function (job) { return (React.createElement("tr", { key: job.key, className: "divide-x divide-base-300" },
-                                columns.map(function (key) { return (React.createElement("td", { key: key, className: "border border-base-300 whitespace-nowrap px-8 py-4 text-base" }, String(job[key]))); }),
-                                React.createElement("td", { className: "border border-base-300 whitespace-nowrap px-8 py-4 text-base" },
-                                    React.createElement("div", { className: "flex gap-2" },
-                                        React.createElement("button", { className: "px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition", onClick: function () { return alert("Accepted job #" + job.key); } }, "Accept"),
-                                        React.createElement("button", { className: "px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition", onClick: function () { return alert("Rejected job #" + job.key); } }, "Reject"))))); }))))))))));
+                                React.createElement("tr", null, columns.map(function (key) { return (React.createElement("th", { key: key, className: "border border-base-300 whitespace-nowrap px-8 py-4 bg-base-200 text-lg font-semibold text-gray-700" }, key)); }))),
+                            React.createElement("tbody", { className: "divide-y divide-base-300" }, filteredJobs.map(function (job) { return (React.createElement("tr", { key: job.key, className: "divide-x divide-base-300" }, columns.map(function (key) { return (React.createElement("td", { key: key, className: "border border-base-300 whitespace-nowrap px-8 py-4 text-base" }, String(job[key]))); }))); }))))))))));
 }
 exports["default"] = JobsList;
