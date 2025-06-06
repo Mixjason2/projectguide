@@ -53,6 +53,13 @@ export default function LoginPage() {
       // Show result from API to user
       if (data.status) {
         setMessage("Login successful!");
+        if (rememberMe) {
+          localStorage.setItem("savedUsername", username);
+          localStorage.setItem("savedPassword", password);
+        } else {
+          localStorage.removeItem("savedUsername");
+          localStorage.removeItem("savedPassword");
+        }
         router.push("/home");
       } else {
         setMessage("Incorrect username or password.");
