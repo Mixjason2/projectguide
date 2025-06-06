@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import CssgGuide from '../cssguide'
 
-
 type Job = {
   key: number
   PNR: string
@@ -27,18 +26,8 @@ export default function JobsList() {
   const [error, setError] = useState<string | null>(null)
   const [searchKey, setSearchKey] = useState<string>('PNR')
   const [searchTerm, setSearchTerm] = useState<string>('')
-  const [showMenu, setShowMenu] = useState<boolean>(false)
 
   const router = useRouter()
-
-  const handleLogout = () => {
-    alert('Logout clicked')
-    router.push('/login')
-  }
-
-  const handleMenuToggle = () => {
-    setShowMenu(prev => !prev)
-  }
 
   useEffect(() => {
     setLoading(true)
@@ -74,59 +63,61 @@ export default function JobsList() {
     return String(value).toLowerCase().includes(searchTerm.toLowerCase())
   })
 
-  if (loading) {
-    return <div className="p-4">Loading jobs...</div>
-  }
-
-  if (error) {
-    return <div className="p-4 text-red-600">Error: {error}</div>
-  }
-
-  if (!jobs.length) {
-    return <div className="p-4">No jobs found</div>
-  }
-
   return (
     <CssgGuide>
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Jobs List</h1>
-      <div className="mb-4 flex gap-2">
-        <select
-          value={searchKey}
-          onChange={e => setSearchKey(e.target.value)}
-          className="input input-bordered"
-        >
-          {columns.map(key => (
-            <option key={key} value={key}>{key}</option>
-          ))}
-        </select>
-        <input
-          type="text"
-          placeholder="Search"
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          className="input input-bordered"
-        />
+      <div className="overflow-x-auto flex justify-center py-8">
+        <div className="bg-base-100 rounded-xl shadow-xl border border-base-300 w-full max-w-5xl">
+          <div className="p-4">
+            <h1 className="text-2xl font-bold mb-4">Jobs List</h1>
+            <div className="mb-4 flex gap-2">
+              <select
+                value={searchKey}
+                onChange={e => setSearchKey(e.target.value)}
+                className="input input-bordered"
+              >
+                {columns.map(key => (
+                  <option key={key} value={key}>{key}</option>
+                ))}
+              </select>
+              <input
+                type="text"
+                placeholder="Search"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="input input-bordered"
+              />
+            </div>
+            {loading ? (
+              <div className="p-4">Loading jobs...</div>
+            ) : error ? (
+              <div className="p-4 text-red-600">Error: {error}</div>
+            ) : !jobs.length ? (
+              <div className="p-4">No jobs found</div>
+            ) : (
+              <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
+                <table className="table table-zebra table-bordered w-full divide-y divide-base-300">
+                  <thead className="divide-y divide-base-300">
+                    <tr>
+                      {columns.map(key => (
+                        <th key={key} className="border border-base-300">{key}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-base-300">
+                    {filteredJobs.map(job => (
+                      <tr key={job.key} className="divide-x divide-base-300">
+                        {columns.map(key => (
+                          <td key={key} className="border border-base-300">{String(job[key as keyof Job])}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
-      <table className="table w-full">
-        <thead>
-          <tr>
-            {columns.map(key => (
-              <th key={key}>{key}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {filteredJobs.map(job => (
-            <tr key={job.key}>
-              {columns.map(key => (
-                <td key={key}>{String(job[key as keyof Job])}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
     </CssgGuide>
   )
 }
