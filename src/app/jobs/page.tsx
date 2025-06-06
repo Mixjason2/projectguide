@@ -63,6 +63,10 @@ export default function JobsList() {
     return String(value).toLowerCase().includes(searchTerm.toLowerCase())
   })
 
+  // Example: You can set this to true when you want to show a new message alert
+  const hasNewMessage = true
+  const newMessageText = "You have 1 unread message"
+
   return (
     <CssgGuide>
       <div className="overflow-x-auto flex justify-center py-8">
