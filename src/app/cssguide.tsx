@@ -44,11 +44,11 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
                         tabIndex={-1}
                         aria-labelledby="drawer-navigation-label"
                     >
-                        <h5 id="drawer-navigation-label" className="text-base font-semibold text-blue-700 uppercase">Menu</h5>
+                        <h5 id="drawer-navigation-label" className="text-base font-semibold text-black-700 uppercase">Menu</h5>
                         <button
                             type="button"
                             aria-controls="drawer-navigation"
-                            className="text-blue-700 bg-transparent hover:bg-blue-100 hover:text-blue-900 rounded-lg text-sm w-8 h-8 absolute top-2.5 end-2.5 inline-flex items-center justify-center"
+                            className="text-black-700 bg-transparent hover:bg-blue-100 hover:text-black-900 rounded-lg text-sm w-8 h-8 absolute top-2.5 end-2.5 inline-flex items-center justify-center"
                             onClick={() => setOpen(false)}
                         >
                             <svg className="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
