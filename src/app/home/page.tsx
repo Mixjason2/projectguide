@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import CssgGuide from '../cssguide'
+
 
 type Job = {
   key: number
@@ -85,6 +87,7 @@ export default function HomePage() {
   }
 
   return (
+    <CssgGuide>
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Jobs List</h1>
       <div className="mb-4 flex gap-2">
@@ -124,5 +127,6 @@ export default function HomePage() {
         </tbody>
       </table>
     </div>
+    </CssgGuide>
   )
 }
