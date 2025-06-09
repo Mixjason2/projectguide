@@ -47,47 +47,49 @@ export default function CalendarExcel() {
 
   return (
     <CssgGuide>
-      <div className="flex justify-center py-8">
-        <div className="overflow-x-auto">
-          <div className="flex items-center justify-between mb-4">
-            <button className="btn btn-sm btn-outline" onClick={prevMonth}>&lt;</button>
-            <span className="font-bold text-lg">{monthNames[month]} {year}</span>
-            <button className="btn btn-sm btn-outline" onClick={nextMonth}>&gt;</button>
-          </div>
-          <table className="table table-bordered border border-base-300 bg-base-100 shadow-lg rounded-box min-w-[600px]">
-            <thead>
-              <tr>
-                <th className="text-center">Sun</th>
-                <th className="text-center">Mon</th>
-                <th className="text-center">Tue</th>
-                <th className="text-center">Wed</th>
-                <th className="text-center">Thu</th>
-                <th className="text-center">Fri</th>
-                <th className="text-center">Sat</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Array.from({ length: cells.length / 7 }).map((_, week) => (
-                <tr key={week}>
-                  {cells.slice(week * 7, week * 7 + 7).map((day, i) => (
-                    <td key={i} className="p-0">
-                      {day ? (
-                        <input
-                          className="w-full h-12 px-2 border-none focus:outline-none"
-                          type="text"
-                          placeholder={String(day)}
-                          value={data[day] || ""}
-                          onChange={e =>
-                            setData({ ...data, [day]: e.target.value })
-                          }
-                        />
-                      ) : null}
-                    </td>
-                  ))}
+      <div className="flex justify-center py-8 min-h-screen">
+        <div className="bg-base-100 rounded-xl shadow-xl border border-base-300 p-4 w-full max-w-3xl">
+          <div className="overflow-x-auto">
+            <div className="flex items-center justify-between mb-4">
+              <button className="btn btn-sm btn-outline" onClick={prevMonth}>&lt;</button>
+              <span className="font-bold text-lg">{monthNames[month]} {year}</span>
+              <button className="btn btn-sm btn-outline" onClick={nextMonth}>&gt;</button>
+            </div>
+            <table className="table table-bordered border border-base-300 bg-base-100 shadow-lg rounded-box w-full min-w-[350px]">
+              <thead>
+                <tr>
+                  <th className="text-center">Sun</th>
+                  <th className="text-center">Mon</th>
+                  <th className="text-center">Tue</th>
+                  <th className="text-center">Wed</th>
+                  <th className="text-center">Thu</th>
+                  <th className="text-center">Fri</th>
+                  <th className="text-center">Sat</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {Array.from({ length: cells.length / 7 }).map((_, week) => (
+                  <tr key={week}>
+                    {cells.slice(week * 7, week * 7 + 7).map((day, i) => (
+                      <td key={i} className="p-0">
+                        {day ? (
+                          <input
+                            className="w-full h-12 px-2 border-none focus:outline-none"
+                            type="text"
+                            placeholder={String(day)}
+                            value={data[day] || ""}
+                            onChange={e =>
+                              setData({ ...data, [day]: e.target.value })
+                            }
+                          />
+                        ) : null}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </CssgGuide>

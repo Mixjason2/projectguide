@@ -155,14 +155,6 @@ export default function JobsList() {
                   <tbody className="divide-y divide-base-300">
                     {filteredJobs.map(job => (
                       <tr key={job.key} className="divide-x divide-base-300">
-                        <td className="border border-base-300 whitespace-nowrap px-8 py-4 text-base">
-                          <button
-                            className="btn btn-sm btn-info"
-                            onClick={() => setDetailJob(job)}
-                          >
-                            Detail
-                          </button>
-                        </td>
                         {columns.map(key =>
                           key === 'Photo' ? (
                             <td
@@ -229,6 +221,22 @@ export default function JobsList() {
                             </td>
                           )
                         )}
+                        <td className="border border-base-300 whitespace-nowrap px-8 py-4 text-base">
+                          <div className="flex gap-2">
+                            <button
+                              className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition"
+                              onClick={() => alert(`Accepted job #${job.key}`)}
+                            >
+                              Accept
+                            </button>
+                            <button
+                              className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
+                              onClick={() => alert(`Rejected job #${job.key}`)}
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
