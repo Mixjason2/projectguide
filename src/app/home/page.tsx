@@ -58,6 +58,7 @@ export default function JobsList() {
   const [startDate, setStartDate] = useState<string>('2025-01-01')
   const [endDate, setEndDate] = useState<string>('2025-01-31')
   const [page, setPage] = useState(1)
+  const [uploadJob, setUploadJob] = useState<Job | null>(null)
 
   const pageSize = 6
 
@@ -186,24 +187,41 @@ export default function JobsList() {
     </div>
   )
 
-  // รวมข้อมูล summary ด้านขวาบน
+  // ปรับ summary เป็นแถวแนวนอน สวยงาม และวางไว้บนหัว card Jobs List
   const summary = (
-    <div className="absolute top-4 right-8 z-30 bg-white border border-blue-300 rounded-xl shadow-lg px-6 py-4 min-w-[220px]">
-      <div className="font-bold text-lg mb-2 text-blue-700">Summary</div>
-      <div className="text-sm">
-        <div>All Jobs: <span className="font-bold">{jobs.length}</span></div>
-        <div>Unique PNR: <span className="font-bold">{mergedJobs.length}</span></div>
-        <div>Current Page: <span className="font-bold">{page}</span> / {totalPages}</div>
-        <div>Date: <span className="font-bold">{startDate}</span> - <span className="font-bold">{endDate}</span></div>
+    <div className="w-full flex justify-end mb-6">
+      <div className="flex flex-row flex-wrap gap-6 bg-white border border-blue-300 rounded-xl shadow-lg px-8 py-4 items-center max-w-3xl">
+        <div className="flex items-center gap-2">
+          <span className="inline-block w-3 h-3 rounded-full bg-orange-400"></span>
+          <span className="text-gray-500">All Jobs:</span>
+          <span className="font-bold text-blue-700">{jobs.length}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-gray-500">Unique PNR:</span>
+          <span className="font-bold text-blue-700">{mergedJobs.length}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-gray-500">Page:</span>
+          <span className="font-bold text-blue-700">{page}</span>
+          <span className="text-gray-400">/</span>
+          <span className="font-bold text-blue-700">{totalPages}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-gray-500">Date:</span>
+          <span className="font-bold">{startDate}</span>
+          <span className="text-gray-400">-</span>
+          <span className="font-bold">{endDate}</span>
+        </div>
       </div>
     </div>
   )
 
   return (
     <CssgGuide>
-      <div className="flex justify-center items-start py-8 min-h-screen bg-base-200 relative">
+      <div className="flex flex-col items-center py-8 min-h-screen bg-base-200 relative">
+        {/* Summary bar */}
         {summary}
-        <div className="bg-base-100 rounded-xl shadow-xl border border-base-300 w-full max-w-full p-0">
+        <div className="bg-base-100 rounded-xl shadow-xl border border-base-300 w-full max-w-7xl p-0">
           <div className="p-4 w-full min-h-screen overflow-auto">
             <h1 className="text-2xl font-bold mb-4">Jobs List</h1>
             {/* ปรับ UI ช่วงเลือกวันที่ */}
@@ -281,7 +299,7 @@ export default function JobsList() {
                           {renderField('Pax', job.Pax)}
                           {renderField('Source', job.Source)}
                         </div>
-                        <div className="flex gap-3 mt-auto">
+                        <div className="flex gap-3 mt-auto flex-wrap">
                           <button
                             className="btn btn-success flex-1 text-base font-bold py-2 rounded-full shadow"
                             onClick={() => alert(`Accepted job PNR ${job.PNR}`)}
@@ -293,6 +311,16 @@ export default function JobsList() {
                             onClick={() => alert(`Rejected job PNR ${job.PNR}`)}
                           >
                             Reject
+                          </button>
+                          {/* ปุ่มเดียวสำหรับอัปโหลด (ขนาดเล็กลง) */}
+                          <button
+                            className="btn btn-info btn-sm btn-circle"
+                            onClick={() => setUploadJob(job)}
+                            title="Upload Photo & Remark"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+                            </svg>
                           </button>
                         </div>
                       </div>
@@ -329,6 +357,62 @@ export default function JobsList() {
                       </button>
                       <h2 className="text-xl font-bold mb-4">All Job Details</h2>
                       {renderAllDetails(detailJobs)}
+                    </div>
+                  </div>
+                )}
+                {/* Modal สำหรับอัปโหลดรูปและเนื้อหา */}
+                {uploadJob && (
+                  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-2xl border-4 border-blue-400 p-8 max-w-md w-full relative animate-fade-in">
+                      <button
+                        className="absolute top-2 right-2 btn btn-sm btn-error"
+                        onClick={() => setUploadJob(null)}
+                      >
+                        ✕
+                      </button>
+                      <h2 className="text-xl font-bold mb-4">Upload Photo & Remark</h2>
+                      <form
+                        onSubmit={e => {
+                          e.preventDefault();
+                          // handle upload logic here
+                          alert('Uploaded!');
+                          setUploadJob(null);
+                        }}
+                        className="space-y-4"
+                      >
+                        <div>
+                          <label className="block font-semibold mb-1">Photo</label>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="file-input file-input-bordered w-full"
+                            onChange={e => {
+                              // handle file select
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <label className="block font-semibold mb-1">Remark</label>
+                          <textarea
+                            className="textarea textarea-bordered w-full"
+                            rows={3}
+                            placeholder="Enter remark..."
+                            // onChange={...}
+                          />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            className="btn btn-outline"
+                            onClick={() => setUploadJob(null)}
+                          >
+                            Cancel
+                          </button>
+                          <button type="submit" className="btn btn-primary">
+                            Upload
+                          </button>
+                        </div>
+                      </form>
                     </div>
                   </div>
                 )}
