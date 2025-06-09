@@ -207,32 +207,41 @@ export default function JobsList() {
           <div className="p-4 w-full min-h-screen overflow-auto">
             <h1 className="text-2xl font-bold mb-4">Jobs List</h1>
             {/* ปรับ UI ช่วงเลือกวันที่ */}
-            <div className="mb-8 flex flex-col sm:flex-row gap-4 items-center justify-center">
-              <div className="flex flex-col items-start">
-                <label className="mb-1 text-xs text-gray-500 font-semibold" htmlFor="start-date">Start date</label>
-                <input
-                  id="start-date"
-                  type="date"
-                  value={startDate}
-                  max={endDate}
-                  onChange={e => setStartDate(e.target.value)}
-                  className="input input-bordered w-44"
-                  placeholder="Start date"
-                />
+            <div className="mb-8 flex flex-col items-center">
+              <div className="bg-base-100 border border-base-300 rounded-xl shadow-md px-6 py-4 flex flex-col sm:flex-row items-center gap-4 w-full max-w-xl">
+                <div className="flex flex-col items-start w-full">
+                  <label className="mb-1 text-xs text-gray-500 font-semibold" htmlFor="start-date">
+                    Start date
+                  </label>
+                  <input
+                    id="start-date"
+                    type="date"
+                    value={startDate}
+                    max={endDate}
+                    onChange={e => setStartDate(e.target.value)}
+                    className="input input-bordered w-full"
+                    placeholder="Start date"
+                  />
+                </div>
+                <span className="mx-2 mt-6 sm:mt-8 text-gray-400 font-semibold hidden sm:inline">to</span>
+                <div className="flex flex-col items-start w-full">
+                  <label className="mb-1 text-xs text-gray-500 font-semibold" htmlFor="end-date">
+                    End date
+                  </label>
+                  <input
+                    id="end-date"
+                    type="date"
+                    value={endDate}
+                    min={startDate}
+                    onChange={e => setEndDate(e.target.value)}
+                    className="input input-bordered w-full"
+                    placeholder="End date"
+                  />
+                </div>
               </div>
-              <span className="mx-2 mt-6 sm:mt-8 text-gray-400 font-semibold">to</span>
-              <div className="flex flex-col items-start">
-                <label className="mb-1 text-xs text-gray-500 font-semibold" htmlFor="end-date">End date</label>
-                <input
-                  id="end-date"
-                  type="date"
-                  value={endDate}
-                  min={startDate}
-                  onChange={e => setEndDate(e.target.value)}
-                  className="input input-bordered w-44"
-                  placeholder="End date"
-                />
-              </div>
+              <span className="mt-2 text-xs text-gray-400">
+                Please select a date range to filter the desired tasks.
+              </span>
             </div>
             {loading ? (
               <div className="p-4 ">Loading jobs...</div>
