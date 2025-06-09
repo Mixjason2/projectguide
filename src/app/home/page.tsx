@@ -27,24 +27,13 @@ export default function JobsList() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [detailJob, setDetailJob] = useState<Job | null>(null)
-
-<<<<<<< HEAD
-<<<<<<< HEAD
-  // Set your default start and end date here (YYYY-MM-DD)
-  const defaultStart = '2025-01-01'   // <-- change as needed
-  const defaultEnd = '2025-01-31'     // <-- change as needed
-
-  const [startDate, setStartDate] = useState<string>(defaultStart)
-  const [endDate, setEndDate] = useState<string>(defaultEnd)
+  const [startDate, setStartDate] = useState<string>('2025-01-01')
+  const [endDate, setEndDate] = useState<string>('2025-01-31')
   const [page, setPage] = useState(1)
 
-  const router = useRouter()
+  const pageSize = 6
+  const totalPages = Math.ceil(jobs.length / pageSize)
 
-=======
-  // เพิ่ม: mock ข้อมูล 10 รายการ ถ้า API จริงยังไม่มี
->>>>>>> 15e2377c3894cc6eaac4b774e66972ba080ebd38
-=======
->>>>>>> d03e2452a8b85048074bbda95d3b9cabb9b1e9aa
   useEffect(() => {
     setLoading(true)
     // Mock ข้อมูล 10 รายการ
@@ -71,15 +60,12 @@ export default function JobsList() {
     }, 500)
   }, [])
 
-  const [startDate, setStartDate] = useState<string>('2025-01-01')
-  const [endDate, setEndDate] = useState<string>('2025-01-31')
-
   const columns = jobs.length > 0
     ? [
-        ...Object.keys(jobs[0]).filter(k => k !== 'Photo' && k !== 'Remark'),
-        'Photo',
-        'Remark'
-      ]
+      ...Object.keys(jobs[0]).filter(k => k !== 'Photo' && k !== 'Remark'),
+      'Photo',
+      'Remark'
+    ]
     : ['Photo', 'Remark']
 
   const filteredJobs = jobs.filter(job => {
@@ -96,15 +82,8 @@ export default function JobsList() {
     )
   })
 
-<<<<<<< HEAD
-  // Pagination
-  const pageSize = 6
-  const totalPages = Math.ceil(filteredJobs.length / pageSize)
   const pagedJobs = filteredJobs.slice((page - 1) * pageSize, page * pageSize)
 
-  // Handle photo upload (optional, for demo only, not persistent)
-=======
->>>>>>> 15e2377c3894cc6eaac4b774e66972ba080ebd38
   const handlePhotoChange = (jobKey: number, file: File | null) => {
     if (!file) return
     setJobs(prev =>
@@ -130,28 +109,37 @@ export default function JobsList() {
 
   return (
     <CssgGuide>
-      <div className="overflow-x-auto flex justify-center py-8">
-        <div className="bg-base-100 rounded-xl shadow-xl border border-base-300 w-full max-w-5xl">
-          <div className="p-4 w-full min-h-screen">
+      <div className="flex justify-center items-start py-8 min-h-screen bg-base-200">
+        <div className="bg-base-100 rounded-xl shadow-xl border border-base-300 w-full max-w-full p-0">
+          <div className="p-4 w-full min-h-screen overflow-auto">
             <h1 className="text-2xl font-bold mb-4">Jobs List</h1>
-            <div className="mb-4 flex gap-2 items-center">
-              <input
-                type="date"
-                value={startDate}
-                max={endDate}
-                onChange={e => setStartDate(e.target.value)}
-                className="input input-bordered"
-                placeholder="Start date"
-              />
-              <span className="mx-2">to</span>
-              <input
-                type="date"
-                value={endDate}
-                min={startDate}
-                onChange={e => setEndDate(e.target.value)}
-                className="input input-bordered"
-                placeholder="End date"
-              />
+            {/* ปรับ UI ช่วงเลือกวันที่ */}
+            <div className="mb-8 flex flex-col sm:flex-row gap-4 items-center justify-center">
+              <div className="flex flex-col items-start">
+                <label className="mb-1 text-xs text-gray-500 font-semibold" htmlFor="start-date">Start date</label>
+                <input
+                  id="start-date"
+                  type="date"
+                  value={startDate}
+                  max={endDate}
+                  onChange={e => setStartDate(e.target.value)}
+                  className="input input-bordered w-44"
+                  placeholder="Start date"
+                />
+              </div>
+              <span className="mx-2 mt-6 sm:mt-8 text-gray-400 font-semibold">to</span>
+              <div className="flex flex-col items-start">
+                <label className="mb-1 text-xs text-gray-500 font-semibold" htmlFor="end-date">End date</label>
+                <input
+                  id="end-date"
+                  type="date"
+                  value={endDate}
+                  min={startDate}
+                  onChange={e => setEndDate(e.target.value)}
+                  className="input input-bordered w-44"
+                  placeholder="End date"
+                />
+              </div>
             </div>
             {loading ? (
               <div className="p-4 ">Loading jobs...</div>
@@ -160,31 +148,52 @@ export default function JobsList() {
             ) : !jobs.length ? (
               <div className="p-4">No jobs found</div>
             ) : (
-<<<<<<< HEAD
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                   {pagedJobs.map(job => (
-                    <div key={job.key} className="card bg-base-200 shadow-md border border-base-300">
-                      <div className="card-body">
-                        <h2 className="card-title">Job #{job.key}</h2>
-                        <div className="text-sm">
-                          <div><b>PNR:</b> {job.PNR}</div>
-                          <div><b>Pickup:</b> {job.Pickup} ({job.PickupDate})</div>
-                          <div><b>Dropoff:</b> {job.Dropoff} ({job.DropoffDate})</div>
-                          <div><b>Pax:</b> {job.Pax}</div>
-                          <div><b>Confirmed:</b> {job.IsConfirmed ? "Yes" : "No"}</div>
-                          <div><b>Cancel:</b> {job.IsCancel ? "Yes" : "No"}</div>
-                          {/* เพิ่ม field อื่นๆ ตามต้องการ */}
+                    <div key={job.key} className="relative bg-white border border-base-300 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col">
+                      {/* Detail Icon */}
+                      <button
+                        className="btn btn-ghost btn-circle absolute top-4 right-4"
+                        title="Detail"
+                        onClick={() => setDetailJob(job)}
+                        style={{ zIndex: 2 }}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-8 h-8 text-primary"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 0c0 5-9 9-9 9s-9-4-9-9a9 9 0 1118 0z"
+                          />
+                        </svg>
+                      </button>
+                      <div className="p-6 flex-1 flex flex-col">
+                        <h2 className="text-xl font-bold mb-2 text-primary">Job #{job.key}</h2>
+                        <div className="text-sm text-gray-600 space-y-1 mb-4">
+                          <div><span className="font-semibold">PNR:</span> {job.PNR}</div>
+                          <div><span className="font-semibold">Pickup:</span> {job.Pickup} <span className="text-xs text-gray-400">({job.PickupDate})</span></div>
+                          <div><span className="font-semibold">Dropoff:</span> {job.Dropoff} <span className="text-xs text-gray-400">({job.DropoffDate})</span></div>
+                          <div><span className="font-semibold">Pax:</span> {job.Pax}</div>
+                          <div><span className="font-semibold">BSL ID:</span> {job.BSL_ID}</div>
+                          <div><span className="font-semibold">Source:</span> {job.Source}</div>
+                          {/* เพิ่มข้อมูลอื่นๆ ที่ต้องการแสดงแทน Status ได้ที่นี่ */}
                         </div>
-                        <div className="flex gap-2 mt-4">
+                        <div className="flex gap-3 mt-auto">
                           <button
-                            className="btn btn-success btn-sm"
+                            className="btn btn-success flex-1 text-base font-bold py-2 rounded-full shadow"
                             onClick={() => alert(`Accepted job #${job.key}`)}
                           >
                             Accept
                           </button>
                           <button
-                            className="btn btn-error btn-sm"
+                            className="btn btn-error flex-1 text-base font-bold py-2 rounded-full shadow"
                             onClick={() => alert(`Rejected job #${job.key}`)}
                           >
                             Reject
@@ -212,123 +221,6 @@ export default function JobsList() {
                     Next
                   </button>
                 </div>
-              </>
-=======
-              <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
-                <table className="table table-zebra table-bordered table-auto divide-y divide-base-300">
-                  <thead className="divide-y divide-base-300">
-                    <tr>
-                      <th className="border border-base-300 whitespace-nowrap px-8 py-4 bg-base-200 text-lg font-semibold text-gray-700">
-                        Detail
-                      </th>
-                      {columns.map(key => (
-                        <th
-                          key={key}
-                          className="border border-base-300 whitespace-nowrap px-8 py-4 bg-base-200 text-lg font-semibold text-gray-700"
-                        >
-                          {key}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-base-300">
-                    {filteredJobs.map(job => (
-                      <tr key={job.key} className="divide-x divide-base-300">
-                        {/* Detail button */}
-                        <td className="border border-base-300 whitespace-nowrap px-8 py-4 text-base">
-                          <button
-                            className="btn btn-sm btn-info"
-                            onClick={() => setDetailJob(job)}
-                          >
-                            Detail
-                          </button>
-                        </td>
-                        {columns.map(key =>
-                          key === 'Photo' ? (
-                            <td
-                              key={key}
-                              className="border border-base-300 whitespace-nowrap px-8 py-4 text-base"
-                            >
-                              {job.Photo ? (
-                                <img
-                                  src={job.Photo}
-                                  alt="Job Photo"
-                                  className="w-16 h-16 object-cover rounded"
-                                />
-                              ) : (
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={e =>
-                                    handlePhotoChange(
-                                      job.key,
-                                      e.target.files ? e.target.files[0] : null
-                                    )
-                                  }
-                                />
-                              )}
-                            </td>
-                          ) : key === 'Remark' ? (
-                            <td
-                              key={key}
-                              className="border border-base-300 whitespace-nowrap px-8 py-4 text-base"
-                            >
-                              <div className="flex gap-2 items-center">
-                                <input
-                                  type="text"
-                                  value={job.Remark ?? ''}
-                                  onChange={e =>
-                                    handleRemarkChange(job.key, e.target.value)
-                                  }
-                                  className="input input-bordered"
-                                  placeholder="Remark"
-                                />
-                                <button
-                                  className="btn btn-sm btn-primary"
-                                  onClick={() => sendRemark(job.key, job.Remark ?? '')}
-                                >
-                                  Send
-                                </button>
-                              </div>
-                            </td>
-                          ) : key === 'NotAvailable' ? (
-                            <td
-                              key={key}
-                              className="border border-base-300 whitespace-nowrap px-8 py-4 text-base"
-                            >
-                              {typeof job.NotAvailable === 'object'
-                                ? JSON.stringify(job.NotAvailable)
-                                : String(job.NotAvailable ?? '')}
-                            </td>
-                          ) : (
-                            <td
-                              key={key}
-                              className="border border-base-300 whitespace-nowrap px-8 py-4 text-base"
-                            >
-                              {String(job[key as keyof Job] ?? '')}
-                            </td>
-                          )
-                        )}
-                        <td className="border border-base-300 whitespace-nowrap px-8 py-4 text-base">
-                          <div className="flex gap-2">
-                            <button
-                              className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition"
-                              onClick={() => alert(`Accepted job #${job.key}`)}
-                            >
-                              Accept
-                            </button>
-                            <button
-                              className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
-                              onClick={() => alert(`Rejected job #${job.key}`)}
-                            >
-                              Reject
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
                 {/* Detail Modal */}
                 {detailJob && (
                   <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
@@ -341,40 +233,21 @@ export default function JobsList() {
                       </button>
                       <h2 className="text-xl font-bold mb-4">Job Detail</h2>
                       <div className="space-y-2 mb-4">
-                        {Object.entries(detailJob).map(([k, v]) => (
-                          <div key={k} className="flex">
-                            <span className="font-semibold w-40">{k}:</span>
-                            <span className="break-all">
-                              {typeof v === 'object' ? JSON.stringify(v) : String(v)}
-                            </span>
-                          </div>
+                        {Object.entries(detailJob)
+                          .filter(([k]) => k !== "IsConfirmed" && k !== "IsCancel")
+                          .map(([k, v]) => (
+                            <div key={k} className="flex">
+                              <span className="font-semibold w-40">{k}:</span>
+                              <span className="break-all">
+                                {typeof v === 'object' ? JSON.stringify(v) : String(v)}
+                              </span>
+                            </div>
                         ))}
-                      </div>
-                      <div className="flex gap-4 justify-end">
-                        <button
-                          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
-                          onClick={() => {
-                            alert(`Accepted job #${detailJob.key}`)
-                            closeDetail()
-                          }}
-                        >
-                          Accept
-                        </button>
-                        <button
-                          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
-                          onClick={() => {
-                            alert(`Rejected job #${detailJob.key}`)
-                            closeDetail()
-                          }}
-                        >
-                          Reject
-                        </button>
                       </div>
                     </div>
                   </div>
                 )}
-              </div>
->>>>>>> 15e2377c3894cc6eaac4b774e66972ba080ebd38
+              </>
             )}
           </div>
         </div>
