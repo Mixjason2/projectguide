@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import CssgGuide from '../cssguide'
 
 type Job = {
@@ -22,50 +21,66 @@ type Job = {
   Remark?: string
 }
 
+// Merge jobs by PNR, combine fields that are different into arrays
+type MergedJob = {
+  [K in keyof Omit<Job, 'key'>]: Job[K] | Job[K][]
+} & { keys: number[] }
+
+function mergeJobsByPNR(jobs: Job[]) {
+  const map: Record<string, { merged: MergedJob, all: Job[] }> = {}
+  for (const job of jobs) {
+    if (!map[job.PNR]) {
+      map[job.PNR] = { merged: { ...job, keys: [job.key] }, all: [job] }
+    } else {
+      map[job.PNR].merged.keys.push(job.key)
+      map[job.PNR].all.push(job)
+      // Merge fields: if different, make array of unique values
+      for (const k of Object.keys(job) as (keyof Job)[]) {
+        if (k === 'key' || k === 'Photo' || k === 'Remark') continue
+        const prev = map[job.PNR].merged[k]
+        const curr = job[k]
+        if (Array.isArray(prev)) {
+          if (!prev.includes(curr)) (prev as any[]).push(curr)
+        } else if (prev !== curr) {
+          (map[job.PNR].merged as any)[k] = [prev, curr].filter((v, i, arr) => arr.indexOf(v) === i)
+        }
+      }
+    }
+  }
+  return Object.entries(map).map(([pnr, data]) => ({ ...data.merged, PNR: pnr, all: data.all }))
+}
+
 export default function JobsList() {
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [detailJob, setDetailJob] = useState<Job | null>(null)
+  const [detailJobs, setDetailJobs] = useState<Job[] | null>(null)
+  const [startDate, setStartDate] = useState<string>('2025-01-01')
+  const [endDate, setEndDate] = useState<string>('2025-01-31')
   const [page, setPage] = useState(1)
-  const pageSize = 5
+
+  const pageSize = 6
 
   useEffect(() => {
     setLoading(true)
-    // Mock ข้อมูล 10 รายการ
-    const mockJobs: Job[] = Array.from({ length: 10 }).map((_, i) => ({
-      key: i + 1,
-      PNR: `PNR${i + 1}`,
-      PNRDate: `2025-01-${String(i + 1).padStart(2, '0')}`,
-      BSL_ID: `BSL${i + 1}`,
-      PickupDate: `2025-01-${String(i + 1).padStart(2, '0')}`,
-      Pickup: `Pickup${i + 1}`,
-      DropoffDate: `2025-01-${String(i + 2).padStart(2, '0')}`,
-      Dropoff: `Dropoff${i + 1}`,
-      Source: `Source${i + 1}`,
-      Pax: Math.floor(Math.random() * 5) + 1,
-      IsConfirmed: i % 2 === 0,
-      IsCancel: i % 3 === 0,
-      NotAvailable: null,
-      Photo: "",
-      Remark: ""
-    }))
-    setTimeout(() => {
-      setJobs(mockJobs)
-      setLoading(false)
-    }, 500)
-  }, [])
-
-  const [startDate, setStartDate] = useState<string>('2025-01-01')
-  const [endDate, setEndDate] = useState<string>('2025-01-31')
-
-  const columns = jobs.length > 0
-    ? [
-        ...Object.keys(jobs[0]).filter(k => k !== 'Photo' && k !== 'Remark'),
-        'Photo',
-        'Remark'
-      ]
-    : ['Photo', 'Remark']
+    setError(null)
+    fetch('/api/guide/job', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: 'AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tquHz0YvTfZ//YHCHoAonEi4',
+        startdate: startDate,
+        enddate: endDate,
+      }),
+    })
+      .then(async res => {
+        if (!res.ok) throw new Error(await res.text())
+        return res.json()
+      })
+      .then((data: Job[]) => setJobs(data))
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [startDate, endDate])
 
   const filteredJobs = jobs.filter(job => {
     const pickup = job.PickupDate
@@ -81,57 +96,143 @@ export default function JobsList() {
     )
   })
 
-  // Pagination
-  const totalPages = Math.ceil(filteredJobs.length / pageSize)
-  const pagedJobs = filteredJobs.slice((page - 1) * pageSize, page * pageSize)
+  const mergedJobs = mergeJobsByPNR(filteredJobs)
+  const totalPages = Math.ceil(mergedJobs.length / pageSize)
+  const pagedJobs = mergedJobs.slice((page - 1) * pageSize, page * pageSize)
 
-  const handlePhotoChange = (jobKey: number, file: File | null) => {
-    if (!file) return
-    setJobs(prev =>
-      prev.map(job =>
-        job.key === jobKey ? { ...job, Photo: URL.createObjectURL(file) } : job
-      )
+  // Helper to format date and time, keep only วัน/เดือน/ปี (YYYY-MM-DD)
+  function formatDate(dateStr: string) {
+    if (!dateStr) return ''
+    const match = dateStr.match(/^\d{4}-\d{2}-\d{2}/)
+    return match ? match[0] : dateStr
+  }
+
+  // Helper to combine Pickup + PickupDate, Dropoff + DropoffDate
+  function renderPlaceDate(place: string, date: string, label: string) {
+    if (!place && !date) return null
+    return (
+      <div>
+        <span className="font-semibold">{label}:</span>{' '}
+        {place ? place : ''}{place && date ? ' - ' : ''}{date ? formatDate(date) : ''}
+      </div>
     )
   }
 
-  const handleRemarkChange = (jobKey: number, remark: string) => {
-    setJobs(prev =>
-      prev.map(job =>
-        job.key === jobKey ? { ...job, Remark: remark } : job
+  // Helper to render value or array of values
+  const renderField = (label: string, value: any) => {
+    if (label === 'BSL ID' || label === 'Pickup' || label === 'PickupDate' || label === 'Dropoff' || label === 'DropoffDate') return null // Remove BSL ID and handled fields
+    if (Array.isArray(value)) {
+      return (
+        <div>
+          <span className="font-semibold">{label}:</span>
+          <ul className="list-disc ml-6">
+            {value.map((v, i) => (
+              <li key={i}>{String(v)}</li>
+            ))}
+          </ul>
+        </div>
       )
+    }
+    return (
+      <div>
+        <span className="font-semibold">{label}:</span> {String(value)}
+      </div>
     )
   }
 
-  const sendRemark = (jobKey: number, remark: string) => {
-    alert(`ส่ง Remark "${remark}" สำหรับ job #${jobKey} (mock)`)
-  }
+  // Render all job details for a PNR
+  const renderAllDetails = (jobs: Job[]) => (
+    <div className="max-h-[60vh] overflow-auto">
+      {jobs.map((job, idx) => (
+        <div key={job.key} className="mb-4 border-b border-blue-200 pb-2 last:border-b-0 last:pb-0">
+          <div className="font-semibold text-blue-700 mb-1">PNR: {job.PNR}</div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+            {/* Combine Pickup + PickupDate */}
+            <div className="flex col-span-2">
+              <span className="font-semibold w-28">Pickup:</span>
+              <span className="break-all ml-2">{job.Pickup}{job.Pickup && job.PickupDate ? ' - ' : ''}{job.PickupDate ? formatDate(job.PickupDate) : ''}</span>
+            </div>
+            {/* Combine Dropoff + DropoffDate */}
+            <div className="flex col-span-2">
+              <span className="font-semibold w-28">Dropoff:</span>
+              <span className="break-all ml-2">{job.Dropoff}{job.Dropoff && job.DropoffDate ? ' - ' : ''}{job.DropoffDate ? formatDate(job.DropoffDate) : ''}</span>
+            </div>
+            {/* Show PNRDate with only date */}
+            <div className="flex col-span-2">
+              <span className="font-semibold w-28">PNRDate:</span>
+              <span className="break-all ml-2">{formatDate(job.PNRDate)}</span>
+            </div>
+            {Object.entries(job)
+              .filter(([k]) =>
+                k !== "IsConfirmed" &&
+                k !== "IsCancel" &&
+                k !== "key" &&
+                k !== "BSL_ID" &&
+                k !== "Pickup" &&
+                k !== "PickupDate" &&
+                k !== "Dropoff" &&
+                k !== "DropoffDate" &&
+                k !== "PNRDate"
+              )
+              .map(([k, v]) => (
+                <div key={k} className="flex">
+                  <span className="font-semibold w-28">{k}:</span>
+                  <span className="break-all ml-2">{typeof v === 'object' ? JSON.stringify(v) : String(v)}</span>
+                </div>
+              ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
 
-  const closeDetail = () => setDetailJob(null)
+  // รวมข้อมูล summary ด้านขวาบน
+  const summary = (
+    <div className="absolute top-4 right-8 z-30 bg-white border border-blue-300 rounded-xl shadow-lg px-6 py-4 min-w-[220px]">
+      <div className="font-bold text-lg mb-2 text-blue-700">Summary</div>
+      <div className="text-sm">
+        <div>All Jobs: <span className="font-bold">{jobs.length}</span></div>
+        <div>Unique PNR: <span className="font-bold">{mergedJobs.length}</span></div>
+        <div>Current Page: <span className="font-bold">{page}</span> / {totalPages}</div>
+        <div>Date: <span className="font-bold">{startDate}</span> - <span className="font-bold">{endDate}</span></div>
+      </div>
+    </div>
+  )
 
   return (
     <CssgGuide>
-      <div className="overflow-x-auto flex justify-center py-8">
-        <div className="bg-base-100 rounded-xl shadow-xl border border-base-300 w-full max-w-5xl">
-          <div className="p-4 w-full min-h-screen">
+      <div className="flex justify-center items-start py-8 min-h-screen bg-base-200 relative">
+        {summary}
+        <div className="bg-base-100 rounded-xl shadow-xl border border-base-300 w-full max-w-full p-0">
+          <div className="p-4 w-full min-h-screen overflow-auto">
             <h1 className="text-2xl font-bold mb-4">Jobs List</h1>
-            <div className="mb-4 flex gap-2 items-center">
-              <input
-                type="date"
-                value={startDate}
-                max={endDate}
-                onChange={e => setStartDate(e.target.value)}
-                className="input input-bordered"
-                placeholder="Start date"
-              />
-              <span className="mx-2">to</span>
-              <input
-                type="date"
-                value={endDate}
-                min={startDate}
-                onChange={e => setEndDate(e.target.value)}
-                className="input input-bordered"
-                placeholder="End date"
-              />
+            {/* ปรับ UI ช่วงเลือกวันที่ */}
+            <div className="mb-8 flex flex-col sm:flex-row gap-4 items-center justify-center">
+              <div className="flex flex-col items-start">
+                <label className="mb-1 text-xs text-gray-500 font-semibold" htmlFor="start-date">Start date</label>
+                <input
+                  id="start-date"
+                  type="date"
+                  value={startDate}
+                  max={endDate}
+                  onChange={e => setStartDate(e.target.value)}
+                  className="input input-bordered w-44"
+                  placeholder="Start date"
+                />
+              </div>
+              <span className="mx-2 mt-6 sm:mt-8 text-gray-400 font-semibold">to</span>
+              <div className="flex flex-col items-start">
+                <label className="mb-1 text-xs text-gray-500 font-semibold" htmlFor="end-date">End date</label>
+                <input
+                  id="end-date"
+                  type="date"
+                  value={endDate}
+                  min={startDate}
+                  onChange={e => setEndDate(e.target.value)}
+                  className="input input-bordered w-44"
+                  placeholder="End date"
+                />
+              </div>
             </div>
             {loading ? (
               <div className="p-4 ">Loading jobs...</div>
@@ -141,193 +242,84 @@ export default function JobsList() {
               <div className="p-4">No jobs found</div>
             ) : (
               <>
-                <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
-                  <table className="table table-zebra table-bordered table-auto divide-y divide-base-300">
-                    <thead className="divide-y divide-base-300">
-                      <tr>
-                        <th className="border border-base-300 whitespace-nowrap px-8 py-4 bg-base-200 text-lg font-semibold text-gray-700">
-                          Detail
-                        </th>
-                        {columns.map(key => (
-                          <th
-                            key={key}
-                            className="border border-base-300 whitespace-nowrap px-8 py-4 bg-base-200 text-lg font-semibold text-gray-700"
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {pagedJobs.map((job: any, idx) => (
+                    <div key={job.PNR} className="relative bg-white border border-base-300 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col">
+                      {/* Show number of jobs in this PNR at top-left */}
+                      <div className="absolute top-4 left-4 bg-blue-100 text-blue-700 font-bold rounded-full px-3 py-1 text-sm shadow z-10">
+                        {job.all?.length ?? 1}
+                      </div>
+                      {/* Logo button for detail */}
+                      <button
+                        className="absolute top-4 right-4 btn btn-circle btn-outline"
+                        title="Show all details"
+                        onClick={() => setDetailJobs(job.all)}
+                        style={{ zIndex: 2 }}
+                      >
+                        {/* Any logo/icon, here is a simple info icon */}
+                        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <circle cx="12" cy="12" r="10" stroke="blue" strokeWidth="2" fill="white"/>
+                          <text x="12" y="17" textAnchor="middle" fontSize="14" fill="blue" fontWeight="bold">i</text>
+                        </svg>
+                      </button>
+                      <div className="p-6 flex-1 flex flex-col">
+                        <h2 className="text-xl font-bold mb-2 text-primary">PNR: {job.PNR}</h2>
+                        <div className="text-sm text-gray-600 space-y-1 mb-4">
+                          {/* Combine Pickup + PickupDate */}
+                          {renderPlaceDate(job.Pickup, job.PickupDate, 'Pickup')}
+                          {/* Combine Dropoff + DropoffDate */}
+                          {renderPlaceDate(job.Dropoff, job.DropoffDate, 'Dropoff')}
+                          {renderField('Pax', job.Pax)}
+                          {renderField('Source', job.Source)}
+                        </div>
+                        <div className="flex gap-3 mt-auto">
+                          <button
+                            className="btn btn-success flex-1 text-base font-bold py-2 rounded-full shadow"
+                            onClick={() => alert(`Accepted job PNR ${job.PNR}`)}
                           >
-                            {key}
-                          </th>
-                        ))}
-                        <th className="border border-base-300 whitespace-nowrap px-8 py-4 bg-base-200 text-lg font-semibold text-gray-700">
-                          Action
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-base-300">
-                      {pagedJobs.map(job => (
-                        <tr key={job.key} className="divide-x divide-base-300">
-                          {/* Detail button */}
-                          <td className="border border-base-300 whitespace-nowrap px-8 py-4 text-base">
-                            <button
-                              className="btn btn-sm font-bold flex items-center gap-2 bg-gradient-to-r from-blue-400 to-blue-600 text-white border-2 border-blue-600 shadow-lg rounded-lg px-4 py-2 hover:from-blue-500 hover:to-blue-700 hover:scale-105 transition"
-                              onClick={() => setDetailJob(job)}
-                              style={{ boxShadow: '0 4px 16px 0 rgba(59,130,246,0.15)' }}
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              Detail
-                            </button>
-                          </td>
-                          {columns.map(key =>
-                            key === 'Photo' ? (
-                              <td
-                                key={key}
-                                className="border border-base-300 whitespace-nowrap px-8 py-4 text-base"
-                              >
-                                {job.Photo ? (
-                                  <img
-                                    src={job.Photo}
-                                    alt="Job Photo"
-                                    className="w-16 h-16 object-cover rounded"
-                                  />
-                                ) : (
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={e =>
-                                      handlePhotoChange(
-                                        job.key,
-                                        e.target.files ? e.target.files[0] : null
-                                      )
-                                    }
-                                  />
-                                )}
-                              </td>
-                            ) : key === 'Remark' ? (
-                              <td
-                                key={key}
-                                className="border border-base-300 whitespace-nowrap px-8 py-4 text-base"
-                              >
-                                <div className="flex gap-2 items-center">
-                                  <input
-                                    type="text"
-                                    value={job.Remark ?? ''}
-                                    onChange={e =>
-                                      handleRemarkChange(job.key, e.target.value)
-                                    }
-                                    className="input input-bordered"
-                                    placeholder="Remark"
-                                  />
-                                  <button
-                                    className="btn btn-sm btn-primary"
-                                    onClick={() => sendRemark(job.key, job.Remark ?? '')}
-                                  >
-                                    Send
-                                  </button>
-                                </div>
-                              </td>
-                            ) : key === 'NotAvailable' ? (
-                              <td
-                                key={key}
-                                className="border border-base-300 whitespace-nowrap px-8 py-4 text-base"
-                              >
-                                {typeof job.NotAvailable === 'object'
-                                  ? JSON.stringify(job.NotAvailable)
-                                  : String(job.NotAvailable ?? '')}
-                              </td>
-                            ) : (
-                              <td
-                                key={key}
-                                className="border border-base-300 whitespace-nowrap px-8 py-4 text-base"
-                              >
-                                {String(job[key as keyof Job] ?? '')}
-                              </td>
-                            )
-                          )}
-                          <td className="border border-base-300 whitespace-nowrap px-8 py-4 text-base">
-                            <div className="flex gap-2">
-                              <button
-                                className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition"
-                                onClick={() => alert(`Accepted job #${job.key}`)}
-                              >
-                                Accept
-                              </button>
-                              <button
-                                className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
-                                onClick={() => alert(`Rejected job #${job.key}`)}
-                              >
-                                Reject
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                            Accept
+                          </button>
+                          <button
+                            className="btn btn-error flex-1 text-base font-bold py-2 rounded-full shadow"
+                            onClick={() => alert(`Rejected job PNR ${job.PNR}`)}
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
                 {/* Pagination */}
-                <div className="flex justify-center items-center gap-4 mt-4">
+                <div className="flex justify-center mt-6 gap-2">
                   <button
-                    className="btn btn-sm"
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    className="btn btn-outline btn-sm"
                     disabled={page === 1}
+                    onClick={() => setPage(page - 1)}
                   >
-                    Previous
+                    Prev
                   </button>
-                  <span>
-                    Page {page} of {totalPages}
-                  </span>
+                  <span className="px-2 py-1">{page} / {totalPages}</span>
                   <button
-                    className="btn btn-sm"
-                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    className="btn btn-outline btn-sm"
                     disabled={page === totalPages}
+                    onClick={() => setPage(page + 1)}
                   >
                     Next
                   </button>
                 </div>
-                {/* Detail Modal */}
-                {detailJob && (
+                {/* All Details Modal */}
+                {detailJobs && (
                   <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl shadow-2xl border-4 border-blue-400 p-8 max-w-lg w-full relative animate-fade-in">
+                    <div className="bg-white rounded-xl shadow-2xl border-4 border-blue-400 p-8 max-w-2xl w-full relative animate-fade-in">
                       <button
                         className="absolute top-2 right-2 btn btn-sm btn-error"
-                        onClick={closeDetail}
+                        onClick={() => setDetailJobs(null)}
                       >
                         ✕
                       </button>
-                      <h2 className="text-2xl font-bold mb-6 text-blue-700 flex items-center gap-2">
-                        <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                        Job Detail
-                      </h2>
-                      <div className="space-y-3 mb-6 border-2 border-blue-200 rounded-lg bg-blue-50 p-4 shadow-inner">
-                        {Object.entries(detailJob).map(([k, v]) => (
-                          <div key={k} className="flex items-center">
-                            <span className="font-semibold w-40 text-gray-700">{k}:</span>
-                            <span className="break-all text-gray-900 bg-white rounded px-2 py-1 border border-blue-100 ml-2">
-                              {typeof v === 'object' ? JSON.stringify(v) : String(v)}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="flex gap-4 justify-end">
-                        <button
-                          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
-                          onClick={() => {
-                            alert(`Accepted job #${detailJob.key}`)
-                            closeDetail()
-                          }}
-                        >
-                          Accept
-                        </button>
-                        <button
-                          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
-                          onClick={() => {
-                            alert(`Rejected job #${detailJob.key}`)
-                            closeDetail()
-                          }}
-                        >
-                          Reject
-                        </button>
-                      </div>
+                      <h2 className="text-xl font-bold mb-4">All Job Details</h2>
+                      {renderAllDetails(detailJobs)}
                     </div>
                   </div>
                 )}
