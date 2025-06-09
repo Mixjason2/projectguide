@@ -18,57 +18,46 @@ type Job = {
   IsConfirmed: boolean
   IsCancel: boolean
   NotAvailable: any
-  Photo?: string // Add Photo field (URL or file name)
-  Remark?: string // Add Remark field
+  Photo?: string
+  Remark?: string
 }
 
 export default function JobsList() {
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [detailJob, setDetailJob] = useState<Job | null>(null)
 
-  // Set your default start and end date here (YYYY-MM-DD)
-  const defaultStart = '2025-01-01'   // <-- change as needed
-  const defaultEnd = '2025-01-31'     // <-- change as needed
-
-  const [startDate, setStartDate] = useState<string>(defaultStart)
-  const [endDate, setEndDate] = useState<string>(defaultEnd)
-
-  const router = useRouter()
-
+  // เพิ่ม: mock ข้อมูล 10 รายการ ถ้า API จริงยังไม่มี
   useEffect(() => {
     setLoading(true)
-    fetch('/api/guide/job', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        token:
-          'AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tquHz0YvTfZ//YHCHoAonEi4',
-        startdate: '2025-01-01',
-        enddate: '2025-01-31',
-      }),
-    })
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch')
-        return res.json()
-      })
-      .then(data => {
-        // Add Remark field to each job if not present
-        setJobs(
-          data.map((job: Job) => ({
-            ...job,
-            Remark: job.Remark ?? '',
-          }))
-        )
-        setLoading(false)
-      })
-      .catch(err => {
-        setError(err.message)
-        setLoading(false)
-      })
+    // ลองเปลี่ยน fetch เป็น mock ข้อมูล (ลบ fetch ออกถ้าต้องการใช้ mock)
+    const mockJobs: Job[] = Array.from({ length: 10 }).map((_, i) => ({
+      key: i + 1,
+      PNR: `PNR${i + 1}`,
+      PNRDate: `2025-01-${String(i + 1).padStart(2, '0')}`,
+      BSL_ID: `BSL${i + 1}`,
+      PickupDate: `2025-01-${String(i + 1).padStart(2, '0')}`,
+      Pickup: `Pickup${i + 1}`,
+      DropoffDate: `2025-01-${String(i + 2).padStart(2, '0')}`,
+      Dropoff: `Dropoff${i + 1}`,
+      Source: `Source${i + 1}`,
+      Pax: Math.floor(Math.random() * 5) + 1,
+      IsConfirmed: i % 2 === 0,
+      IsCancel: i % 3 === 0,
+      NotAvailable: null,
+      Photo: "",
+      Remark: ""
+    }))
+    setTimeout(() => {
+      setJobs(mockJobs)
+      setLoading(false)
+    }, 500)
   }, [])
 
-  // Move "Remark" to the last column, "Photo" before it
+  const [startDate, setStartDate] = useState<string>('2025-01-01')
+  const [endDate, setEndDate] = useState<string>('2025-01-31')
+
   const columns = jobs.length > 0
     ? [
         ...Object.keys(jobs[0]).filter(k => k !== 'Photo' && k !== 'Remark'),
@@ -77,7 +66,6 @@ export default function JobsList() {
       ]
     : ['Photo', 'Remark']
 
-  // Filter jobs by date range (PickupDate or DropoffDate within range)
   const filteredJobs = jobs.filter(job => {
     const pickup = job.PickupDate
     const dropoff = job.DropoffDate
@@ -92,7 +80,6 @@ export default function JobsList() {
     )
   })
 
-  // Handle photo upload (optional, for demo only, not persistent)
   const handlePhotoChange = (jobKey: number, file: File | null) => {
     if (!file) return
     setJobs(prev =>
@@ -102,7 +89,6 @@ export default function JobsList() {
     )
   }
 
-  // Handle remark change
   const handleRemarkChange = (jobKey: number, remark: string) => {
     setJobs(prev =>
       prev.map(job =>
@@ -111,21 +97,11 @@ export default function JobsList() {
     )
   }
 
-  // Example function to send remark to API server
   const sendRemark = (jobKey: number, remark: string) => {
-    fetch('/api/guide/remark', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jobKey, remark }),
-    })
-      .then(res => res.json())
-      .then(data => {
-        alert('Remark sent!')
-      })
-      .catch(err => {
-        alert('Failed to send remark')
-      })
+    alert(`ส่ง Remark "${remark}" สำหรับ job #${jobKey} (mock)`)
   }
+
+  const closeDetail = () => setDetailJob(null)
 
   return (
     <CssgGuide>
@@ -163,6 +139,9 @@ export default function JobsList() {
                 <table className="table table-zebra table-bordered table-auto divide-y divide-base-300">
                   <thead className="divide-y divide-base-300">
                     <tr>
+                      <th className="border border-base-300 whitespace-nowrap px-8 py-4 bg-base-200 text-lg font-semibold text-gray-700">
+                        Detail
+                      </th>
                       {columns.map(key => (
                         <th
                           key={key}
@@ -171,14 +150,19 @@ export default function JobsList() {
                           {key}
                         </th>
                       ))}
-                      <th className="border border-base-300 whitespace-nowrap px-8 py-4 bg-base-200 text-lg font-semibold text-gray-700">
-                        Action
-                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-base-300">
                     {filteredJobs.map(job => (
                       <tr key={job.key} className="divide-x divide-base-300">
+                        <td className="border border-base-300 whitespace-nowrap px-8 py-4 text-base">
+                          <button
+                            className="btn btn-sm btn-info"
+                            onClick={() => setDetailJob(job)}
+                          >
+                            Detail
+                          </button>
+                        </td>
                         {columns.map(key =>
                           key === 'Photo' ? (
                             <td
@@ -245,26 +229,54 @@ export default function JobsList() {
                             </td>
                           )
                         )}
-                        <td className="border border-base-300 whitespace-nowrap px-8 py-4 text-base">
-                          <div className="flex gap-2">
-                            <button
-                              className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition"
-                              onClick={() => alert(`Accepted job #${job.key}`)}
-                            >
-                              Accept
-                            </button>
-                            <button
-                              className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
-                              onClick={() => alert(`Rejected job #${job.key}`)}
-                            >
-                              Reject
-                            </button>
-                          </div>
-                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+                {/* Detail Modal */}
+                {detailJob && (
+                  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-lg p-6 max-w-lg w-full relative">
+                      <button
+                        className="absolute top-2 right-2 btn btn-sm btn-error"
+                        onClick={closeDetail}
+                      >
+                        ✕
+                      </button>
+                      <h2 className="text-xl font-bold mb-4">Job Detail</h2>
+                      <div className="space-y-2 mb-4">
+                        {Object.entries(detailJob).map(([k, v]) => (
+                          <div key={k} className="flex">
+                            <span className="font-semibold w-40">{k}:</span>
+                            <span className="break-all">
+                              {typeof v === 'object' ? JSON.stringify(v) : String(v)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-4 justify-end">
+                        <button
+                          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
+                          onClick={() => {
+                            alert(`Accepted job #${detailJob.key}`)
+                            closeDetail()
+                          }}
+                        >
+                          Accept
+                        </button>
+                        <button
+                          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
+                          onClick={() => {
+                            alert(`Rejected job #${detailJob.key}`)
+                            closeDetail()
+                          }}
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
