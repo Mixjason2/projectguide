@@ -28,10 +28,9 @@ export default function JobsList() {
   const [error, setError] = useState<string | null>(null)
   const [detailJob, setDetailJob] = useState<Job | null>(null)
 
-  // เพิ่ม: mock ข้อมูล 10 รายการ ถ้า API จริงยังไม่มี
   useEffect(() => {
     setLoading(true)
-    // ลองเปลี่ยน fetch เป็น mock ข้อมูล (ลบ fetch ออกถ้าต้องการใช้ mock)
+    // Mock ข้อมูล 10 รายการ
     const mockJobs: Job[] = Array.from({ length: 10 }).map((_, i) => ({
       key: i + 1,
       PNR: `PNR${i + 1}`,
@@ -155,6 +154,15 @@ export default function JobsList() {
                   <tbody className="divide-y divide-base-300">
                     {filteredJobs.map(job => (
                       <tr key={job.key} className="divide-x divide-base-300">
+                        {/* Detail button */}
+                        <td className="border border-base-300 whitespace-nowrap px-8 py-4 text-base">
+                          <button
+                            className="btn btn-sm btn-info"
+                            onClick={() => setDetailJob(job)}
+                          >
+                            Detail
+                          </button>
+                        </td>
                         {columns.map(key =>
                           key === 'Photo' ? (
                             <td
