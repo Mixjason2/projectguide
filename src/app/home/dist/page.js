@@ -108,7 +108,7 @@ function JobsList() {
                             React.createElement("div", { className: "flex flex-col items-start w-full" },
                                 React.createElement("label", { className: "mb-1 text-xs text-gray-500 font-semibold", htmlFor: "end-date" }, "End date"),
                                 React.createElement("input", { id: "end-date", type: "date", value: endDate, min: startDate, onChange: function (e) { return setEndDate(e.target.value); }, className: "input input-bordered w-full", placeholder: "End date" }))),
-                        React.createElement("span", { className: "mt-2 text-xs text-gray-400" }, "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E0A\u0E48\u0E27\u0E07\u0E27\u0E31\u0E19\u0E17\u0E35\u0E48\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E01\u0E23\u0E2D\u0E07\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E07\u0E32\u0E19\u0E17\u0E35\u0E48\u0E15\u0E49\u0E2D\u0E07\u0E01\u0E32\u0E23")),
+                        React.createElement("span", { className: "mt-2 text-xs text-gray-400" }, "Please select a date range to filter the desired tasks.")),
                     loading ? (React.createElement("div", { className: "p-4 " }, "Loading jobs...")) : error ? (React.createElement("div", { className: "p-4 text-red-600" },
                         "Error: ",
                         error)) : !jobs.length ? (React.createElement("div", { className: "p-4" }, "No jobs found")) : (React.createElement(React.Fragment, null,

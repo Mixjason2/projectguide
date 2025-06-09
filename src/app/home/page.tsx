@@ -147,7 +147,7 @@ export default function JobsList() {
                 </div>
               </div>
               <span className="mt-2 text-xs text-gray-400">
-                เลือกช่วงวันที่เพื่อกรองข้อมูลงานที่ต้องการ
+                Please select a date range to filter the desired tasks.
               </span>
             </div>
             {loading ? (
