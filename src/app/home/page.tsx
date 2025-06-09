@@ -33,6 +33,7 @@ export default function JobsList() {
 
   const [startDate, setStartDate] = useState<string>(defaultStart)
   const [endDate, setEndDate] = useState<string>(defaultEnd)
+  const [page, setPage] = useState(1)
 
   const router = useRouter()
 
@@ -91,6 +92,11 @@ export default function JobsList() {
       (dropoff >= startDate && dropoff <= endDate)
     )
   })
+
+  // Pagination
+  const pageSize = 6
+  const totalPages = Math.ceil(filteredJobs.length / pageSize)
+  const pagedJobs = filteredJobs.slice((page - 1) * pageSize, page * pageSize)
 
   // Handle photo upload (optional, for demo only, not persistent)
   const handlePhotoChange = (jobKey: number, file: File | null) => {
@@ -159,112 +165,58 @@ export default function JobsList() {
             ) : !jobs.length ? (
               <div className="p-4">No jobs found</div>
             ) : (
-              <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
-                <table className="table table-zebra table-bordered table-auto divide-y divide-base-300">
-                  <thead className="divide-y divide-base-300">
-                    <tr>
-                      {columns.map(key => (
-                        <th
-                          key={key}
-                          className="border border-base-300 whitespace-nowrap px-8 py-4 bg-base-200 text-lg font-semibold text-gray-700"
-                        >
-                          {key}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-base-300">
-                    {filteredJobs.map(job => (
-                      <tr key={job.key} className="divide-x divide-base-300">
-
-                        {columns.map(key =>
-                          key === 'Photo' ? (
-                            <td
-                              key={key}
-                              className="border border-base-300 whitespace-nowrap px-8 py-4 text-base"
-                            >
-                              {job.Photo ? (
-                                <img
-                                  src={job.Photo}
-                                  alt="Job Photo"
-                                  className="w-16 h-16 object-cover rounded"
-                                />
-                              ) : (
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={e =>
-                                    handlePhotoChange(
-                                      job.key,
-                                      e.target.files ? e.target.files[0] : null
-                                    )
-                                  }
-                                />
-                              )}
-                            </td>
-                          ) : key === 'Remark' ? (
-                            <td
-                              key={key}
-                              className="border border-base-300 whitespace-nowrap px-8 py-4 text-base"
-                            >
-                              <div className="flex gap-2 items-center">
-                                <input
-                                  type="text"
-                                  value={job.Remark ?? ''}
-                                  onChange={e =>
-                                    handleRemarkChange(job.key, e.target.value)
-                                  }
-                                  className="input input-bordered"
-                                  placeholder="Remark"
-                                />
-                                <button
-                                  className="btn btn-sm btn-primary"
-                                  onClick={() => sendRemark(job.key, job.Remark ?? '')}
-                                >
-                                  Send
-                                </button>
-                              </div>
-                            </td>
-                          ) : key === 'NotAvailable' ? (
-                            <td
-                              key={key}
-                              className="border border-base-300 whitespace-nowrap px-8 py-4 text-base"
-                            >
-                              {typeof job.NotAvailable === 'object'
-                                ? JSON.stringify(job.NotAvailable)
-                                : String(job.NotAvailable ?? '')}
-                            </td>
-                          ) : (
-                            <td
-                              key={key}
-                              className="border border-base-300 whitespace-nowrap px-8 py-4 text-base"
-                            >
-                              {String(job[key as keyof Job] ?? '')}
-                            </td>
-                          )
-                        )}
-                        <td className="border border-base-300 whitespace-nowrap px-8 py-4 text-base">
-                          <div className="flex gap-2">
-                            <button
-                              className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition"
-                              onClick={() => alert(`Accepted job #${job.key}`)}
-                            >
-                              Accept
-                            </button>
-                            <button
-                              className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition"
-                              onClick={() => alert(`Rejected job #${job.key}`)}
-                            >
-                              Reject
-                            </button>
-                          </div>
-                        </td>
-
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {pagedJobs.map(job => (
+                    <div key={job.key} className="card bg-base-200 shadow-md border border-base-300">
+                      <div className="card-body">
+                        <h2 className="card-title">Job #{job.key}</h2>
+                        <div className="text-sm">
+                          <div><b>PNR:</b> {job.PNR}</div>
+                          <div><b>Pickup:</b> {job.Pickup} ({job.PickupDate})</div>
+                          <div><b>Dropoff:</b> {job.Dropoff} ({job.DropoffDate})</div>
+                          <div><b>Pax:</b> {job.Pax}</div>
+                          <div><b>Confirmed:</b> {job.IsConfirmed ? "Yes" : "No"}</div>
+                          <div><b>Cancel:</b> {job.IsCancel ? "Yes" : "No"}</div>
+                          {/* เพิ่ม field อื่นๆ ตามต้องการ */}
+                        </div>
+                        <div className="flex gap-2 mt-4">
+                          <button
+                            className="btn btn-success btn-sm"
+                            onClick={() => alert(`Accepted job #${job.key}`)}
+                          >
+                            Accept
+                          </button>
+                          <button
+                            className="btn btn-error btn-sm"
+                            onClick={() => alert(`Rejected job #${job.key}`)}
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {/* Pagination */}
+                <div className="flex justify-center mt-6 gap-2">
+                  <button
+                    className="btn btn-outline btn-sm"
+                    disabled={page === 1}
+                    onClick={() => setPage(page - 1)}
+                  >
+                    Prev
+                  </button>
+                  <span className="px-2 py-1">{page} / {totalPages}</span>
+                  <button
+                    className="btn btn-outline btn-sm"
+                    disabled={page === totalPages}
+                    onClick={() => setPage(page + 1)}
+                  >
+                    Next
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>
