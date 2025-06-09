@@ -29,6 +29,7 @@ export default function JobsList() {
   const [detailJob, setDetailJob] = useState<Job | null>(null)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   // Set your default start and end date here (YYYY-MM-DD)
   const defaultStart = '2025-01-01'   // <-- change as needed
   const defaultEnd = '2025-01-31'     // <-- change as needed
@@ -42,9 +43,11 @@ export default function JobsList() {
 =======
   // เพิ่ม: mock ข้อมูล 10 รายการ ถ้า API จริงยังไม่มี
 >>>>>>> 15e2377c3894cc6eaac4b774e66972ba080ebd38
+=======
+>>>>>>> d03e2452a8b85048074bbda95d3b9cabb9b1e9aa
   useEffect(() => {
     setLoading(true)
-    // ลองเปลี่ยน fetch เป็น mock ข้อมูล (ลบ fetch ออกถ้าต้องการใช้ mock)
+    // Mock ข้อมูล 10 รายการ
     const mockJobs: Job[] = Array.from({ length: 10 }).map((_, i) => ({
       key: i + 1,
       PNR: `PNR${i + 1}`,
@@ -231,6 +234,15 @@ export default function JobsList() {
                   <tbody className="divide-y divide-base-300">
                     {filteredJobs.map(job => (
                       <tr key={job.key} className="divide-x divide-base-300">
+                        {/* Detail button */}
+                        <td className="border border-base-300 whitespace-nowrap px-8 py-4 text-base">
+                          <button
+                            className="btn btn-sm btn-info"
+                            onClick={() => setDetailJob(job)}
+                          >
+                            Detail
+                          </button>
+                        </td>
                         {columns.map(key =>
                           key === 'Photo' ? (
                             <td
