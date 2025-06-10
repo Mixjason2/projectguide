@@ -146,7 +146,7 @@ export default function JobsList() {
     <div className="max-h-[60vh] overflow-auto">
       {jobs.map((job, idx) => (
         <div key={job.key} className="mb-4 border-b border-blue-200 pb-2 last:border-b-0 last:pb-0">
-          <div className="font-semibold text-blue-700 mb-1">PNR: {job.PNR}</div>
+          <div className="font-semibold text-blue-700 mb-1 underline underline-offset-4" >PNR: {job.PNR}</div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
             {/* Combine Pickup + PickupDate */}
             <div className="flex col-span-2">
@@ -200,18 +200,6 @@ export default function JobsList() {
           <span className="text-gray-500">Unique PNR:</span>
           <span className="font-bold text-blue-700">{mergedJobs.length}</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-gray-500">Page:</span>
-          <span className="font-bold text-blue-700">{page}</span>
-          <span className="text-gray-400">/</span>
-          <span className="font-bold text-blue-700">{totalPages}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-gray-500">Date:</span>
-          <span className="font-bold">{startDate}</span>
-          <span className="text-gray-400">-</span>
-          <span className="font-bold">{endDate}</span>
-        </div>
       </div>
     </div>
   )
@@ -222,7 +210,7 @@ export default function JobsList() {
         {/* Summary bar */}
         {summary}
         <div className="bg-base-100 rounded-xl shadow-xl border border-base-300 w-full max-w-7xl p-0">
-          <div className="p-4 w-full min-h-screen overflow-auto">
+          <div className="p-4 w-full /* min-h-screen */ overflow-auto">
             <h1 className="text-2xl font-bold mb-4">Jobs List</h1>
             {/* ปรับ UI ช่วงเลือกวันที่ */}
             <div className="mb-8 flex flex-col items-center">
@@ -290,7 +278,7 @@ export default function JobsList() {
                         </svg>
                       </button>
                       <div className="p-6 flex-1 flex flex-col">
-                        <h2 className="text-xl font-bold mb-2 text-primary">PNR: {job.PNR}</h2>
+                        <h2 className="text-xl font-bold mb-2 text-primary underline underline-offset-4">PNR: {job.PNR}</h2>
                         <div className="text-sm text-gray-600 space-y-1 mb-4">
                           {/* Combine Pickup + PickupDate */}
                           {renderPlaceDate(job.Pickup, job.PickupDate, 'Pickup')}
@@ -328,22 +316,24 @@ export default function JobsList() {
                   ))}
                 </div>
                 {/* Pagination */}
-                <div className="flex justify-center mt-6 gap-2">
-                  <button
-                    className="btn btn-outline btn-sm"
-                    disabled={page === 1}
-                    onClick={() => setPage(page - 1)}
-                  >
-                    Prev
-                  </button>
-                  <span className="px-2 py-1">{page} / {totalPages}</span>
-                  <button
-                    className="btn btn-outline btn-sm"
-                    disabled={page === totalPages}
-                    onClick={() => setPage(page + 1)}
-                  >
-                    Next
-                  </button>
+                <div className="w-full flex justify-center mt-6">
+                  <div className="inline-flex items-center gap-2 bg-base-100 border border-base-300 rounded-full shadow px-4 py-2">
+                    <button
+                      className="btn btn-outline btn-sm rounded-full min-w-[64px]"
+                      disabled={page === 1}
+                      onClick={() => setPage(page - 1)}
+                    >
+                      Prev
+                    </button>
+                    <span className="px-2 py-1 font-semibold text-base-content">{page} <span className="text-gray-400">/</span> {totalPages}</span>
+                    <button
+                      className="btn btn-outline btn-sm rounded-full min-w-[64px]"
+                      disabled={page === totalPages}
+                      onClick={() => setPage(page + 1)}
+                    >
+                      Next
+                    </button>
+                  </div>
                 </div>
                 {/* All Details Modal */}
                 {detailJobs && (
