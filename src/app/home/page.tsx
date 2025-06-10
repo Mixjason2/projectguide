@@ -79,7 +79,10 @@ export default function JobsList() {
         if (!res.ok) throw new Error(await res.text())
         return res.json()
       })
-      .then((data: Job[]) => setJobs(data))
+      .then((data: Job[]) => {
+        console.log("API jobs:", data)
+        setJobs(data)
+      })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }, [startDate, endDate])

@@ -45,7 +45,8 @@ export default function LoginPage() {
         body: JSON.stringify({
           Username: username,
           Password: password,
-          asmdb: "Assignment_TH"
+          asmdb: "Assignment_TH",
+          connection : "[AS-DTGTHA]"
         }),
       });
       const data = await res.json();
@@ -53,6 +54,9 @@ export default function LoginPage() {
       // Show result from API to user
       if (data.status) {
         setMessage("Login successful!");
+        // เก็บ token ลง localStorage
+        localStorage.setItem("token", data.token);
+
         if (rememberMe) {
           localStorage.setItem("savedUsername", username);
           localStorage.setItem("savedPassword", password);
