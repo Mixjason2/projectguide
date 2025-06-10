@@ -45,7 +45,8 @@ export default function LoginPage() {
         body: JSON.stringify({
           Username: username,
           Password: password,
-          asmdb: "Assignment_TH"
+          asmdb: "Assignment_TH",
+          connection: "[AS-DTGTHA]" // เพิ่มบรรทัดนี้
         }),
       });
       const data = await res.json();
