@@ -65,13 +65,14 @@ export default function JobsList() {
   useEffect(() => {
     setLoading(true)
     setError(null)
+    const token = localStorage.getItem("token") || ""
     fetch('/api/guide/job', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        token: 'AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tquHz0YvTfZ//YHCHoAonEi4',
-        startdate: startDate,
-        enddate: endDate,
+        token : 'AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==',
+        startdate: "2025-01-01",
+        enddate: "2025-01-31",
       }),
     })
       .then(async res => {
@@ -196,22 +197,7 @@ export default function JobsList() {
           <span className="text-gray-500">All Jobs:</span>
           <span className="font-bold text-blue-700">{jobs.length}</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-gray-500">Unique PNR:</span>
-          <span className="font-bold text-blue-700">{mergedJobs.length}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-gray-500">Page:</span>
-          <span className="font-bold text-blue-700">{page}</span>
-          <span className="text-gray-400">/</span>
-          <span className="font-bold text-blue-700">{totalPages}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-gray-500">Date:</span>
-          <span className="font-bold">{startDate}</span>
-          <span className="text-gray-400">-</span>
-          <span className="font-bold">{endDate}</span>
-        </div>
+        {/* Removed Page and Date info */}
       </div>
     </div>
   )
