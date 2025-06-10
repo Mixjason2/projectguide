@@ -192,21 +192,21 @@ function JobsList() {
             "PNR: ",
             job.PNR),
         React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm" },
-            React.createElement("div", { className: "flex" },
-                React.createElement("span", { className: "font-semibold w-28" }, "Pickup:"),
-                React.createElement("span", { className: "break-all ml-2" },
+            React.createElement("div", { className: "flex flex-wrap" },
+                React.createElement("span", { className: "font-semibold w-28 shrink-0" }, "Pickup:"),
+                React.createElement("span", { className: "break-words ml-2" },
                     job.Pickup,
                     job.Pickup && job.PickupDate ? ' - ' : '',
                     job.PickupDate ? formatDate(job.PickupDate) : '')),
-            React.createElement("div", { className: "flex" },
-                React.createElement("span", { className: "font-semibold w-28" }, "Dropoff:"),
-                React.createElement("span", { className: "break-all ml-2" },
+            React.createElement("div", { className: "flex flex-wrap" },
+                React.createElement("span", { className: "font-semibold w-28 shrink-0" }, "Dropoff:"),
+                React.createElement("span", { className: "break-words ml-2" },
                     job.Dropoff,
                     job.Dropoff && job.DropoffDate ? ' - ' : '',
                     job.DropoffDate ? formatDate(job.DropoffDate) : '')),
-            React.createElement("div", { className: "flex" },
-                React.createElement("span", { className: "font-semibold w-28" }, "PNRDate:"),
-                React.createElement("span", { className: "break-all ml-2" }, formatDate(job.PNRDate))),
+            React.createElement("div", { className: "flex flex-wrap" },
+                React.createElement("span", { className: "font-semibold w-28 shrink-0" }, "PNRDate:"),
+                React.createElement("span", { className: "break-words ml-2" }, formatDate(job.PNRDate))),
             Object.entries(job)
                 .filter(function (_a) {
                 var k = _a[0];
@@ -230,11 +230,11 @@ function JobsList() {
                     label = "ProductName";
                 if (k === "serviceTypeName")
                     label = "TypeName";
-                return (React.createElement("div", { key: k, className: "flex" },
-                    React.createElement("span", { className: "font-semibold w-28" },
+                return (React.createElement("div", { key: k, className: "flex flex-wrap" },
+                    React.createElement("span", { className: "font-semibold w-28 shrink-0" },
                         label,
                         ":"),
-                    React.createElement("span", { className: "break-all ml-2" }, typeof v === 'object' ? JSON.stringify(v) : String(v))));
+                    React.createElement("span", { className: "break-words ml-2" }, typeof v === 'object' ? JSON.stringify(v) : String(v))));
             })))); }))); };
     // ปรับ summary เป็นแถวแนวนอน สวยงาม และวางไว้บนหัว card Jobs List
     var summary = (React.createElement("div", { className: "w-full flex justify-end mb-6" },

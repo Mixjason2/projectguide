@@ -62,20 +62,33 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
                                     <Link href="/calendar" className="flex items-center p-4 text-lg font-semibold text-blue-900 rounded-xl hover:bg-blue-100 group">
                                         {/* Calendar icon */}
                                         <svg className="w-8 h-8 text-blue-500 transition duration-75 group-hover:text-blue-900"
-                                            aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 22 21">
-                                            <path d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z" />
-                                            <path d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z" />
+                                            aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <rect x="3" y="4" width="18" height="18" rx="3" fill="currentColor" fillOpacity="0.1"/>
+                                            <rect x="3" y="8" width="18" height="14" rx="2" fill="currentColor" />
+                                            <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" d="M16 2v4M8 2v4M3 8h18"/>
+                                            <rect x="7" y="12" width="2" height="2" rx="1" fill="white"/>
+                                            <rect x="11" y="12" width="2" height="2" rx="1" fill="white"/>
+                                            <rect x="15" y="12" width="2" height="2" rx="1" fill="white"/>
                                         </svg>
                                         <span className="ms-4">Calendar</span>
                                     </Link>
                                 </li>
                                 <li>
                                     <a href="/home" className="flex items-center p-4 text-lg font-semibold text-blue-900 rounded-xl hover:bg-blue-100 group">
-                                        {/* Assignment icon */}
-                                        <svg className="w-8 h-8 text-blue-500 transition duration-75 group-hover:text-blue-900"
-                                            aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 22 21">
-                                            <path d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z" />
-                                            <path d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z" />
+                                        {/* List/Checklist icon */}
+                                        <svg
+                                            className="w-8 h-8 text-blue-500 transition duration-75 group-hover:text-blue-900"
+                                            aria-hidden="true"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                            strokeWidth={2}
+                                        >
+                                            <rect x="4" y="4" width="16" height="16" rx="3" fill="#e0e7ff" />
+                                            <path stroke="#2563eb" strokeWidth="2" strokeLinecap="round" d="M8 9h8M8 13h5" />
+                                            <circle cx="7" cy="9" r="1" fill="#2563eb" />
+                                            <circle cx="7" cy="13" r="1" fill="#2563eb" />
                                         </svg>
                                         <span className="ms-4">Jobs List</span>
                                     </a>
@@ -85,9 +98,9 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
                                 <a href="/" className="flex items-center p-2 text-red-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group">
                                     {/* Log Out icon */}
                                     <svg className="w-5 h-5 text-red-500 transition duration-75 group-hover:text-red-700"
-                                        aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 22 21">
-                                        <path d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z" />
-                                        <path d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z" />
+                                        aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" />
                                     </svg>
                                     <span className="ms-3">Log Out</span>
                                 </a>

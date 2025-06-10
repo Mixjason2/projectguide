@@ -166,27 +166,19 @@ export default function JobsList() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
             {/* Pickup + PickupDate */}
-            <div className="flex">
-              <span className="font-semibold w-28">Pickup:</span>
-              <span className="break-all ml-2">
-                {job.Pickup}
-                {job.Pickup && job.PickupDate ? ' - ' : ''}
-                {job.PickupDate ? formatDate(job.PickupDate) : ''}
-              </span>
+            <div className="flex flex-wrap">
+              <span className="font-semibold w-28 shrink-0">Pickup:</span>
+              <span className="break-words ml-2">{job.Pickup}{job.Pickup && job.PickupDate ? ' - ' : ''}{job.PickupDate ? formatDate(job.PickupDate) : ''}</span>
             </div>
             {/* Dropoff + DropoffDate */}
-            <div className="flex">
-              <span className="font-semibold w-28">Dropoff:</span>
-              <span className="break-all ml-2">
-                {job.Dropoff}
-                {job.Dropoff && job.DropoffDate ? ' - ' : ''}
-                {job.DropoffDate ? formatDate(job.DropoffDate) : ''}
-              </span>
+            <div className="flex flex-wrap">
+              <span className="font-semibold w-28 shrink-0">Dropoff:</span>
+              <span className="break-words ml-2">{job.Dropoff}{job.Dropoff && job.DropoffDate ? ' - ' : ''}{job.DropoffDate ? formatDate(job.DropoffDate) : ''}</span>
             </div>
             {/* PNRDate */}
-            <div className="flex">
-              <span className="font-semibold w-28">PNRDate:</span>
-              <span className="break-all ml-2">{formatDate(job.PNRDate)}</span>
+            <div className="flex flex-wrap">
+              <span className="font-semibold w-28 shrink-0">PNRDate:</span>
+              <span className="break-words ml-2">{formatDate(job.PNRDate)}</span>
             </div>
             {Object.entries(job)
               .filter(([k]) =>
@@ -207,9 +199,9 @@ export default function JobsList() {
                 if (k === "serviceProductName") label = "ProductName";
                 if (k === "serviceTypeName") label = "TypeName";
                 return (
-                  <div key={k} className="flex">
-                    <span className="font-semibold w-28">{label}:</span>
-                    <span className="break-all ml-2">{typeof v === 'object' ? JSON.stringify(v) : String(v)}</span>
+                  <div key={k} className="flex flex-wrap">
+                    <span className="font-semibold w-28 shrink-0">{label}:</span>
+                    <span className="break-words ml-2">{typeof v === 'object' ? JSON.stringify(v) : String(v)}</span>
                   </div>
                 );
               })}
