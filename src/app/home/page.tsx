@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import CssgGuide from '../cssguide'
+import axios from "axios";
 
 type Job = {
   key: number
@@ -14,8 +15,8 @@ type Job = {
   Dropoff: string
   Source: string
   Pax: number
-  IsConfirmed: boolean
-  IsCancel: boolean
+  isConfirmed: boolean
+  isCancel: boolean
   NotAvailable: any
   Photo?: string
   Remark?: string
@@ -74,14 +75,12 @@ export default function JobsList() {
   const pageSize = 6
 
   useEffect(() => {
-    setLoading(true)
-    setError(null)
-    const token = localStorage.getItem("token") || ""
-    fetch('/api/guide/job', {
+    const token = localStorage.getItem("token") || "";
+    fetch('https://operation.dth.travel:7082/api/guide/job', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        token : "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
+        token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
         startdate: "2025-01-01",
         enddate: "2025-05-31",
       }),
@@ -96,7 +95,7 @@ export default function JobsList() {
       })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
-  }, [startDate, endDate])
+  }, []);
 
   const filteredJobs = jobs.filter(job => {
     const pickup = job.PickupDate
@@ -218,7 +217,7 @@ export default function JobsList() {
         <div className="flex items-center gap-2">
           <span className="inline-block w-3 h-3 rounded-full bg-orange-400"></span>
           <span className="text-gray-500">All Jobs:</span>
-          <span className="font-bold text-blue-700">{jobs.length}</span>
+          <span className="font-bold text-blue-700">{filteredJobs.length}</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-gray-500">Unique PNR:</span>
@@ -227,6 +226,25 @@ export default function JobsList() {
       </div>
     </div>
   )
+
+  async function fetchJobs(token: string, startDate: string, endDate: string) {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('https://operation.dth.travel:7082/api/guide/job', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, startdate: startDate, enddate: endDate }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data: Job[] = await res.json();
+      setJobs(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <CssgGuide>
@@ -295,9 +313,16 @@ export default function JobsList() {
                         onClick={() => setDetailJobs(job.all)}
                         style={{ zIndex: 2 }}
                       >
+<<<<<<< HEAD
                         <svg width="36" height="36" fill="none" viewBox="0 0 36 36">
                           <circle cx="18" cy="18" r="16" stroke="#60a5fa" strokeWidth="3" fill="#f1f5f9"/>
                           <text x="18" y="24" textAnchor="middle" fontSize="20" fill="#222" fontWeight="bold" fontFamily="Arial, sans-serif">i</text>
+=======
+                        {/* Any logo/icon, here is a simple info icon */}
+                        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <circle cx="12" cy="12" r="10" stroke="blue" strokeWidth="2" fill="white" />
+                          <text x="12" y="17" textAnchor="middle" fontSize="14" fill="blue" fontWeight="bold">i</text>
+>>>>>>> 1783589362ef2210715e753d0d269dba4aa709b7
                         </svg>
                       </button>
                       <div className="p-6 flex-1 flex flex-col">
@@ -311,19 +336,64 @@ export default function JobsList() {
                           {renderField('Source', job.Source)}
                         </div>
                         <div className="flex gap-3 mt-auto flex-wrap">
+                          {/* Accept Button */}
                           <button
                             className="btn btn-success flex-1 text-base font-bold py-2 rounded-full shadow"
-                            onClick={() => alert(`Accepted job PNR ${job.PNR}`)}
+                            onClick={async () => {
+                              try {
+                        
+                                const token = localStorage.getItem("token") || "";
+                                const response = await axios.put(
+                                  `http://10.2.4.200:7072/api/guide/job/${job.key}`,
+                                  {
+                                    token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
+                                    data: { isConfirmed: true }
+                                  }
+                                );
+                                console.log("Accept response:", response.data);
+                                const result = response.data;
+                                if (result.success) {
+                                  alert("Accept งานสำเร็จ");
+                                  // setJobs(jobs => jobs.map(j => j.key === job.key ? result : j));
+                                } else {
+                                  alert("Accept งานไม่สำเร็จ: " + (result?.error || "Unknown error"));
+                                }
+                              } catch (e: any) {
+                                console.error("Accept error:", e);
+                                alert("เกิดข้อผิดพลาด: " + e.message);
+                              }
+                            }}
                           >
                             Accept
                           </button>
+                          {/* Reject Button */}
                           <button
                             className="btn btn-error flex-1 text-base font-bold py-2 rounded-full shadow"
-                            onClick={() => alert(`Rejected job PNR ${job.PNR}`)}
+                            onClick={async () => {
+                              try {
+                                const token = localStorage.getItem("token") || "";
+                                const response = await axios.put(
+                                  `https://operation.dth.travel:7082/api/guide/job/${job.key}`,
+                                  {
+                                    token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
+                                    data: { isCancel: true }
+                                  }
+                                );
+                                const result = response.data;
+                                if (result.success) {
+                                  alert("Reject งานสำเร็จ");
+                                  // setJobs(jobs => jobs.map(j => j.key === job.key ? result : j));
+                                } else {
+                                  alert("Reject งานไม่สำเร็จ: " + (result?.error || "Unknown error"));
+                                }
+                              } catch (e: any) {
+                                alert("เกิดข้อผิดพลาด: " + e.message);
+                              }
+                            }}
                           >
-                            Reject
+                            Reject Job
                           </button>
-                          {/* ปุ่มเดียวสำหรับอัปโหลด (ขนาดเล็กลง) */}
+                          {/* ปุ่มสำหรับอัปโหลด */}
                           <button
                             className="btn btn-info btn-sm btn-circle"
                             onClick={() => setUploadJob(job)}
@@ -410,7 +480,7 @@ export default function JobsList() {
                             className="textarea textarea-bordered w-full"
                             rows={3}
                             placeholder="Enter remark..."
-                            // onChange={...}
+                          // onChange={...}
                           />
                         </div>
                         <div className="flex justify-end gap-2">
