@@ -83,7 +83,8 @@ function LoginPage() {
                             body: JSON.stringify({
                                 Username: username,
                                 Password: password,
-                                asmdb: "Assignment_TH"
+                                asmdb: "Assignment_TH",
+                                connection: "[AS-DTGTHA]"
                             })
                         })];
                 case 2:
@@ -92,7 +93,7 @@ function LoginPage() {
                 case 3:
                     data = _a.sent();
                     // Show result from API to user
-                    if (data.status) {
+                    if (data.status && data.token) {
                         setMessage("Login successful!");
                         if (rememberMe) {
                             localStorage.setItem("savedUsername", username);
@@ -102,6 +103,8 @@ function LoginPage() {
                             localStorage.removeItem("savedUsername");
                             localStorage.removeItem("savedPassword");
                         }
+                        // เก็บ token ไว้ใน localStorage หรือ sessionStorage ถ้าต้องการ
+                        localStorage.setItem("token", data.token);
                         router.push("/home");
                     }
                     else {

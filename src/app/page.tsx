@@ -45,12 +45,12 @@ export default function LoginPage() {
         body: JSON.stringify({
           Username: username,
           Password: password,
-          asmdb: "Assignment_TH",
-          connection: "[AS-DTGTHA]",
+          asmdb: "Assignment_TH"
         }),
       });
       const data = await res.json();
 
+      // Show result from API to user
       if (data.status) {
         setMessage("Login successful!");
         if (rememberMe) {
@@ -60,8 +60,6 @@ export default function LoginPage() {
           localStorage.removeItem("savedUsername");
           localStorage.removeItem("savedPassword");
         }
-        // Save token to localStorage or cookie if needed
-        localStorage.setItem("token", data.token);
         router.push("/home");
       } else {
         setMessage("Incorrect username or password.");
