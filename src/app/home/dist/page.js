@@ -82,14 +82,23 @@ function mergeJobsByPNR(jobs) {
         return (__assign(__assign({}, data.merged), { PNR: pnr, all: data.all }));
     });
 }
+function getToday() {
+    var d = new Date();
+    return d.toISOString().slice(0, 10);
+}
+function getEndOfMonth() {
+    var d = new Date();
+    d.setMonth(d.getMonth() + 1, 0); // set to last day of this month
+    return d.toISOString().slice(0, 10);
+}
 function JobsList() {
     var _this = this;
     var _a = react_1.useState([]), jobs = _a[0], setJobs = _a[1];
     var _b = react_1.useState(false), loading = _b[0], setLoading = _b[1];
     var _c = react_1.useState(null), error = _c[0], setError = _c[1];
     var _d = react_1.useState(null), detailJobs = _d[0], setDetailJobs = _d[1];
-    var _e = react_1.useState('2025-01-01'), startDate = _e[0], setStartDate = _e[1];
-    var _f = react_1.useState('2025-01-31'), endDate = _f[0], setEndDate = _f[1];
+    var _e = react_1.useState(getToday()), startDate = _e[0], setStartDate = _e[1];
+    var _f = react_1.useState(getEndOfMonth()), endDate = _f[0], setEndDate = _f[1];
     var _g = react_1.useState(1), page = _g[0], setPage = _g[1];
     var _h = react_1.useState(null), uploadJob = _h[0], setUploadJob = _h[1];
     var pageSize = 6;
@@ -101,9 +110,9 @@ function JobsList() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                token: 'AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==',
+                token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
                 startdate: "2025-01-01",
-                enddate: "2025-01-31"
+                enddate: "2025-05-31"
             })
         })
             .then(function (res) { return __awaiter(_this, void 0, void 0, function () {
@@ -119,7 +128,10 @@ function JobsList() {
                 }
             });
         }); })
-            .then(function (data) { return setJobs(data); })["catch"](function (err) { return setError(err.message); })["finally"](function () { return setLoading(false); });
+            .then(function (data) {
+            console.log("API jobs:", data);
+            setJobs(data);
+        })["catch"](function (err) { return setError(err.message); })["finally"](function () { return setLoading(false); });
     }, [startDate, endDate]);
     var filteredJobs = jobs.filter(function (job) {
         var pickup = job.PickupDate;
@@ -179,20 +191,20 @@ function JobsList() {
         React.createElement("div", { className: "font-semibold text-blue-700 mb-1 underline underline-offset-4" },
             "PNR: ",
             job.PNR),
-        React.createElement("div", { className: "grid grid-cols-2 gap-x-4 gap-y-1 text-sm" },
-            React.createElement("div", { className: "flex col-span-2" },
+        React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm" },
+            React.createElement("div", { className: "flex" },
                 React.createElement("span", { className: "font-semibold w-28" }, "Pickup:"),
                 React.createElement("span", { className: "break-all ml-2" },
                     job.Pickup,
                     job.Pickup && job.PickupDate ? ' - ' : '',
                     job.PickupDate ? formatDate(job.PickupDate) : '')),
-            React.createElement("div", { className: "flex col-span-2" },
+            React.createElement("div", { className: "flex" },
                 React.createElement("span", { className: "font-semibold w-28" }, "Dropoff:"),
                 React.createElement("span", { className: "break-all ml-2" },
                     job.Dropoff,
                     job.Dropoff && job.DropoffDate ? ' - ' : '',
                     job.DropoffDate ? formatDate(job.DropoffDate) : '')),
-            React.createElement("div", { className: "flex col-span-2" },
+            React.createElement("div", { className: "flex" },
                 React.createElement("span", { className: "font-semibold w-28" }, "PNRDate:"),
                 React.createElement("span", { className: "break-all ml-2" }, formatDate(job.PNRDate))),
             Object.entries(job)
@@ -210,9 +222,17 @@ function JobsList() {
             })
                 .map(function (_a) {
                 var k = _a[0], v = _a[1];
+                // ถ้า key คือ serviceSupplierCode_TP หรือ serviceProductName ให้ตัดคำว่า "service" ออก
+                var label = k;
+                if (k === "serviceSupplierCode_TP")
+                    label = "SupplierCode_TP";
+                if (k === "serviceProductName")
+                    label = "ProductName";
+                if (k === "serviceTypeName")
+                    label = "TypeName";
                 return (React.createElement("div", { key: k, className: "flex" },
                     React.createElement("span", { className: "font-semibold w-28" },
-                        k,
+                        label,
                         ":"),
                     React.createElement("span", { className: "break-all ml-2" }, typeof v === 'object' ? JSON.stringify(v) : String(v))));
             })))); }))); };
@@ -250,9 +270,9 @@ function JobsList() {
                             return (React.createElement("div", { key: job.PNR, className: "relative bg-white border border-base-300 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col" },
                                 React.createElement("div", { className: "absolute top-4 left-4 bg-blue-100 text-blue-700 font-bold rounded-full px-3 py-1 text-sm shadow z-10" }, (_b = (_a = job.all) === null || _a === void 0 ? void 0 : _a.length) !== null && _b !== void 0 ? _b : 1),
                                 React.createElement("button", { className: "absolute top-4 right-4 btn btn-circle btn-outline", title: "Show all details", onClick: function () { return setDetailJobs(job.all); }, style: { zIndex: 2 } },
-                                    React.createElement("svg", { width: "24", height: "24", fill: "none", stroke: "currentColor", strokeWidth: "2" },
-                                        React.createElement("circle", { cx: "12", cy: "12", r: "10", stroke: "blue", strokeWidth: "2", fill: "white" }),
-                                        React.createElement("text", { x: "12", y: "17", textAnchor: "middle", fontSize: "14", fill: "blue", fontWeight: "bold" }, "i"))),
+                                    React.createElement("svg", { width: "36", height: "36", fill: "none", viewBox: "0 0 36 36" },
+                                        React.createElement("circle", { cx: "18", cy: "18", r: "16", stroke: "#60a5fa", strokeWidth: "3", fill: "#f1f5f9" }),
+                                        React.createElement("text", { x: "18", y: "24", textAnchor: "middle", fontSize: "20", fill: "#222", fontWeight: "bold", fontFamily: "Arial, sans-serif" }, "i"))),
                                 React.createElement("div", { className: "p-6 flex-1 flex flex-col" },
                                     React.createElement("h2", { className: "text-xl font-bold mb-2 text-primary underline underline-offset-4" },
                                         "PNR: ",

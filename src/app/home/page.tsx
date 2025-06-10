@@ -161,20 +161,30 @@ export default function JobsList() {
     <div className="max-h-[60vh] overflow-auto">
       {jobs.map((job, idx) => (
         <div key={job.key} className="mb-4 border-b border-blue-200 pb-2 last:border-b-0 last:pb-0">
-          <div className="font-semibold text-blue-700 mb-1 underline underline-offset-4" >PNR: {job.PNR}</div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-            {/* Combine Pickup + PickupDate */}
-            <div className="flex col-span-2">
+          <div className="font-semibold text-blue-700 mb-1 underline underline-offset-4">
+            PNR: {job.PNR}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+            {/* Pickup + PickupDate */}
+            <div className="flex">
               <span className="font-semibold w-28">Pickup:</span>
-              <span className="break-all ml-2">{job.Pickup}{job.Pickup && job.PickupDate ? ' - ' : ''}{job.PickupDate ? formatDate(job.PickupDate) : ''}</span>
+              <span className="break-all ml-2">
+                {job.Pickup}
+                {job.Pickup && job.PickupDate ? ' - ' : ''}
+                {job.PickupDate ? formatDate(job.PickupDate) : ''}
+              </span>
             </div>
-            {/* Combine Dropoff + DropoffDate */}
-            <div className="flex col-span-2">
+            {/* Dropoff + DropoffDate */}
+            <div className="flex">
               <span className="font-semibold w-28">Dropoff:</span>
-              <span className="break-all ml-2">{job.Dropoff}{job.Dropoff && job.DropoffDate ? ' - ' : ''}{job.DropoffDate ? formatDate(job.DropoffDate) : ''}</span>
+              <span className="break-all ml-2">
+                {job.Dropoff}
+                {job.Dropoff && job.DropoffDate ? ' - ' : ''}
+                {job.DropoffDate ? formatDate(job.DropoffDate) : ''}
+              </span>
             </div>
-            {/* Show PNRDate with only date */}
-            <div className="flex col-span-2">
+            {/* PNRDate */}
+            <div className="flex">
               <span className="font-semibold w-28">PNRDate:</span>
               <span className="break-all ml-2">{formatDate(job.PNRDate)}</span>
             </div>
@@ -190,12 +200,19 @@ export default function JobsList() {
                 k !== "DropoffDate" &&
                 k !== "PNRDate"
               )
-              .map(([k, v]) => (
-                <div key={k} className="flex">
-                  <span className="font-semibold w-28">{k}:</span>
-                  <span className="break-all ml-2">{typeof v === 'object' ? JSON.stringify(v) : String(v)}</span>
-                </div>
-              ))}
+              .map(([k, v]) => {
+                // ถ้า key คือ serviceSupplierCode_TP หรือ serviceProductName ให้ตัดคำว่า "service" ออก
+                let label = k;
+                if (k === "serviceSupplierCode_TP") label = "SupplierCode_TP";
+                if (k === "serviceProductName") label = "ProductName";
+                if (k === "serviceTypeName") label = "TypeName";
+                return (
+                  <div key={k} className="flex">
+                    <span className="font-semibold w-28">{label}:</span>
+                    <span className="break-all ml-2">{typeof v === 'object' ? JSON.stringify(v) : String(v)}</span>
+                  </div>
+                );
+              })}
           </div>
         </div>
       ))}
@@ -286,10 +303,9 @@ export default function JobsList() {
                         onClick={() => setDetailJobs(job.all)}
                         style={{ zIndex: 2 }}
                       >
-                        {/* Any logo/icon, here is a simple info icon */}
-                        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <circle cx="12" cy="12" r="10" stroke="blue" strokeWidth="2" fill="white"/>
-                          <text x="12" y="17" textAnchor="middle" fontSize="14" fill="blue" fontWeight="bold">i</text>
+                        <svg width="36" height="36" fill="none" viewBox="0 0 36 36">
+                          <circle cx="18" cy="18" r="16" stroke="#60a5fa" strokeWidth="3" fill="#f1f5f9"/>
+                          <text x="18" y="24" textAnchor="middle" fontSize="20" fill="#222" fontWeight="bold" fontFamily="Arial, sans-serif">i</text>
                         </svg>
                       </button>
                       <div className="p-6 flex-1 flex flex-col">
