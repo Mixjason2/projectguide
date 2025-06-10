@@ -38,21 +38,20 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      // Call your own Next.js API route instead of direct external API
-      const res = await fetch("/api/guide/login", {
+      // Send data to API
+      const res = await fetch("https://operation.dth.travel:7082/api/guide/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           Username: username,
           Password: password,
-          asmdb: "Assignment_TH",
-          connection : "[AS-DTGTHA]"
+          asmdb: "Assignment_TH"
         }),
       });
       const data = await res.json();
 
       // Show result from API to user
-      if (data.status) {
+      if (data.status && data.token) {
         setMessage("Login successful!");
         // เก็บ token ลง localStorage
         localStorage.setItem("token", data.token);
@@ -64,6 +63,8 @@ export default function LoginPage() {
           localStorage.removeItem("savedUsername");
           localStorage.removeItem("savedPassword");
         }
+        // เก็บ token ไว้ใน localStorage หรือ sessionStorage ถ้าต้องการ
+        localStorage.setItem("token", data.token);
         router.push("/home");
       } else {
         setMessage("Incorrect username or password.");
