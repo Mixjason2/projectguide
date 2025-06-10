@@ -201,18 +201,6 @@ export default function JobsList() {
           <span className="text-gray-500">Unique PNR:</span>
           <span className="font-bold text-blue-700">{mergedJobs.length}</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-gray-500">Page:</span>
-          <span className="font-bold text-blue-700">{page}</span>
-          <span className="text-gray-400">/</span>
-          <span className="font-bold text-blue-700">{totalPages}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-gray-500">Date:</span>
-          <span className="font-bold">{startDate}</span>
-          <span className="text-gray-400">-</span>
-          <span className="font-bold">{endDate}</span>
-        </div>
       </div>
     </div>
   )
