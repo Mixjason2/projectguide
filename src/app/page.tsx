@@ -36,7 +36,7 @@ export default function LoginPage() {
       return;
     }
 
-    setLoading(true);
+    // setLoading(true);
     try {
       // Send data to API
       const res = await fetch("https://operation.dth.travel:7082/api/guide/login", {
@@ -73,7 +73,7 @@ export default function LoginPage() {
     } catch (err) {
       setMessage("Failed to connect to the server.");
     }
-    setLoading(false);
+    // setLoading(false);
   };
 
   return (
