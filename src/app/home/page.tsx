@@ -50,13 +50,24 @@ function mergeJobsByPNR(jobs: Job[]) {
   return Object.entries(map).map(([pnr, data]) => ({ ...data.merged, PNR: pnr, all: data.all }))
 }
 
+function getToday() {
+  const d = new Date();
+  return d.toISOString().slice(0, 10);
+}
+
+function getEndOfMonth() {
+  const d = new Date();
+  d.setMonth(d.getMonth() + 1, 0); // set to last day of this month
+  return d.toISOString().slice(0, 10);
+}
+
 export default function JobsList() {
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [detailJobs, setDetailJobs] = useState<Job[] | null>(null)
-  const [startDate, setStartDate] = useState<string>('2025-01-01')
-  const [endDate, setEndDate] = useState<string>('2025-01-31')
+  const [startDate, setStartDate] = useState<string>(getToday());
+  const [endDate, setEndDate] = useState<string>(getEndOfMonth());
   const [page, setPage] = useState(1)
   const [uploadJob, setUploadJob] = useState<Job | null>(null)
 
