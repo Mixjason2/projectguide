@@ -107,7 +107,10 @@ function CalendarExcel() {
                 react_1["default"].createElement(react_2["default"], { plugins: [daygrid_1["default"], timegrid_1["default"], list_1["default"], interaction_1["default"]], initialView: "dayGridMonth", events: events, height: "100%", contentHeight: "auto", aspectRatio: 1.7, headerToolbar: {
                         start: 'title',
                         center: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth',
-                        end: 'today prev,next'
+                        end: 'today prev,next',
+                        start: 'title today',
+                        center: '',
+                        end: 'prev,next dayGridMonth,timeGridWeek,timeGridDay,listMonth' // ฝั่งขวา
                     }, editable: false, selectable: true, expandRows: true })))));
 }
 exports["default"] = CalendarExcel;

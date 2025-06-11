@@ -1,3 +1,4 @@
+
 /* ถ้าต้องการเพิ่มความสวยให้ปฏิทิน */
 .fc {
   font-family: 'Inter', sans-serif;
@@ -55,3 +56,23 @@
   flex-wrap: wrap;
   gap: 0.5rem;
 }
+
+.fc .fc-header-toolbar {
+  display: flex;
+  flex-wrap: wrap;         /* ✅ บรรทัดใหม่ได้ */
+  gap: 0.5rem;
+}
+
+.fc .fc-toolbar-chunk {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* จัดให้ title เต็มบรรทัด */
+.fc .fc-toolbar-title {
+  font-size: 1.875rem;
+  font-weight: bold;
+  flex-basis: 100%;        /* ✅ ดัน title ไปเต็มบรรทัด */
+}
+

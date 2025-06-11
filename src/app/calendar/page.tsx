@@ -77,6 +77,9 @@ export default function CalendarExcel() {
               start: 'title', // title ชิดซ้าย
               center: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth', // ปุ่มมุมมองไว้กลาง
               end: 'today prev,next', // ปุ่ม today / เลื่อนเดือนไว้ขวา
+              start: 'title today',  // เอา title + today ไว้ฝั่งซ้าย
+              center: '',
+              end: 'prev,next dayGridMonth,timeGridWeek,timeGridDay,listMonth' // ฝั่งขวา
             }}
             editable={false}
             selectable={true}
