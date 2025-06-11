@@ -228,7 +228,6 @@ export default function JobsList() {
   )
 
   async function fetchJobs(token: string, startDate: string, endDate: string) {
-    setLoading(true);
     setError(null);
     try {
       const res = await fetch('https://operation.dth.travel:7082/api/guide/job', {
