@@ -92,8 +92,8 @@ export default function LoginPage() {
     boxShadow: "-8px 8px 20px rgba(149, 201, 65, 0.25)",
     zIndex: 10,
   }}
-/>
-
+>
+</div>
     <div className="card-body relative z-10">
       <h2 className="card-title justify-center mb-6 text-2xl font-bold text-gray-800">Login</h2>
       <form onSubmit={handleSubmit} className="space-y-5">
