@@ -20,9 +20,14 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
                     </button>
                 </div>
                 {/* Center: Title */}
-                <div className="flex-1 flex items-center justify-center">
-                    <span className="text-center w-full">CSS Guide</span>
+                <div className="flex items-center justify-center w-full">
+                    <img
+                        src="https://dth.travel/wp-content/uploads/2023/08/DTH-LOGO-FULL-WHITE-FORMERLY-new.svg"
+                        alt="DTH Logo"
+                        className="h-16 w-auto"
+                    />
                 </div>
+
                 {/* Right: Notification */}
                 <div className="flex-none flex items-center">
                     <button className="btn btn-square btn-ghost text-white">

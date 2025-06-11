@@ -250,15 +250,18 @@ export default function JobsList() {
 
   return (
     <CssgGuide>
-      <div className="flex flex-col items-center py-8 min-h-screen bg-base-200 relative ">
+      <div className="flex flex-col items-center py-8 min-h-screen bg-base-200 relative bg-[#9EE4F6]">
         {/* Summary bar */}
         {summary}
-        <div className="bg-base-100 rounded-xl shadow-xl border border-base-300 w-full max-w-7xl p-0">
-          <div className="p-4 w-full /* min-h-screen */ overflow-auto bg-[#ffffff]">
+        <div className="bg-[#F9FAFB] rounded-3xl shadow-lg border border-gray-300 w-full max-w-7xl p-6">
+          <div className="p-4 w-full /* min-h-screen */ overflow-auto bg-[#F9FAFB]">
             <h1 className="text-2xl font-Arial mb-4">Jobs List</h1>
             {/* ปรับ UI ช่วงเลือกวันที่ */}
             <div className="mb-8 flex flex-col items-center">
-              <div className="bg-base-100 border border-base-300 rounded-xl shadow-md px-6 py-4 flex flex-col sm:flex-row items-center gap-4 w-full max-w-xl">
+              <div className="bg-base-100 border border-base-300 rounded-xl shadow-md px-6 py-4 flex flex-col sm:flex-row items-center gap-4 w-full max-w-xl" style={{
+                backgroundColor: '#E6F0FA',
+                borderColor: '#2D3E92',
+              }}>
                 <div className="flex flex-col items-start w-full">
                   <label className="mb-1 text-xs text-gray-500 font-Arial" htmlFor="start-date">
                     Start date
@@ -324,22 +327,45 @@ export default function JobsList() {
 
                         {/* Logo button */}
                         <button
-                          className="absolute top-4 right-4 btn btn-circle btn-outline"
+                          className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white border-2 border-[#2D3E92] shadow-[0_4px_10px_rgba(45,62,146,0.3)] hover:shadow-[0_6px_14px_rgba(45,62,146,0.4)] transition-all duration-200 flex items-center justify-center"
                           title="Show all details"
                           onClick={() => setDetailJobs(job.all)}
                           style={{ zIndex: 2 }}
                         >
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                            <circle cx="12" cy="12" r="10" stroke="blue" strokeWidth="2" fill="white" />
-                            <text x="12" y="12" textAnchor="middle" dominantBaseline="central" fontSize="18" fill="black" fontWeight="Arial">i</text>
+                          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" fill="#F0F8FF" />
+                            <text
+                              x="12"
+                              y="12"
+                              textAnchor="middle"
+                              dominantBaseline="central"
+                              fontSize="18"
+                              fill="#2D3E92"
+                              fontFamily="Arial"
+                              fontWeight="bold"
+                            >
+                              i
+                            </text>
                           </svg>
                         </button>
 
+
+
                         {/* PNR header (click to toggle) */}
-                        <div className="p-6 pb-0 cursor-pointer" onClick={toggleExpand}>
-                          <h2 className="text-xl font-Arial mb-2 text-primary underline underline-offset-4">
+                        <div className="p-6 pb-0 cursor-pointer" onClick={toggleExpand} style={{
+                          backgroundColor: '#ffffff',
+                          borderColor: '#9EE4F6',
+                          borderWidth: '1px',
+                        }}>
+                          <h2 className="text-xl font-Arial mb-2 text-primary underline underline-offset-4" style={{ color: '#2D3E92' }} >
                             PNR: {job.PNR}
-                            <span className="ml-2 text-sm text-gray-500">{isExpanded ? '▲' : '▼'}</span>
+                            <span
+                              className={`ml-2 text-sm px-2 py-1 rounded-full cursor-pointer transition-all duration-200 
+    ${isExpanded ? 'bg-[#6A5ACD] text-white' : 'bg-[#2D3E92] text-white'}
+    hover:shadow-md`}
+                            >
+                              {isExpanded ? '▲' : '▼'}
+                            </span>
                           </h2>
                         </div>
 

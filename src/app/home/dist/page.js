@@ -286,13 +286,16 @@ function JobsList() {
         });
     }
     return (React.createElement(cssguide_1["default"], null,
-        React.createElement("div", { className: "flex flex-col items-center py-8 min-h-screen bg-base-200 relative " },
+        React.createElement("div", { className: "flex flex-col items-center py-8 min-h-screen bg-base-200 relative bg-[#9EE4F6]" },
             summary,
-            React.createElement("div", { className: "bg-base-100 rounded-xl shadow-xl border border-base-300 w-full max-w-7xl p-0" },
-                React.createElement("div", { className: "p-4 w-full /* min-h-screen */ overflow-auto bg-[#ffffff]" },
+            React.createElement("div", { className: "bg-[#F9FAFB] rounded-3xl shadow-lg border border-gray-300 w-full max-w-7xl p-6" },
+                React.createElement("div", { className: "p-4 w-full /* min-h-screen */ overflow-auto bg-[#F9FAFB]" },
                     React.createElement("h1", { className: "text-2xl font-Arial mb-4" }, "Jobs List"),
                     React.createElement("div", { className: "mb-8 flex flex-col items-center" },
-                        React.createElement("div", { className: "bg-base-100 border border-base-300 rounded-xl shadow-md px-6 py-4 flex flex-col sm:flex-row items-center gap-4 w-full max-w-xl" },
+                        React.createElement("div", { className: "bg-base-100 border border-base-300 rounded-xl shadow-md px-6 py-4 flex flex-col sm:flex-row items-center gap-4 w-full max-w-xl", style: {
+                                backgroundColor: '#E6F0FA',
+                                borderColor: '#2D3E92'
+                            } },
                             React.createElement("div", { className: "flex flex-col items-start w-full" },
                                 React.createElement("label", { className: "mb-1 text-xs text-gray-500 font-Arial", htmlFor: "start-date" }, "Start date"),
                                 React.createElement("input", { id: "start-date", type: "date", value: startDate, max: endDate, onChange: function (e) { return setStartDate(e.target.value); }, className: "input input-bordered w-full", placeholder: "Start date" })),
@@ -315,15 +318,19 @@ function JobsList() {
                             };
                             return (React.createElement("div", { key: job.PNR, className: "relative bg-white border border-base-300 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col" },
                                 React.createElement("div", { className: "absolute top-4 left-4 bg-blue-100 text-[#2D3E92] font-Arial rounded-full px-3 py-1 text-sm shadow z-10" }, (_c = (_b = job.all) === null || _b === void 0 ? void 0 : _b.length) !== null && _c !== void 0 ? _c : 1),
-                                React.createElement("button", { className: "absolute top-4 right-4 btn btn-circle btn-outline", title: "Show all details", onClick: function () { return setDetailJobs(job.all); }, style: { zIndex: 2 } },
-                                    React.createElement("svg", { width: "24", height: "24", viewBox: "0 0 24 24", fill: "none" },
-                                        React.createElement("circle", { cx: "12", cy: "12", r: "10", stroke: "blue", strokeWidth: "2", fill: "white" }),
-                                        React.createElement("text", { x: "12", y: "12", textAnchor: "middle", dominantBaseline: "central", fontSize: "18", fill: "black", fontWeight: "Arial" }, "i"))),
-                                React.createElement("div", { className: "p-6 pb-0 cursor-pointer", onClick: toggleExpand },
-                                    React.createElement("h2", { className: "text-xl font-Arial mb-2 text-primary underline underline-offset-4" },
+                                React.createElement("button", { className: "absolute top-4 right-4 w-10 h-10 rounded-full bg-white border-2 border-[#2D3E92] shadow-[0_4px_10px_rgba(45,62,146,0.3)] hover:shadow-[0_6px_14px_rgba(45,62,146,0.4)] transition-all duration-200 flex items-center justify-center", title: "Show all details", onClick: function () { return setDetailJobs(job.all); }, style: { zIndex: 2 } },
+                                    React.createElement("svg", { width: "28", height: "28", viewBox: "0 0 24 24", fill: "none" },
+                                        React.createElement("circle", { cx: "12", cy: "12", r: "10", fill: "#F0F8FF" }),
+                                        React.createElement("text", { x: "12", y: "12", textAnchor: "middle", dominantBaseline: "central", fontSize: "18", fill: "#2D3E92", fontFamily: "Arial", fontWeight: "bold" }, "i"))),
+                                React.createElement("div", { className: "p-6 pb-0 cursor-pointer", onClick: toggleExpand, style: {
+                                        backgroundColor: '#ffffff',
+                                        borderColor: '#9EE4F6',
+                                        borderWidth: '1px'
+                                    } },
+                                    React.createElement("h2", { className: "text-xl font-Arial mb-2 text-primary underline underline-offset-4", style: { color: '#2D3E92' } },
                                         "PNR: ",
                                         job.PNR,
-                                        React.createElement("span", { className: "ml-2 text-sm text-gray-500" }, isExpanded ? '▲' : '▼'))),
+                                        React.createElement("span", { className: "ml-2 text-sm px-2 py-1 rounded-full cursor-pointer transition-all duration-200 \n    " + (isExpanded ? 'bg-[#6A5ACD] text-white' : 'bg-[#2D3E92] text-white') + "\n    hover:shadow-md" }, isExpanded ? '▲' : '▼'))),
                                 isExpanded && (React.createElement("div", { className: "p-6 pt-0 flex-1 flex flex-col" },
                                     React.createElement("div", { className: "text-sm text-gray-600 space-y-1 mb-4" },
                                         renderPlaceDate(job.Pickup, job.PickupDate, 'Pickup'),
