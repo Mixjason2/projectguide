@@ -80,19 +80,19 @@ export default function LoginPage() {
 <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#2d4392" }}>
   <div className="card w-full max-w-3xl bg-white shadow-xl rounded-xl relative overflow-hidden">
     {/* มุมบนขวาสีเขียวเป็นวงกลมโค้งลง */}
-    <div
-      style={{
-        position: "absolute",
-        top: 0,
-        right: 0,
-        width: "140px",
-        height: "140px",
-        backgroundColor: "#95c941",
-        borderBottomLeftRadius: "140px", // โค้งลงแบบครึ่งวงกลม
-        borderTopRightRadius: "0",
-        zIndex: 1,
-      }}
-    />
+<div
+  style={{
+    position: "absolute",
+    top: 0,
+    right: 0,
+    width: "140px",
+    height: "140px",
+    backgroundColor: "#95c941",
+    borderBottomLeftRadius: "90px"  , // ทำให้มุมล่างซ้ายโค้ง
+    zIndex: 1,
+  }}
+/>
+
     <div className="card-body relative z-10">
       <h2 className="card-title justify-center mb-6 text-2xl font-bold text-gray-800">Login</h2>
       <form onSubmit={handleSubmit} className="space-y-5">

@@ -129,8 +129,7 @@ function LoginPage() {
                     width: "140px",
                     height: "140px",
                     backgroundColor: "#95c941",
-                    borderBottomLeftRadius: "140px",
-                    borderTopRightRadius: "0",
+                    borderBottomLeftRadius: "90px",
                     zIndex: 1
                 } }),
             React.createElement("div", { className: "card-body relative z-10" },
