@@ -77,67 +77,92 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-base-200">
-      <div className="card w-full max-w-3xl bg-white shadow-xl rounded-xl">
-        <div className="card-body">
-          <h2 className="card-title justify-center mb-6 text-2xl font-bold text-gray-800">Login</h2>
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label htmlFor="username" className="block text-base font-bold mb-1 text-gray-800">Username</label>
-              <input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="input input-bordered w-full text-base"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="block text-base font-bold mb-1 text-gray-800">Password</label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input input-bordered w-full text-base"
-                required
-              />
-            </div>
-            <div className="flex items-center gap-2 mb-2">
-              <label htmlFor="rememberMe" className="flex items-center cursor-pointer">
-                <input
-                  id="rememberMe"
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="checkbox checkbox-primary"
-                />
-                <span className="ml-2 text-base text-gray-800">Remember me</span>
-              </label>
-            </div>
-            <div className="bg-white p-6 rounded-lg">
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn btn-primary w-full text-lg font-bold"
-                style={{
-                  minHeight: "3rem",
-                  boxShadow: "0 2px 8px 0 rgba(37,99,235,0.10)",
-                  border: "none"
-                }}
-              >
-                {loading ? "Logging in..." : "Login"}
-              </button>
-            </div>
-          </form>
-          {message && (
-            <p className={`mt-4 text-sm text-center ${message.includes("successful") ? "text-black-600" : "text-red-500"}`}>
-              {message}
-            </p>
-          )}
+<div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#2d4392" }}>
+  <div className="card w-full max-w-3xl bg-white shadow-xl rounded-xl relative overflow-hidden">
+    {/* มุมบนขวาสีเขียวเป็นวงกลมโค้งลง */}
+    <div
+      style={{
+        position: "absolute",
+        top: 0,
+        right: 0,
+        width: "140px",
+        height: "140px",
+        backgroundColor: "#95c941",
+        borderBottomLeftRadius: "140px", // โค้งลงแบบครึ่งวงกลม
+        borderTopRightRadius: "0",
+        zIndex: 1,
+      }}
+    />
+    <div className="card-body relative z-10">
+      <h2 className="card-title justify-center mb-6 text-2xl font-bold text-gray-800">Login</h2>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div>
+          <label htmlFor="username" className="block text-base font-bold mb-1 text-gray-800">Username</label>
+          <input
+            id="username"
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="input input-bordered w-full text-base"
+            required
+          />
         </div>
-      </div>
+        <div>
+          <label htmlFor="password" className="block text-base font-bold mb-1 text-gray-800">Password</label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="input input-bordered w-full text-base"
+            required
+          />
+        </div>
+        <div className="flex items-center gap-2 mb-2">
+          <label htmlFor="rememberMe" className="flex items-center cursor-pointer">
+            <input
+              id="rememberMe"
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="accent-[#95c941] w-5 h-5"
+            />
+            <span className="ml-2 text-base text-gray-800">Remember me</span>
+          </label>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full text-lg font-bold transition duration-200"
+            style={{
+              backgroundColor: "#2D3E92",
+              color: "#ffffff",
+              minHeight: "3rem",
+              boxShadow: "0 4px 14px rgba(45, 62, 146, 0.25)",
+              border: "none",
+              borderRadius: "0.5rem"
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#3D50B2"; // สีอ่อนลง
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#2D3E92"; // กลับมาสีเดิม
+            }}
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </div>
+      </form>
+      {message && (
+        <p className={`mt-4 text-sm text-center ${message.includes("successful") ? "text-black-600" : "text-red-500"}`}>
+          {message}
+        </p>
+      )}
     </div>
+  </div>
+</div>
+
   );
 }

@@ -73,7 +73,6 @@ function LoginPage() {
                         setMessage("Password must contain only letters or numbers.");
                         return [2 /*return*/];
                     }
-                    setLoading(true);
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 4, , 5]);
@@ -84,7 +83,7 @@ function LoginPage() {
                                 Username: username,
                                 Password: password,
                                 asmdb: "Assignment_TH",
-                                connection: "[AS-DTGTHA]"
+                                connection: "[AS-DTGTHA]" // เพิ่มบรรทัดนี้
                             })
                         })];
                 case 2:
@@ -95,6 +94,8 @@ function LoginPage() {
                     // Show result from API to user
                     if (data.status && data.token) {
                         setMessage("Login successful!");
+                        // เก็บ token ลง localStorage
+                        localStorage.setItem("token", data.token);
                         if (rememberMe) {
                             localStorage.setItem("savedUsername", username);
                             localStorage.setItem("savedPassword", password);
@@ -115,15 +116,24 @@ function LoginPage() {
                     err_1 = _a.sent();
                     setMessage("Failed to connect to the server.");
                     return [3 /*break*/, 5];
-                case 5:
-                    setLoading(false);
-                    return [2 /*return*/];
+                case 5: return [2 /*return*/];
             }
         });
     }); };
-    return (React.createElement("div", { className: "min-h-screen flex items-center justify-center bg-base-200" },
-        React.createElement("div", { className: "card w-full max-w-3xl bg-white shadow-xl rounded-xl" },
-            React.createElement("div", { className: "card-body" },
+    return (React.createElement("div", { className: "min-h-screen flex items-center justify-center", style: { backgroundColor: "#2d4392" } },
+        React.createElement("div", { className: "card w-full max-w-3xl bg-white shadow-xl rounded-xl relative overflow-hidden" },
+            React.createElement("div", { style: {
+                    position: "absolute",
+                    top: 0,
+                    right: 0,
+                    width: "140px",
+                    height: "140px",
+                    backgroundColor: "#95c941",
+                    borderBottomLeftRadius: "140px",
+                    borderTopRightRadius: "0",
+                    zIndex: 1
+                } }),
+            React.createElement("div", { className: "card-body relative z-10" },
                 React.createElement("h2", { className: "card-title justify-center mb-6 text-2xl font-bold text-gray-800" }, "Login"),
                 React.createElement("form", { onSubmit: handleSubmit, className: "space-y-5" },
                     React.createElement("div", null,
@@ -134,13 +144,20 @@ function LoginPage() {
                         React.createElement("input", { id: "password", type: "password", value: password, onChange: function (e) { return setPassword(e.target.value); }, className: "input input-bordered w-full text-base", required: true })),
                     React.createElement("div", { className: "flex items-center gap-2 mb-2" },
                         React.createElement("label", { htmlFor: "rememberMe", className: "flex items-center cursor-pointer" },
-                            React.createElement("input", { id: "rememberMe", type: "checkbox", checked: rememberMe, onChange: function (e) { return setRememberMe(e.target.checked); }, className: "checkbox checkbox-primary" }),
+                            React.createElement("input", { id: "rememberMe", type: "checkbox", checked: rememberMe, onChange: function (e) { return setRememberMe(e.target.checked); }, className: "accent-[#95c941] w-5 h-5" }),
                             React.createElement("span", { className: "ml-2 text-base text-gray-800" }, "Remember me"))),
                     React.createElement("div", { className: "bg-white p-6 rounded-lg" },
-                        React.createElement("button", { type: "submit", disabled: loading, className: "btn btn-primary w-full text-lg font-bold", style: {
+                        React.createElement("button", { type: "submit", disabled: loading, className: "w-full text-lg font-bold transition duration-200", style: {
+                                backgroundColor: "#2D3E92",
+                                color: "#ffffff",
                                 minHeight: "3rem",
-                                boxShadow: "0 2px 8px 0 rgba(37,99,235,0.10)",
-                                border: "none"
+                                boxShadow: "0 4px 14px rgba(45, 62, 146, 0.25)",
+                                border: "none",
+                                borderRadius: "0.5rem"
+                            }, onMouseEnter: function (e) {
+                                e.currentTarget.style.backgroundColor = "#3D50B2"; // สีอ่อนลง
+                            }, onMouseLeave: function (e) {
+                                e.currentTarget.style.backgroundColor = "#2D3E92"; // กลับมาสีเดิม
                             } }, loading ? "Logging in..." : "Login"))),
                 message && (React.createElement("p", { className: "mt-4 text-sm text-center " + (message.includes("successful") ? "text-black-600" : "text-red-500") }, message))))));
 }
