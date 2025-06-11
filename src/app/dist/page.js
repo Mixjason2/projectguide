@@ -126,11 +126,12 @@ function LoginPage() {
                     position: "absolute",
                     top: 0,
                     right: 0,
-                    width: "140px",
-                    height: "140px",
+                    width: "160px",
+                    height: "160px",
                     backgroundColor: "#95c941",
-                    borderBottomLeftRadius: "90px",
-                    zIndex: 1
+                    borderBottomLeftRadius: "160px",
+                    boxShadow: "-8px 8px 20px rgba(149, 201, 65, 0.25)",
+                    zIndex: 10
                 } }),
             React.createElement("div", { className: "card-body relative z-10" },
                 React.createElement("h2", { className: "card-title justify-center mb-6 text-2xl font-bold text-gray-800" }, "Login"),
