@@ -62,9 +62,10 @@ export default function CalendarExcel() {
   if (error) return <div>Error: {error}</div>;
 
   return (
+
     <CssgGuide>
-      <div className="flex justify-center items-center min-h-screen bg-base-200">
-        <div className="bg-base-100 rounded-xl shadow-xl border border-base-300 w-full max-w-screen-2xl h-[90vh] flex flex-col">
+      <div className="bg-base-200 flex flex-col items-center justify-start p-4 min-h-screen">
+  <div className="bg-base-100 rounded-xl shadow-xl border border-base-300 w-full max-w-screen-2xl" style={{ height: '90vh' }}>
           <FullCalendar
             plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
             initialView="dayGridMonth"
@@ -73,9 +74,9 @@ export default function CalendarExcel() {
             contentHeight="auto"
             aspectRatio={1.7}
             headerToolbar={{
-              left: 'prev,next today',
-              center: 'title',
-              right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
+              start: 'title', // title ชิดซ้าย
+              center: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth', // ปุ่มมุมมองไว้กลาง
+              end: 'today prev,next', // ปุ่ม today / เลื่อนเดือนไว้ขวา
             }}
             editable={false}
             selectable={true}
