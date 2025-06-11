@@ -228,6 +228,7 @@ export default function JobsList() {
   )
 
   async function fetchJobs(token: string, startDate: string, endDate: string) {
+    setLoading(true);
     setError(null);
     try {
       const res = await fetch('https://operation.dth.travel:7082/api/guide/job', {
@@ -314,9 +315,9 @@ export default function JobsList() {
                       >
 
                         {/* Any logo/icon, here is a simple info icon */}
-                        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                           <circle cx="12" cy="12" r="10" stroke="blue" strokeWidth="2" fill="white" />
-                          <text x="12" y="17" textAnchor="middle" fontSize="14" fill="blue" fontWeight="bold">i</text>
+                          <text x="12" y="12" textAnchor="middle" dominantBaseline="central" fontSize="18" fill="black" fontWeight="bold">i</text>
                         </svg>
                       </button>
                       <div className="p-6 flex-1 flex flex-col">
@@ -335,7 +336,7 @@ export default function JobsList() {
                             className="btn btn-success flex-1 text-base font-bold py-2 rounded-full shadow"
                             onClick={async () => {
                               try {
-                        
+
                                 const token = localStorage.getItem("token") || "";
                                 const response = await axios.put(
                                   `http://10.2.4.200:7072/api/guide/job/${job.key}`,
