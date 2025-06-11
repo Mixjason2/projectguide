@@ -228,7 +228,6 @@ export default function JobsList() {
   )
 
   async function fetchJobs(token: string, startDate: string, endDate: string) {
-    setLoading(true);
     setError(null);
     try {
       const res = await fetch('https://operation.dth.travel:7082/api/guide/job', {
@@ -313,16 +312,11 @@ export default function JobsList() {
                         onClick={() => setDetailJobs(job.all)}
                         style={{ zIndex: 2 }}
                       >
-<<<<<<< HEAD
-                        <svg width="36" height="36" fill="none" viewBox="0 0 36 36">
-                          <circle cx="18" cy="18" r="16" stroke="#60a5fa" strokeWidth="3" fill="#f1f5f9"/>
-                          <text x="18" y="24" textAnchor="middle" fontSize="20" fill="#222" fontWeight="bold" fontFamily="Arial, sans-serif">i</text>
-=======
+
                         {/* Any logo/icon, here is a simple info icon */}
                         <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2">
                           <circle cx="12" cy="12" r="10" stroke="blue" strokeWidth="2" fill="white" />
                           <text x="12" y="17" textAnchor="middle" fontSize="14" fill="blue" fontWeight="bold">i</text>
->>>>>>> 1783589362ef2210715e753d0d269dba4aa709b7
                         </svg>
                       </button>
                       <div className="p-6 flex-1 flex flex-col">
