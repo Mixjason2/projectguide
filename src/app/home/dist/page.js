@@ -316,21 +316,21 @@ function JobsList() {
                                     return (__assign(__assign({}, prev), (_a = {}, _a[job.PNR] = !isExpanded, _a)));
                                 });
                             };
-                            return (React.createElement("div", { key: job.PNR, className: "relative bg-white border border-base-300 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col" },
-                                React.createElement("div", { className: "absolute top-4 left-4 bg-blue-100 text-[#2D3E92] font-Arial rounded-full px-3 py-1 text-sm shadow z-10" }, (_c = (_b = job.all) === null || _b === void 0 ? void 0 : _b.length) !== null && _c !== void 0 ? _c : 1),
-                                React.createElement("button", { className: "absolute top-4 right-4 w-10 h-10 rounded-full bg-white border-2 border-[#2D3E92] shadow-[0_4px_10px_rgba(45,62,146,0.3)] hover:shadow-[0_6px_14px_rgba(45,62,146,0.4)] transition-all duration-200 flex items-center justify-center", title: "Show all details", onClick: function () { return setDetailJobs(job.all); }, style: { zIndex: 2 } },
+                            return (React.createElement("div", { key: job.PNR, className: "relative bg-white border border-base-300 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col ", style: {
+                                    backgroundColor: '#ffffff',
+                                    borderColor: '#9EE4F6',
+                                    borderWidth: '1px'
+                                } },
+                                React.createElement("div", { className: "absolute top-6 left-0 bg-blue-100 text-[#2D3E92] font-Arial rounded-full px-3 py-1 text-sm shadow z-10" }, (_c = (_b = job.all) === null || _b === void 0 ? void 0 : _b.length) !== null && _c !== void 0 ? _c : 1),
+                                React.createElement("button", { className: "absolute top-4 right-0 w-10 h-10 rounded-full bg-white border-2 border-[#2D3E92] shadow-[0_4px_10px_rgba(45,62,146,0.3)] hover:shadow-[0_6px_14px_rgba(45,62,146,0.4)] transition-all duration-200 flex items-center justify-center", title: "Show all details", onClick: function () { return setDetailJobs(job.all); }, style: { zIndex: 2 } },
                                     React.createElement("svg", { width: "28", height: "28", viewBox: "0 0 24 24", fill: "none" },
                                         React.createElement("circle", { cx: "12", cy: "12", r: "10", fill: "#F0F8FF" }),
                                         React.createElement("text", { x: "12", y: "12", textAnchor: "middle", dominantBaseline: "central", fontSize: "18", fill: "#2D3E92", fontFamily: "Arial", fontWeight: "bold" }, "i"))),
-                                React.createElement("div", { className: "p-6 pb-0 cursor-pointer", onClick: toggleExpand, style: {
-                                        backgroundColor: '#ffffff',
-                                        borderColor: '#9EE4F6',
-                                        borderWidth: '1px'
-                                    } },
+                                React.createElement("div", { className: "inline-block p-6 pb-0 cursor-pointer mx-auto", onClick: toggleExpand },
                                     React.createElement("h2", { className: "text-xl font-Arial mb-2 text-primary underline underline-offset-4", style: { color: '#2D3E92' } },
                                         "PNR: ",
                                         job.PNR,
-                                        React.createElement("span", { className: "ml-2 text-sm px-2 py-1 rounded-full cursor-pointer transition-all duration-200 \n    " + (isExpanded ? 'bg-[#6A5ACD] text-white' : 'bg-[#2D3E92] text-white') + "\n    hover:shadow-md" }, isExpanded ? '▲' : '▼'))),
+                                        React.createElement("span", { className: "ml-2 text-sm px-2 py-1 rounded-full cursor-pointer transition-all duration-200 " + (isExpanded ? 'bg-[#6A5ACD] text-white' : 'bg-[#2D3E92] text-white') + " hover:shadow-md" }, isExpanded ? '▲' : '▼'))),
                                 isExpanded && (React.createElement("div", { className: "p-6 pt-0 flex-1 flex flex-col" },
                                     React.createElement("div", { className: "text-sm text-gray-600 space-y-1 mb-4" },
                                         renderPlaceDate(job.Pickup, job.PickupDate, 'Pickup'),
