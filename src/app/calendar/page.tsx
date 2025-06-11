@@ -73,9 +73,9 @@ export default function CalendarExcel() {
             contentHeight="auto"
             aspectRatio={1.7}
             headerToolbar={{
-              left: 'prev,next today',
-              center: 'title',
-              right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
+              start: 'title today',  // เอา title + today ไว้ฝั่งซ้าย
+              center: '',
+              end: 'prev,next dayGridMonth,timeGridWeek,timeGridDay,listMonth' // ฝั่งขวา
             }}
             editable={false}
             selectable={true}
