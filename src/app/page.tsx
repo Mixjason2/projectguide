@@ -85,14 +85,39 @@ export default function LoginPage() {
     position: "absolute",
     top: 0,
     right: 0,
-    width: "140px",
-    height: "140px",
-    backgroundColor: "#95c941",
-    borderBottomLeftRadius: "90px"  , // ทำให้มุมล่างซ้ายโค้ง
-    zIndex: 1,
+    width: "60vw",
+    height: "40vh",
+    backgroundColor: "#8ED351", // ห้ามเปลี่ยนสี
+    clipPath: `polygon(
+      40% 0,
+      43% 7%,
+      46% 0,
+      49% 7%,
+      52% 0,
+      55% 7%,
+      58% 0,
+      61% 7%,
+      64% 0,
+      67% 7%,
+      70% 0,
+      73% 7%,
+      76% 0,
+      79% 7%,
+      82% 0,
+      85% 7%,
+      88% 0,
+      91% 7%,
+      94% 0,
+      97% 7%,
+      100% 0,
+      100% 100%,
+      40% 100%
+    )`,
+    boxShadow: "0 4px 10px rgba(0,0,0,0.1)", // เพิ่มเงาเล็กๆ
+    zIndex: 1
   }}
-/>
-
+>
+</div>
     <div className="card-body relative z-10">
       <h2 className="card-title justify-center mb-6 text-2xl font-bold text-gray-800">Login</h2>
       <form onSubmit={handleSubmit} className="space-y-5">

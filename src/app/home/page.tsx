@@ -360,10 +360,10 @@ export default function JobsList() {
                                 onClick={async () => {
                                   try {
                                     const token = localStorage.getItem("token") || "";
-                                    const response = await axios.put(
-                                      `http://10.2.4.200:7072/api/guide/job/${job.key}`,
+                                    const response = await axios.post(
+                                      `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
                                       {
-                                        token: "your_token_here",
+                                        token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
                                         data: { isConfirmed: true }
                                       }
                                     );
@@ -387,10 +387,10 @@ export default function JobsList() {
                                 onClick={async () => {
                                   try {
                                     const token = localStorage.getItem("token") || "";
-                                    const response = await axios.put(
-                                      `https://operation.dth.travel:7082/api/guide/job/${job.key}`,
+                                    const response = await axios.post(
+                                      `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
                                       {
-                                        token: "your_token_here",
+                                        token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
                                         data: { isCancel: true }
                                       }
                                     );
