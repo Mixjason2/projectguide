@@ -102,15 +102,10 @@ function CalendarExcel() {
             "Error: ",
             error);
     return (react_1["default"].createElement(cssguide_1["default"], null,
-        react_1["default"].createElement("div", { className: "bg-base-200 flex flex-col items-center justify-start p-4 min-h-screen" },
-            react_1["default"].createElement("div", { className: "bg-base-100 rounded-xl shadow-xl border border-base-300 w-full max-w-screen-2xl", style: { height: '90vh' } },
-                react_1["default"].createElement(react_2["default"], { plugins: [daygrid_1["default"], timegrid_1["default"], list_1["default"], interaction_1["default"]], initialView: "dayGridMonth", events: events, height: "100%", contentHeight: "auto", aspectRatio: 1.7, headerToolbar: {
-                        start: 'title',
-                        center: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth',
-                        end: 'today prev,next',
-                        start: 'title today',
-                        center: '',
-                        end: 'prev,next dayGridMonth,timeGridWeek,timeGridDay,listMonth' // ฝั่งขวา
-                    }, editable: false, selectable: true, expandRows: true })))));
+        react_1["default"].createElement(react_2["default"], { plugins: [daygrid_1["default"], timegrid_1["default"], list_1["default"], interaction_1["default"]], initialView: "dayGridMonth", events: events, height: "100%", contentHeight: "auto", aspectRatio: 1.7, headerToolbar: {
+                start: 'title',
+                center: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth',
+                end: 'today prev,next'
+            }, editable: false, selectable: true, expandRows: true })));
 }
 exports["default"] = CalendarExcel;

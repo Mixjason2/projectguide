@@ -64,8 +64,6 @@ export default function CalendarExcel() {
   return (
 
     <CssgGuide>
-      <div className="bg-base-200 flex flex-col items-center justify-start p-4 min-h-screen">
-  <div className="bg-base-100 rounded-xl shadow-xl border border-base-300 w-full max-w-screen-2xl" style={{ height: '90vh' }}>
           <FullCalendar
             plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
             initialView="dayGridMonth"
@@ -77,16 +75,11 @@ export default function CalendarExcel() {
               start: 'title', // title ชิดซ้าย
               center: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth', // ปุ่มมุมมองไว้กลาง
               end: 'today prev,next', // ปุ่ม today / เลื่อนเดือนไว้ขวา
-              start: 'title today',  // เอา title + today ไว้ฝั่งซ้าย
-              center: '',
-              end: 'prev,next dayGridMonth,timeGridWeek,timeGridDay,listMonth' // ฝั่งขวา
             }}
             editable={false}
             selectable={true}
             expandRows={true}
           />
-        </div>
-      </div>
     </CssgGuide>
   );
 }
