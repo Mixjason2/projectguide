@@ -50,6 +50,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 exports.__esModule = true;
 var react_1 = require("react");
 var cssguide_1 = require("../cssguide");
+var axios_1 = require("axios");
 function mergeJobsByPNR(jobs) {
     var map = {};
     for (var _i = 0, jobs_1 = jobs; _i < jobs_1.length; _i++) {
@@ -103,10 +104,8 @@ function JobsList() {
     var _h = react_1.useState(null), uploadJob = _h[0], setUploadJob = _h[1];
     var pageSize = 6;
     react_1.useEffect(function () {
-        setLoading(true);
-        setError(null);
         var token = localStorage.getItem("token") || "";
-        fetch('/api/guide/job', {
+        fetch('https://operation.dth.travel:7082/api/guide/job', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -132,7 +131,7 @@ function JobsList() {
             console.log("API jobs:", data);
             setJobs(data);
         })["catch"](function (err) { return setError(err.message); })["finally"](function () { return setLoading(false); });
-    }, [startDate, endDate]);
+    }, []);
     var filteredJobs = jobs.filter(function (job) {
         var pickup = job.PickupDate;
         var dropoff = job.DropoffDate;
@@ -242,10 +241,49 @@ function JobsList() {
             React.createElement("div", { className: "flex items-center gap-2" },
                 React.createElement("span", { className: "inline-block w-3 h-3 rounded-full bg-orange-400" }),
                 React.createElement("span", { className: "text-gray-500" }, "All Jobs:"),
-                React.createElement("span", { className: "font-bold text-blue-700" }, jobs.length)),
+                React.createElement("span", { className: "font-bold text-blue-700" }, filteredJobs.length)),
             React.createElement("div", { className: "flex items-center gap-2" },
                 React.createElement("span", { className: "text-gray-500" }, "Unique PNR:"),
                 React.createElement("span", { className: "font-bold text-blue-700" }, mergedJobs.length)))));
+    function fetchJobs(token, startDate, endDate) {
+        return __awaiter(this, void 0, void 0, function () {
+            var res, _a, data, err_1;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        setLoading(true);
+                        setError(null);
+                        _b.label = 1;
+                    case 1:
+                        _b.trys.push([1, 6, 7, 8]);
+                        return [4 /*yield*/, fetch('https://operation.dth.travel:7082/api/guide/job', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ token: token, startdate: startDate, enddate: endDate })
+                            })];
+                    case 2:
+                        res = _b.sent();
+                        if (!!res.ok) return [3 /*break*/, 4];
+                        _a = Error.bind;
+                        return [4 /*yield*/, res.text()];
+                    case 3: throw new (_a.apply(Error, [void 0, _b.sent()]))();
+                    case 4: return [4 /*yield*/, res.json()];
+                    case 5:
+                        data = _b.sent();
+                        setJobs(data);
+                        return [3 /*break*/, 8];
+                    case 6:
+                        err_1 = _b.sent();
+                        setError(err_1.message);
+                        return [3 /*break*/, 8];
+                    case 7:
+                        setLoading(false);
+                        return [7 /*endfinally*/];
+                    case 8: return [2 /*return*/];
+                }
+            });
+        });
+    }
     return (React.createElement(cssguide_1["default"], null,
         React.createElement("div", { className: "flex flex-col items-center py-8 min-h-screen bg-base-200 relative" },
             summary,
@@ -270,9 +308,9 @@ function JobsList() {
                             return (React.createElement("div", { key: job.PNR, className: "relative bg-white border border-base-300 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col" },
                                 React.createElement("div", { className: "absolute top-4 left-4 bg-blue-100 text-blue-700 font-bold rounded-full px-3 py-1 text-sm shadow z-10" }, (_b = (_a = job.all) === null || _a === void 0 ? void 0 : _a.length) !== null && _b !== void 0 ? _b : 1),
                                 React.createElement("button", { className: "absolute top-4 right-4 btn btn-circle btn-outline", title: "Show all details", onClick: function () { return setDetailJobs(job.all); }, style: { zIndex: 2 } },
-                                    React.createElement("svg", { width: "36", height: "36", fill: "none", viewBox: "0 0 36 36" },
-                                        React.createElement("circle", { cx: "18", cy: "18", r: "16", stroke: "#60a5fa", strokeWidth: "3", fill: "#f1f5f9" }),
-                                        React.createElement("text", { x: "18", y: "24", textAnchor: "middle", fontSize: "20", fill: "#222", fontWeight: "bold", fontFamily: "Arial, sans-serif" }, "i"))),
+                                    React.createElement("svg", { width: "24", height: "24", fill: "none", stroke: "currentColor", strokeWidth: "2" },
+                                        React.createElement("circle", { cx: "12", cy: "12", r: "10", stroke: "blue", strokeWidth: "2", fill: "white" }),
+                                        React.createElement("text", { x: "12", y: "17", textAnchor: "middle", fontSize: "14", fill: "blue", fontWeight: "bold" }, "i"))),
                                 React.createElement("div", { className: "p-6 flex-1 flex flex-col" },
                                     React.createElement("h2", { className: "text-xl font-bold mb-2 text-primary underline underline-offset-4" },
                                         "PNR: ",
@@ -283,8 +321,68 @@ function JobsList() {
                                         renderField('Pax', job.Pax),
                                         renderField('Source', job.Source)),
                                     React.createElement("div", { className: "flex gap-3 mt-auto flex-wrap" },
-                                        React.createElement("button", { className: "btn btn-success flex-1 text-base font-bold py-2 rounded-full shadow", onClick: function () { return alert("Accepted job PNR " + job.PNR); } }, "Accept"),
-                                        React.createElement("button", { className: "btn btn-error flex-1 text-base font-bold py-2 rounded-full shadow", onClick: function () { return alert("Rejected job PNR " + job.PNR); } }, "Reject"),
+                                        React.createElement("button", { className: "btn btn-success flex-1 text-base font-bold py-2 rounded-full shadow", onClick: function () { return __awaiter(_this, void 0, void 0, function () {
+                                                var token, response, result, e_1;
+                                                return __generator(this, function (_a) {
+                                                    switch (_a.label) {
+                                                        case 0:
+                                                            _a.trys.push([0, 2, , 3]);
+                                                            token = localStorage.getItem("token") || "";
+                                                            return [4 /*yield*/, axios_1["default"].put("http://10.2.4.200:7072/api/guide/job/" + job.key, {
+                                                                    token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
+                                                                    data: { isConfirmed: true }
+                                                                })];
+                                                        case 1:
+                                                            response = _a.sent();
+                                                            console.log("Accept response:", response.data);
+                                                            result = response.data;
+                                                            if (result.success) {
+                                                                alert("Accept งานสำเร็จ");
+                                                                // setJobs(jobs => jobs.map(j => j.key === job.key ? result : j));
+                                                            }
+                                                            else {
+                                                                alert("Accept งานไม่สำเร็จ: " + ((result === null || result === void 0 ? void 0 : result.error) || "Unknown error"));
+                                                            }
+                                                            return [3 /*break*/, 3];
+                                                        case 2:
+                                                            e_1 = _a.sent();
+                                                            console.error("Accept error:", e_1);
+                                                            alert("เกิดข้อผิดพลาด: " + e_1.message);
+                                                            return [3 /*break*/, 3];
+                                                        case 3: return [2 /*return*/];
+                                                    }
+                                                });
+                                            }); } }, "Accept"),
+                                        React.createElement("button", { className: "btn btn-error flex-1 text-base font-bold py-2 rounded-full shadow", onClick: function () { return __awaiter(_this, void 0, void 0, function () {
+                                                var token, response, result, e_2;
+                                                return __generator(this, function (_a) {
+                                                    switch (_a.label) {
+                                                        case 0:
+                                                            _a.trys.push([0, 2, , 3]);
+                                                            token = localStorage.getItem("token") || "";
+                                                            return [4 /*yield*/, axios_1["default"].put("https://operation.dth.travel:7082/api/guide/job/" + job.key, {
+                                                                    token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
+                                                                    data: { isCancel: true }
+                                                                })];
+                                                        case 1:
+                                                            response = _a.sent();
+                                                            result = response.data;
+                                                            if (result.success) {
+                                                                alert("Reject งานสำเร็จ");
+                                                                // setJobs(jobs => jobs.map(j => j.key === job.key ? result : j));
+                                                            }
+                                                            else {
+                                                                alert("Reject งานไม่สำเร็จ: " + ((result === null || result === void 0 ? void 0 : result.error) || "Unknown error"));
+                                                            }
+                                                            return [3 /*break*/, 3];
+                                                        case 2:
+                                                            e_2 = _a.sent();
+                                                            alert("เกิดข้อผิดพลาด: " + e_2.message);
+                                                            return [3 /*break*/, 3];
+                                                        case 3: return [2 /*return*/];
+                                                    }
+                                                });
+                                            }); } }, "Reject Job"),
                                         React.createElement("button", { className: "btn btn-info btn-sm btn-circle", onClick: function () { return setUploadJob(job); }, title: "Upload Photo & Remark" },
                                             React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", className: "w-4 h-4", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor" },
                                                 React.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" })))))));
