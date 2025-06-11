@@ -129,7 +129,7 @@ export default function JobsList() {
     if (!place && !date) return null
     return (
       <div>
-        <span className="font-semibold">{label}:</span>{' '}
+        <span className="font-Arial">{label}:</span>{' '}
         {place ? place : ''}{place && date ? ' - ' : ''}{date ? formatDate(date) : ''}
       </div>
     )
@@ -141,7 +141,7 @@ export default function JobsList() {
     if (Array.isArray(value)) {
       return (
         <div>
-          <span className="font-semibold">{label}:</span>
+          <span className="font-Arial">{label}:</span>
           <ul className="list-disc ml-6">
             {value.map((v, i) => (
               <li key={i}>{String(v)}</li>
@@ -152,7 +152,7 @@ export default function JobsList() {
     }
     return (
       <div>
-        <span className="font-semibold">{label}:</span> {String(value)}
+        <span className="font-Arial">{label}:</span> {String(value)}
       </div>
     )
   }
@@ -162,13 +162,13 @@ export default function JobsList() {
     <div className="max-h-[60vh] overflow-auto">
       {jobs.map((job, idx) => (
         <div key={job.key} className="mb-4 border-b border-blue-200 pb-2 last:border-b-0 last:pb-0">
-          <div className="font-semibold text-blue-700 mb-1 underline underline-offset-4">
+          <div className="font-Arial  text-[#2D3E92] mb-1 underline underline-offset-4">
             PNR: {job.PNR}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
             {/* Pickup + PickupDate */}
             <div className="flex flex-wrap">
-              <span className="font-semibold w-28 shrink-0">Pickup:</span>
+              <span className="font-Arial w-28 shrink-0">Pickup:</span>
               <span className="break-words ml-2">{job.Pickup}{job.Pickup && job.PickupDate ? ' - ' : ''}{job.PickupDate ? formatDate(job.PickupDate) : ''}</span>
             </div>
             {/* Dropoff + DropoffDate */}
@@ -178,7 +178,7 @@ export default function JobsList() {
             </div>
             {/* PNRDate */}
             <div className="flex flex-wrap">
-              <span className="font-semibold w-28 shrink-0">PNRDate:</span>
+              <span className="font-Arial w-28 shrink-0">PNRDate:</span>
               <span className="break-words ml-2">{formatDate(job.PNRDate)}</span>
             </div>
             {Object.entries(job)
@@ -201,7 +201,7 @@ export default function JobsList() {
                 if (k === "serviceTypeName") label = "TypeName";
                 return (
                   <div key={k} className="flex flex-wrap">
-                    <span className="font-semibold w-28 shrink-0">{label}:</span>
+                    <span className="font-Arial w-28 shrink-0">{label}:</span>
                     <span className="break-words ml-2">{typeof v === 'object' ? JSON.stringify(v) : String(v)}</span>
                   </div>
                 );
@@ -219,11 +219,11 @@ export default function JobsList() {
         <div className="flex items-center gap-2">
           <span className="inline-block w-3 h-3 rounded-full bg-orange-400"></span>
           <span className="text-gray-500">All Jobs:</span>
-          <span className="font-bold text-blue-700">{filteredJobs.length}</span>
+          <span className="font-Arial text-[#2D3E92]">{filteredJobs.length}</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-gray-500">Unique PNR:</span>
-          <span className="font-bold text-blue-700">{mergedJobs.length}</span>
+          <span className="font-Arial text-[#2D3E92]">{mergedJobs.length}</span>
         </div>
       </div>
     </div>
@@ -250,17 +250,17 @@ export default function JobsList() {
 
   return (
     <CssgGuide>
-      <div className="flex flex-col items-center py-8 min-h-screen bg-base-200 relative">
+      <div className="flex flex-col items-center py-8 min-h-screen bg-base-200 relative ">
         {/* Summary bar */}
         {summary}
         <div className="bg-base-100 rounded-xl shadow-xl border border-base-300 w-full max-w-7xl p-0">
-          <div className="p-4 w-full /* min-h-screen */ overflow-auto">
-            <h1 className="text-2xl font-bold mb-4">Jobs List</h1>
+          <div className="p-4 w-full /* min-h-screen */ overflow-auto bg-[#ffffff]">
+            <h1 className="text-2xl font-Arial mb-4">Jobs List</h1>
             {/* ปรับ UI ช่วงเลือกวันที่ */}
             <div className="mb-8 flex flex-col items-center">
               <div className="bg-base-100 border border-base-300 rounded-xl shadow-md px-6 py-4 flex flex-col sm:flex-row items-center gap-4 w-full max-w-xl">
                 <div className="flex flex-col items-start w-full">
-                  <label className="mb-1 text-xs text-gray-500 font-semibold" htmlFor="start-date">
+                  <label className="mb-1 text-xs text-gray-500 font-Arial" htmlFor="start-date">
                     Start date
                   </label>
                   <input
@@ -273,9 +273,9 @@ export default function JobsList() {
                     placeholder="Start date"
                   />
                 </div>
-                <span className="mx-2 mt-6 sm:mt-8 text-gray-400 font-semibold hidden sm:inline">to</span>
+                <span className="mx-2 mt-6 sm:mt-8 text-gray-400 font-Arial hidden sm:inline">to</span>
                 <div className="flex flex-col items-start w-full">
-                  <label className="mb-1 text-xs text-gray-500 font-semibold" htmlFor="end-date">
+                  <label className="mb-1 text-xs text-gray-500 font-Arial" htmlFor="end-date">
                     End date
                   </label>
                   <input
@@ -318,7 +318,7 @@ export default function JobsList() {
                         className="relative bg-white border border-base-300 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col"
                       >
                         {/* Show number of jobs in this PNR at top-left */}
-                        <div className="absolute top-4 left-4 bg-blue-100 text-blue-700 font-bold rounded-full px-3 py-1 text-sm shadow z-10">
+                        <div className="absolute top-4 left-4 bg-blue-100 text-[#2D3E92] font-Arial rounded-full px-3 py-1 text-sm shadow z-10">
                           {job.all?.length ?? 1}
                         </div>
 
@@ -331,13 +331,13 @@ export default function JobsList() {
                         >
                           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                             <circle cx="12" cy="12" r="10" stroke="blue" strokeWidth="2" fill="white" />
-                            <text x="12" y="12" textAnchor="middle" dominantBaseline="central" fontSize="18" fill="black" fontWeight="bold">i</text>
+                            <text x="12" y="12" textAnchor="middle" dominantBaseline="central" fontSize="18" fill="black" fontWeight="Arial">i</text>
                           </svg>
                         </button>
 
                         {/* PNR header (click to toggle) */}
                         <div className="p-6 pb-0 cursor-pointer" onClick={toggleExpand}>
-                          <h2 className="text-xl font-bold mb-2 text-primary underline underline-offset-4">
+                          <h2 className="text-xl font-Arial mb-2 text-primary underline underline-offset-4">
                             PNR: {job.PNR}
                             <span className="ml-2 text-sm text-gray-500">{isExpanded ? '▲' : '▼'}</span>
                           </h2>
@@ -356,7 +356,7 @@ export default function JobsList() {
                             <div className="flex gap-3 mt-auto flex-wrap">
                               {/* Accept Button */}
                               <button
-                                className="btn btn-success flex-1 text-base font-bold py-2 rounded-full shadow"
+                                className="btn btn-success flex-1 text-base font-Arial py-2 rounded-full shadow  text-white bg-[#95c941] hover:opacity-90"
                                 onClick={async () => {
                                   try {
                                     const token = localStorage.getItem("token") || "";
@@ -383,7 +383,8 @@ export default function JobsList() {
 
                               {/* Reject Button */}
                               <button
-                                className="btn btn-error flex-1 text-base font-bold py-2 rounded-full shadow"
+                                className="btn flex-1 text-base font-Arial py-2 rounded-full shadow text-white bg-[#E44949] hover:opacity-90"
+
                                 onClick={async () => {
                                   try {
                                     const token = localStorage.getItem("token") || "";
@@ -435,7 +436,7 @@ export default function JobsList() {
                     >
                       Prev
                     </button>
-                    <span className="px-2 py-1 font-semibold text-base-content">{page} <span className="text-gray-400">/</span> {totalPages}</span>
+                    <span className="px-2 py-1 font-Arial text-base-content">{page} <span className="text-gray-400">/</span> {totalPages}</span>
                     <button
                       className="btn btn-outline btn-sm rounded-full min-w-[64px]"
                       disabled={page === totalPages}
@@ -455,7 +456,7 @@ export default function JobsList() {
                       >
                         ✕
                       </button>
-                      <h2 className="text-xl font-bold mb-4">All Job Details</h2>
+                      <h2 className="text-xl font-Arial mb-4">All Job Details</h2>
                       {renderAllDetails(detailJobs)}
                     </div>
                   </div>
@@ -470,7 +471,7 @@ export default function JobsList() {
                       >
                         ✕
                       </button>
-                      <h2 className="text-xl font-bold mb-4">Upload Photo & Remark</h2>
+                      <h2 className="text-xl font-Arial mb-4">Upload Photo & Remark</h2>
                       <form
                         onSubmit={e => {
                           e.preventDefault();
@@ -481,7 +482,7 @@ export default function JobsList() {
                         className="space-y-4"
                       >
                         <div>
-                          <label className="block font-semibold mb-1">Photo</label>
+                          <label className="block font-Arial mb-1">Photo</label>
                           <input
                             type="file"
                             accept="image/*"
@@ -492,7 +493,7 @@ export default function JobsList() {
                           />
                         </div>
                         <div>
-                          <label className="block font-semibold mb-1">Remark</label>
+                          <label className="block font-Arial mb-1">Remark</label>
                           <textarea
                             className="textarea textarea-bordered w-full"
                             rows={3}
