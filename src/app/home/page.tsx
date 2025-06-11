@@ -71,6 +71,8 @@ export default function JobsList() {
   const [endDate, setEndDate] = useState<string>(getEndOfMonth());
   const [page, setPage] = useState(1)
   const [uploadJob, setUploadJob] = useState<Job | null>(null)
+  const [expandedPNRs, setExpandedPNRs] = useState<{ [pnr: string]: boolean }>({});
+
 
   const pageSize = 6
 
@@ -300,108 +302,128 @@ export default function JobsList() {
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {pagedJobs.map((job: any, idx) => (
-                    <div key={job.PNR} className="relative bg-white border border-base-300 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col">
-                      {/* Show number of jobs in this PNR at top-left */}
-                      <div className="absolute top-4 left-4 bg-blue-100 text-blue-700 font-bold rounded-full px-3 py-1 text-sm shadow z-10">
-                        {job.all?.length ?? 1}
-                      </div>
-                      {/* Logo button for detail */}
-                      <button
-                        className="absolute top-4 right-4 btn btn-circle btn-outline"
-                        title="Show all details"
-                        onClick={() => setDetailJobs(job.all)}
-                        style={{ zIndex: 2 }}
+                  {pagedJobs.map((job: any) => {
+                    const isExpanded = expandedPNRs[job.PNR] ?? false;
+
+                    const toggleExpand = () => {
+                      setExpandedPNRs(prev => ({
+                        ...prev,
+                        [job.PNR]: !isExpanded
+                      }));
+                    };
+
+                    return (
+                      <div
+                        key={job.PNR}
+                        className="relative bg-white border border-base-300 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col"
                       >
-
-                        {/* Any logo/icon, here is a simple info icon */}
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                          <circle cx="12" cy="12" r="10" stroke="blue" strokeWidth="2" fill="white" />
-                          <text x="12" y="12" textAnchor="middle" dominantBaseline="central" fontSize="18" fill="black" fontWeight="bold">i</text>
-                        </svg>
-                      </button>
-                      <div className="p-6 flex-1 flex flex-col">
-                        <h2 className="text-xl font-bold mb-2 text-primary underline underline-offset-4">PNR: {job.PNR}</h2>
-                        <div className="text-sm text-gray-600 space-y-1 mb-4">
-                          {/* Combine Pickup + PickupDate */}
-                          {renderPlaceDate(job.Pickup, job.PickupDate, 'Pickup')}
-                          {/* Combine Dropoff + DropoffDate */}
-                          {renderPlaceDate(job.Dropoff, job.DropoffDate, 'Dropoff')}
-                          {renderField('Pax', job.Pax)}
-                          {renderField('Source', job.Source)}
+                        {/* Show number of jobs in this PNR at top-left */}
+                        <div className="absolute top-4 left-4 bg-blue-100 text-blue-700 font-bold rounded-full px-3 py-1 text-sm shadow z-10">
+                          {job.all?.length ?? 1}
                         </div>
-                        <div className="flex gap-3 mt-auto flex-wrap">
-                          {/* Accept Button */}
-                          <button
-                            className="btn btn-success flex-1 text-base font-bold py-2 rounded-full shadow"
-                            onClick={async () => {
-                              try {
 
-                                const token = localStorage.getItem("token") || "";
-                                const response = await axios.put(
-                                  `http://10.2.4.200:7072/api/guide/job/${job.key}`,
-                                  {
-                                    token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
-                                    data: { isConfirmed: true }
-                                  }
-                                );
-                                console.log("Accept response:", response.data);
-                                const result = response.data;
-                                if (result.success) {
-                                  alert("Accept งานสำเร็จ");
-                                  // setJobs(jobs => jobs.map(j => j.key === job.key ? result : j));
-                                } else {
-                                  alert("Accept งานไม่สำเร็จ: " + (result?.error || "Unknown error"));
-                                }
-                              } catch (e: any) {
-                                console.error("Accept error:", e);
-                                alert("เกิดข้อผิดพลาด: " + e.message);
-                              }
-                            }}
-                          >
-                            Accept
-                          </button>
-                          {/* Reject Button */}
-                          <button
-                            className="btn btn-error flex-1 text-base font-bold py-2 rounded-full shadow"
-                            onClick={async () => {
-                              try {
-                                const token = localStorage.getItem("token") || "";
-                                const response = await axios.put(
-                                  `https://operation.dth.travel:7082/api/guide/job/${job.key}`,
-                                  {
-                                    token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
-                                    data: { isCancel: true }
-                                  }
-                                );
-                                const result = response.data;
-                                if (result.success) {
-                                  alert("Reject งานสำเร็จ");
-                                  // setJobs(jobs => jobs.map(j => j.key === job.key ? result : j));
-                                } else {
-                                  alert("Reject งานไม่สำเร็จ: " + (result?.error || "Unknown error"));
-                                }
-                              } catch (e: any) {
-                                alert("เกิดข้อผิดพลาด: " + e.message);
-                              }
-                            }}
-                          >
-                            Reject Job
-                          </button>
-                          {/* ปุ่มสำหรับอัปโหลด */}
-                          <button
-                            className="btn btn-info btn-sm btn-circle"
-                            onClick={() => setUploadJob(job)}
-                            title="Upload Photo & Remark"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
-                            </svg>
-                          </button>
+                        {/* Logo button */}
+                        <button
+                          className="absolute top-4 right-4 btn btn-circle btn-outline"
+                          title="Show all details"
+                          onClick={() => setDetailJobs(job.all)}
+                          style={{ zIndex: 2 }}
+                        >
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" stroke="blue" strokeWidth="2" fill="white" />
+                            <text x="12" y="12" textAnchor="middle" dominantBaseline="central" fontSize="18" fill="black" fontWeight="bold">i</text>
+                          </svg>
+                        </button>
+
+                        {/* PNR header (click to toggle) */}
+                        <div className="p-6 pb-0 cursor-pointer" onClick={toggleExpand}>
+                          <h2 className="text-xl font-bold mb-2 text-primary underline underline-offset-4">
+                            PNR: {job.PNR}
+                            <span className="ml-2 text-sm text-gray-500">{isExpanded ? '▲' : '▼'}</span>
+                          </h2>
                         </div>
+
+                        {/* Expanded content */}
+                        {isExpanded && (
+                          <div className="p-6 pt-0 flex-1 flex flex-col">
+                            <div className="text-sm text-gray-600 space-y-1 mb-4">
+                              {renderPlaceDate(job.Pickup, job.PickupDate, 'Pickup')}
+                              {renderPlaceDate(job.Dropoff, job.DropoffDate, 'Dropoff')}
+                              {renderField('Pax', job.Pax)}
+                              {renderField('Source', job.Source)}
+                            </div>
+
+                            <div className="flex gap-3 mt-auto flex-wrap">
+                              {/* Accept Button */}
+                              <button
+                                className="btn btn-success flex-1 text-base font-bold py-2 rounded-full shadow"
+                                onClick={async () => {
+                                  try {
+                                    const token = localStorage.getItem("token") || "";
+                                    const response = await axios.put(
+                                      `http://10.2.4.200:7072/api/guide/job/${job.key}`,
+                                      {
+                                        token: "your_token_here",
+                                        data: { isConfirmed: true }
+                                      }
+                                    );
+                                    const result = response.data;
+                                    if (result.success) {
+                                      alert("Accept งานสำเร็จ");
+                                    } else {
+                                      alert("Accept งานไม่สำเร็จ: " + (result?.error || "Unknown error"));
+                                    }
+                                  } catch (e: any) {
+                                    alert("เกิดข้อผิดพลาด: " + e.message);
+                                  }
+                                }}
+                              >
+                                Accept
+                              </button>
+
+                              {/* Reject Button */}
+                              <button
+                                className="btn btn-error flex-1 text-base font-bold py-2 rounded-full shadow"
+                                onClick={async () => {
+                                  try {
+                                    const token = localStorage.getItem("token") || "";
+                                    const response = await axios.put(
+                                      `https://operation.dth.travel:7082/api/guide/job/${job.key}`,
+                                      {
+                                        token: "your_token_here",
+                                        data: { isCancel: true }
+                                      }
+                                    );
+                                    const result = response.data;
+                                    if (result.success) {
+                                      alert("Reject งานสำเร็จ");
+                                    } else {
+                                      alert("Reject งานไม่สำเร็จ: " + (result?.error || "Unknown error"));
+                                    }
+                                  } catch (e: any) {
+                                    alert("เกิดข้อผิดพลาด: " + e.message);
+                                  }
+                                }}
+                              >
+                                Reject Job
+                              </button>
+
+                              {/* Upload Button */}
+                              <button
+                                className="btn btn-info btn-sm btn-circle"
+                                onClick={() => setUploadJob(job)}
+                                title="Upload Photo & Remark"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 {/* Pagination */}
                 <div className="w-full flex justify-center mt-6">
