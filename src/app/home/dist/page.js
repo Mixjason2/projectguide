@@ -291,23 +291,22 @@ function JobsList() {
             React.createElement("div", { className: "bg-[#F9FAFB] rounded-3xl shadow-lg border border-gray-300 w-full max-w-7xl p-6" },
                 React.createElement("div", { className: "p-4 w-full /* min-h-screen */ overflow-auto bg-[#F9FAFB]" },
                     React.createElement("h1", { className: "text-2xl font-Arial mb-4" }, "Jobs List"),
-                    React.createElement("div", { className: "mb-8 flex flex-col items-center" },
-                        React.createElement("div", { className: "bg-base-100 border border-base-300 rounded-xl shadow-md px-6 py-4 flex flex-col sm:flex-row items-center gap-4 w-full max-w-xl", style: {
+                    React.createElement("div", { className: "mb-6 flex flex-col items-center w-full px-4" },
+                        React.createElement("div", { className: "w-full rounded-xl shadow-md px-4 py-4 flex flex-row items-end justify-between gap-2", style: {
                                 backgroundColor: '#E6F0FA',
-                                borderColor: '#2D3E92'
+                                border: '1px solid #2D3E92'
                             } },
-                            React.createElement("div", { className: "flex flex-col items-start w-full" },
-                                React.createElement("label", { className: "mb-1 text-xs text-gray-500 font-Arial", htmlFor: "start-date" }, "Start date"),
+                            React.createElement("div", { className: "flex flex-col w-[48%]" },
+                                React.createElement("label", { htmlFor: "start-date", className: "mb-1 text-xs text-gray-500 font-Arial" }, "Start date"),
                                 React.createElement("input", { id: "start-date", type: "date", value: startDate, max: endDate, onChange: function (e) { return setStartDate(e.target.value); }, className: "input input-bordered w-full", placeholder: "Start date" })),
-                            React.createElement("span", { className: "mx-2 mt-6 sm:mt-8 text-gray-400 font-Arial hidden sm:inline" }, "to"),
-                            React.createElement("div", { className: "flex flex-col items-start w-full" },
-                                React.createElement("label", { className: "mb-1 text-xs text-gray-500 font-Arial", htmlFor: "end-date" }, "End date"),
+                            React.createElement("div", { className: "flex flex-col w-[48%]" },
+                                React.createElement("label", { htmlFor: "end-date", className: "mb-1 text-xs text-gray-500 font-Arial" }, "End date"),
                                 React.createElement("input", { id: "end-date", type: "date", value: endDate, min: startDate, onChange: function (e) { return setEndDate(e.target.value); }, className: "input input-bordered w-full", placeholder: "End date" }))),
-                        React.createElement("span", { className: "mt-2 text-xs text-gray-400" }, "Please select a date range to filter the desired tasks.")),
+                        React.createElement("span", { className: "mt-2 text-xs text-gray-400 text-center px-2" }, "Please select a date range to filter the desired tasks.")),
                     loading ? (React.createElement("div", { className: "p-4 " }, "Loading jobs...")) : error ? (React.createElement("div", { className: "p-4 text-red-600" },
                         "Error: ",
                         error)) : !pagedJobs.length ? (React.createElement("div", { className: "p-4" }, "No jobs found")) : (React.createElement(React.Fragment, null,
-                        React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8" }, pagedJobs.map(function (job) {
+                        React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" }, pagedJobs.map(function (job) {
                             var _a, _b, _c;
                             var isExpanded = (_a = expandedPNRs[job.PNR]) !== null && _a !== void 0 ? _a : false;
                             var toggleExpand = function () {
@@ -321,8 +320,8 @@ function JobsList() {
                                     borderColor: '#9EE4F6',
                                     borderWidth: '1px'
                                 } },
-                                React.createElement("div", { className: "absolute top-6 left-0 bg-blue-100 text-[#2D3E92] font-Arial rounded-full px-3 py-1 text-sm shadow z-10" }, (_c = (_b = job.all) === null || _b === void 0 ? void 0 : _b.length) !== null && _c !== void 0 ? _c : 1),
-                                React.createElement("button", { className: "absolute top-4 right-0 w-10 h-10 rounded-full bg-white border-2 border-[#2D3E92] shadow-[0_4px_10px_rgba(45,62,146,0.3)] hover:shadow-[0_6px_14px_rgba(45,62,146,0.4)] transition-all duration-200 flex items-center justify-center", title: "Show all details", onClick: function () { return setDetailJobs(job.all); }, style: { zIndex: 2 } },
+                                React.createElement("div", { className: "absolute top-2 left-1 bg-blue-100 text-[#2D3E92] font-Arial rounded-full px-3 py-1 text-sm shadow z-10" }, (_c = (_b = job.all) === null || _b === void 0 ? void 0 : _b.length) !== null && _c !== void 0 ? _c : 1),
+                                React.createElement("button", { className: "absolute top-3.5 right-2 w-8 h-8 rounded-full bg-white border-2 border-[#2D3E92] shadow-[0_4px_10px_rgba(45,62,146,0.3)] hover:shadow-[0_6px_14px_rgba(45,62,146,0.4)] transition-all duration-200 flex items-center justify-center", title: "Show all details", onClick: function () { return setDetailJobs(job.all); }, style: { zIndex: 2 } },
                                     React.createElement("svg", { width: "28", height: "28", viewBox: "0 0 24 24", fill: "none" },
                                         React.createElement("circle", { cx: "12", cy: "12", r: "10", fill: "#F0F8FF" }),
                                         React.createElement("text", { x: "12", y: "12", textAnchor: "middle", dominantBaseline: "central", fontSize: "18", fill: "#2D3E92", fontFamily: "Arial", fontWeight: "bold" }, "i"))),

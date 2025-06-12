@@ -257,13 +257,17 @@ export default function JobsList() {
           <div className="p-4 w-full /* min-h-screen */ overflow-auto bg-[#F9FAFB]">
             <h1 className="text-2xl font-Arial mb-4">Jobs List</h1>
             {/* ปรับ UI ช่วงเลือกวันที่ */}
-            <div className="mb-8 flex flex-col items-center">
-              <div className="bg-base-100 border border-base-300 rounded-xl shadow-md px-6 py-4 flex flex-col sm:flex-row items-center gap-4 w-full max-w-xl" style={{
-                backgroundColor: '#E6F0FA',
-                borderColor: '#2D3E92',
-              }}>
-                <div className="flex flex-col items-start w-full">
-                  <label className="mb-1 text-xs text-gray-500 font-Arial" htmlFor="start-date">
+            <div className="mb-6 flex flex-col items-center w-full px-4">
+              <div
+                className="w-full rounded-xl shadow-md px-4 py-4 flex flex-row items-end justify-between gap-2"
+                style={{
+                  backgroundColor: '#E6F0FA',
+                  border: '1px solid #2D3E92',
+                }}
+              >
+                {/* Start Date */}
+                <div className="flex flex-col w-[48%]">
+                  <label htmlFor="start-date" className="mb-1 text-xs text-gray-500 font-Arial">
                     Start date
                   </label>
                   <input
@@ -276,9 +280,10 @@ export default function JobsList() {
                     placeholder="Start date"
                   />
                 </div>
-                <span className="mx-2 mt-6 sm:mt-8 text-gray-400 font-Arial hidden sm:inline">to</span>
-                <div className="flex flex-col items-start w-full">
-                  <label className="mb-1 text-xs text-gray-500 font-Arial" htmlFor="end-date">
+
+                {/* End Date */}
+                <div className="flex flex-col w-[48%]">
+                  <label htmlFor="end-date" className="mb-1 text-xs text-gray-500 font-Arial">
                     End date
                   </label>
                   <input
@@ -292,10 +297,13 @@ export default function JobsList() {
                   />
                 </div>
               </div>
-              <span className="mt-2 text-xs text-gray-400">
+
+              <span className="mt-2 text-xs text-gray-400 text-center px-2">
                 Please select a date range to filter the desired tasks.
               </span>
             </div>
+
+
             {loading ? (
               <div className="p-4 ">Loading jobs...</div>
             ) : error ? (
@@ -304,7 +312,7 @@ export default function JobsList() {
               <div className="p-4">No jobs found</div>
             ) : (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {pagedJobs.map((job: any) => {
                     const isExpanded = expandedPNRs[job.PNR] ?? false;
 
@@ -325,13 +333,13 @@ export default function JobsList() {
                         }}
                       >
                         {/* Show number of jobs in this PNR at top-left */}
-                        <div className="absolute top-6 left-0 bg-blue-100 text-[#2D3E92] font-Arial rounded-full px-3 py-1 text-sm shadow z-10">
+                        <div className="absolute top-2 left-1 bg-blue-100 text-[#2D3E92] font-Arial rounded-full px-3 py-1 text-sm shadow z-10">
                           {job.all?.length ?? 1}
                         </div>
 
                         {/* Logo button */}
                         <button
-                          className="absolute top-4 right-0 w-10 h-10 rounded-full bg-white border-2 border-[#2D3E92] shadow-[0_4px_10px_rgba(45,62,146,0.3)] hover:shadow-[0_6px_14px_rgba(45,62,146,0.4)] transition-all duration-200 flex items-center justify-center"
+                          className="absolute top-3.5 right-2 w-8 h-8 rounded-full bg-white border-2 border-[#2D3E92] shadow-[0_4px_10px_rgba(45,62,146,0.3)] hover:shadow-[0_6px_14px_rgba(45,62,146,0.4)] transition-all duration-200 flex items-center justify-center"
                           title="Show all details"
                           onClick={() => setDetailJobs(job.all)}
                           style={{ zIndex: 2 }}
@@ -358,7 +366,7 @@ export default function JobsList() {
                         {/* PNR header (click to toggle) */}
                         <div
                           className="inline-block p-6 pb-0 cursor-pointer mx-auto"
-                          onClick={toggleExpand}                        >
+                          onClick={toggleExpand}>
                           <h2
                             className="text-xl font-Arial mb-2 text-primary underline underline-offset-4"
                             style={{ color: '#2D3E92' }}

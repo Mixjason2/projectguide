@@ -7,14 +7,14 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
     return (
         <>
             {/* Header */}
-            <header className="navbar bg-[#2D3E92] py-8 px-12 text-3xl font-bold shadow-lg flex items-center justify-between text-white">
+            <header className="navbar bg-[#2D3E92] py-4 px-12 text-3xl font-bold shadow-lg flex items-center justify-between text-white">
                 {/* Left: Hamburger */}
                 <div className="flex-none flex items-center">
                     <button
                         className="btn btn-square btn-ghost text-white"
                         onClick={() => setOpen(true)}
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="inline-block h-5 w-5 stroke-current">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="inline-block h-8 w-8 stroke-current">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path>
                         </svg>
                     </button>

@@ -6,10 +6,10 @@ function CssgGuide(_a) {
     var children = _a.children;
     var _b = react_1.useState(false), open = _b[0], setOpen = _b[1];
     return (react_1["default"].createElement(react_1["default"].Fragment, null,
-        react_1["default"].createElement("header", { className: "navbar bg-[#2D3E92] py-8 px-12 text-3xl font-bold shadow-lg flex items-center justify-between text-white" },
+        react_1["default"].createElement("header", { className: "navbar bg-[#2D3E92] py-4 px-12 text-3xl font-bold shadow-lg flex items-center justify-between text-white" },
             react_1["default"].createElement("div", { className: "flex-none flex items-center" },
                 react_1["default"].createElement("button", { className: "btn btn-square btn-ghost text-white", onClick: function () { return setOpen(true); } },
-                    react_1["default"].createElement("svg", { xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", className: "inline-block h-5 w-5 stroke-current" },
+                    react_1["default"].createElement("svg", { xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", className: "inline-block h-8 w-8 stroke-current" },
                         react_1["default"].createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: "2", d: "M4 6h16M4 12h16M4 18h16" })))),
             react_1["default"].createElement("div", { className: "flex items-center justify-center w-full" },
                 react_1["default"].createElement("img", { src: "https://dth.travel/wp-content/uploads/2023/08/DTH-LOGO-FULL-WHITE-FORMERLY-new.svg", alt: "DTH Logo", className: "h-16 w-auto" })),
