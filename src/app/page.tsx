@@ -95,7 +95,31 @@ export default function LoginPage() {
 >
 </div>
     <div className="card-body relative z-10">
-      <h2 className="card-title justify-center mb-6 text-2xl font-bold text-gray-800">Login</h2>
+    <div className="flex flex-col items-center  p-0 m-0 leading-none">
+  {/* DTH อยู่บรรทัดเดียว ไม่มีช่อง */}
+  <h2 className="text-[4rem] font-extrabold flex p-0 m-0 leading-none">
+    <span className="text-blue-900">D</span>
+    <span className="text-green-500">T</span>
+    <span className="text-teal-500">H</span>
+  </h2>
+
+  {/* TRAVEL มีเส้นดำเฉพาะเหนือ TR */}
+  <div className="relative flex flex-col items-center mt-[-4px]">
+    {/* เส้นดำเฉพาะเหนือ TR */}
+    <div className="absolute h-1 border-t-4 border-black top-[-0.5px] left-[0.1em] w-[3.2em]"></div>
+    
+    <p className="text-[2.2rem] font-bold uppercase m-0 p-0 leading-none tracking-wide">
+      TRAVEL
+    </p>
+  </div>
+
+  {/* GUIDE PORTAL ชิดกับ TRAVEL */}
+  <p className="text-[1.25rem] font-bold uppercase m-0 p-0 leading-none -mt-1">
+    GUIDE PORTAL
+  </p>
+</div>
+
+
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <label htmlFor="username" className="block text-base font-bold mb-1 text-gray-800">Username</label>

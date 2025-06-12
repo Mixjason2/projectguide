@@ -96,11 +96,37 @@ function CalendarExcel() {
         });
     }, [jobs]);
     if (loading)
-        return react_1["default"].createElement("div", null, "Loading jobs...");
+        return (react_1["default"].createElement("div", { style: {
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100vh',
+                fontSize: '1.2rem',
+                color: '#555'
+            } },
+            react_1["default"].createElement("div", { style: { display: 'flex', gap: '8px', marginBottom: '12px' } },
+                react_1["default"].createElement("span", { style: dotStyle(0) }),
+                react_1["default"].createElement("span", { style: dotStyle(1) }),
+                react_1["default"].createElement("span", { style: dotStyle(2) })),
+            "Loading jobs...",
+            react_1["default"].createElement("style", null, "\n      @keyframes bounce {\n        0%, 80%, 100% {\n          transform: scale(0);\n        } 40% {\n          transform: scale(1);\n        }\n      }\n    ")));
+    // ฟังก์ชันช่วยสร้างสไตล์แต่ละ dot พร้อมดีเลย์
+    function dotStyle(delayIndex) {
+        return {
+            width: '12px',
+            height: '12px',
+            backgroundColor: '#95c941',
+            borderRadius: '50%',
+            display: 'inline-block',
+            animation: 'bounce 1.4s infinite ease-in-out both',
+            animationDelay: delayIndex * 0.2 + "s"
+        };
+    }
     if (error)
-        return react_1["default"].createElement("div", null,
+        return (react_1["default"].createElement("div", { className: "max-w-md mx-auto my-5 p-4 text-red-700 bg-red-100 border border-red-300 rounded-lg font-semibold text-center shadow-md" },
             "Error: ",
-            error);
+            error));
     return (react_1["default"].createElement(cssguide_1["default"], null,
         react_1["default"].createElement(react_2["default"], { plugins: [daygrid_1["default"], timegrid_1["default"], list_1["default"], interaction_1["default"]], initialView: "dayGridMonth", events: events, height: "100%", contentHeight: "auto", aspectRatio: 1.7, headerToolbar: {
                 start: 'title',

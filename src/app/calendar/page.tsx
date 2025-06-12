@@ -58,8 +58,53 @@ export default function CalendarExcel() {
     }));
   }, [jobs]);
 
-  if (loading) return <div>Loading jobs...</div>;
-  if (error) return <div>Error: {error}</div>;
+if (loading) return (
+  <div style={{
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100vh',
+    fontSize: '1.2rem',
+    color: '#555'
+  }}>
+    <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+      <span style={dotStyle(0)}></span>
+      <span style={dotStyle(1)}></span>
+      <span style={dotStyle(2)}></span>
+    </div>
+    Loading jobs...
+    <style>{`
+      @keyframes bounce {
+        0%, 80%, 100% {
+          transform: scale(0);
+        } 40% {
+          transform: scale(1);
+        }
+      }
+    `}</style>
+  </div>
+);
+
+// ฟังก์ชันช่วยสร้างสไตล์แต่ละ dot พร้อมดีเลย์
+function dotStyle(delayIndex: number) {
+  return {
+    width: '12px',
+    height: '12px',
+    backgroundColor: '#95c941', // สีเขียวสดใสเหมือนที่ขอ
+    borderRadius: '50%',
+    display: 'inline-block',
+    animation: 'bounce 1.4s infinite ease-in-out both',
+    animationDelay: `${delayIndex * 0.2}s`,
+  };
+}
+
+  if (error) return (
+  <div className="max-w-md mx-auto my-5 p-4 text-red-700 bg-red-100 border border-red-300 rounded-lg font-semibold text-center shadow-md">
+    Error: {error}
+  </div>
+);
+
 
   return (
 
