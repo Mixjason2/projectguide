@@ -63,7 +63,7 @@ function getEndOfMonth() {
 }
 
 export default function JobsList() {
-  const [jobs, setJobs] = useState<Job[]>([])
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [detailJobs, setDetailJobs] = useState<Job[] | null>(null)
@@ -72,6 +72,8 @@ export default function JobsList() {
   const [page, setPage] = useState(1)
   const [uploadJob, setUploadJob] = useState<Job | null>(null)
   const [expandedPNRs, setExpandedPNRs] = useState<{ [pnr: string]: boolean }>({});
+  const [acceptedPNRs, setAcceptedPNRs] = useState<string[]>([]);
+
 
 
   const pageSize = 6
@@ -96,7 +98,6 @@ export default function JobsList() {
         setJobs(data)
       })
       .catch(err => setError(err.message))
-      .finally(() => setLoading(false))
   }, []);
 
   const filteredJobs = jobs.filter(job => {
@@ -191,7 +192,9 @@ export default function JobsList() {
                 k !== "PickupDate" &&
                 k !== "Dropoff" &&
                 k !== "DropoffDate" &&
-                k !== "PNRDate"
+                k !== "PNRDate" &&
+                k !== "all" &&
+                k !== "keys"
               )
               .map(([k, v]) => {
                 // ถ้า key คือ serviceSupplierCode_TP หรือ serviceProductName ให้ตัดคำว่า "service" ออก
@@ -257,51 +260,51 @@ export default function JobsList() {
           <div className="p-4 w-full /* min-h-screen */ overflow-auto bg-[#F9FAFB]">
             <h1 className="text-2xl font-Arial mb-4">Jobs List</h1>
             {/* ปรับ UI ช่วงเลือกวันที่ */}
-<div className="mb-6 flex flex-col items-center w-full px-4">
-  <div
-    className="w-full rounded-xl shadow-md px-4 py-4 flex flex-row items-end justify-between gap-2"
-    style={{
-      backgroundColor: '#E6F0FA',
-      border: '1px solid #2D3E92',
-    }}
-  >
-    {/* Start Date */}
-    <div className="flex flex-col w-[48%]">
-      <label htmlFor="start-date" className="mb-1 text-xs text-gray-500 font-Arial">
-        Start date
-      </label>
-      <input
-        id="start-date"
-        type="date"
-        value={startDate}
-        max={endDate}
-        onChange={e => setStartDate(e.target.value)}
-        className="input input-bordered w-full"
-        placeholder="Start date"
-      />
-    </div>
+            <div className="mb-6 flex flex-col items-center w-full px-4">
+              <div
+                className="w-full rounded-xl shadow-md px-4 py-4 flex flex-row items-end justify-between gap-2"
+                style={{
+                  backgroundColor: '#E6F0FA',
+                  border: '1px solid #2D3E92',
+                }}
+              >
+                {/* Start Date */}
+                <div className="flex flex-col w-[48%]">
+                  <label htmlFor="start-date" className="mb-1 text-xs text-gray-500 font-Arial">
+                    Start date
+                  </label>
+                  <input
+                    id="start-date"
+                    type="date"
+                    value={startDate}
+                    max={endDate}
+                    onChange={e => setStartDate(e.target.value)}
+                    className="input input-bordered w-full"
+                    placeholder="Start date"
+                  />
+                </div>
 
-    {/* End Date */}
-    <div className="flex flex-col w-[48%]">
-      <label htmlFor="end-date" className="mb-1 text-xs text-gray-500 font-Arial">
-        End date
-      </label>
-      <input
-        id="end-date"
-        type="date"
-        value={endDate}
-        min={startDate}
-        onChange={e => setEndDate(e.target.value)}
-        className="input input-bordered w-full"
-        placeholder="End date"
-      />
-    </div>
-  </div>
+                {/* End Date */}
+                <div className="flex flex-col w-[48%]">
+                  <label htmlFor="end-date" className="mb-1 text-xs text-gray-500 font-Arial">
+                    End date
+                  </label>
+                  <input
+                    id="end-date"
+                    type="date"
+                    value={endDate}
+                    min={startDate}
+                    onChange={e => setEndDate(e.target.value)}
+                    className="input input-bordered w-full"
+                    placeholder="End date"
+                  />
+                </div>
+              </div>
 
-  <span className="mt-2 text-xs text-gray-400 text-center px-2">
-    Please select a date range to filter the desired tasks.
-  </span>
-</div>
+              <span className="mt-2 text-xs text-gray-400 text-center px-2">
+                Please select a date range to filter the desired tasks.
+              </span>
+            </div>
 
 
             {loading ? (
@@ -390,74 +393,73 @@ export default function JobsList() {
                               {renderField('Pax', job.Pax)}
                               {renderField('Source', job.Source)}
                             </div>
+                            {!acceptedPNRs.includes(job.PNR) && (
 
-                            <div className="flex gap-3 mt-auto flex-wrap">
-                              {/* Accept Button */}
-                              <button
-                                className="btn btn-success flex-1 text-base font-Arial py-2 rounded-full shadow  text-white bg-[#95c941] hover:opacity-90"
-                                onClick={async () => {
-                                  try {
-                                    const token = localStorage.getItem("token") || "";
-                                    const response = await axios.post(
-                                      `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
-                                      {
-                                        token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
-                                        data: { isConfirmed: true }
+                              <div className="flex gap-3 mt-auto flex-wrap">
+                                {/* Accept Button */}
+                                <button
+                                  className="btn btn-success flex-1 text-base font-Arial py-2 rounded-full shadow  text-white bg-[#95c941] hover:opacity-90"
+                                  onClick={async () => {
+                                    try {
+                                      const token = localStorage.getItem("token") || "";
+                                      const response = await axios.post(
+                                        `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
+                                        {
+                                          token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
+                                          data: { isConfirmed: true }
+                                        }
+                                      );
+                                      const result = response.data;
+                                      if (result.success) {
+                                        alert("Accept งานสำเร็จ");
+
+                                        setAcceptedPNRs(prev => [...prev, job.PNR]);
+
+                                        setJobs(prevJobs => {
+                                          const remaining = prevJobs.filter(j => j.key !== job.key);
+                                          return [job, ...remaining];
+                                        });
+
+                                      } else {
+                                        alert("Accept งานไม่สำเร็จ: " + (result?.error || "Unknown error"));
                                       }
-                                    );
-                                    const result = response.data;
-                                    if (result.success) {
-                                      alert("Accept งานสำเร็จ");
-                                    } else {
-                                      alert("Accept งานไม่สำเร็จ: " + (result?.error || "Unknown error"));
+                                    } catch (e: any) {
+                                      alert("เกิดข้อผิดพลาด: " + e.message);
                                     }
-                                  } catch (e: any) {
-                                    alert("เกิดข้อผิดพลาด: " + e.message);
-                                  }
-                                }}
-                              >
-                                Accept
-                              </button>
+                                  }}
+                                >
+                                  Accept
+                                </button>
 
-                              {/* Reject Button */}
-                              <button
-                                className="btn flex-1 text-base font-Arial py-2 rounded-full shadow text-white bg-[#E44949] hover:opacity-90"
 
-                                onClick={async () => {
-                                  try {
-                                    const token = localStorage.getItem("token") || "";
-                                    const response = await axios.post(
-                                      `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
-                                      {
-                                        token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
-                                        data: { isCancel: true }
+                                {/* Reject Button */}
+                                <button
+                                  className="btn flex-1 text-base font-Arial py-2 rounded-full shadow text-white bg-[#E44949] hover:opacity-90"
+                                  onClick={async () => {
+                                    try {
+                                      const token = localStorage.getItem("token") || "";
+                                      const response = await axios.post(
+                                        `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
+                                        {
+                                          token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
+                                          data: { isCancel: true }
+                                        }
+                                      );
+                                      const result = response.data;
+                                      if (result.success) {
+                                        alert("แจ้งยกเลิกงานสำเร็จ กรุณารอหลังบ้านส่งอีเมลยืนยันสักครู่");
+                                      } else {
+                                        alert("แจ้งยกเลิกงานไม่สำเร็จ: " + (result?.error || "Unknown error"));
                                       }
-                                    );
-                                    const result = response.data;
-                                    if (result.success) {
-                                      alert("Reject งานสำเร็จ");
-                                    } else {
-                                      alert("Reject งานไม่สำเร็จ: " + (result?.error || "Unknown error"));
+                                    } catch (e: any) {
+                                      alert("เกิดข้อผิดพลาด: " + e.message);
                                     }
-                                  } catch (e: any) {
-                                    alert("เกิดข้อผิดพลาด: " + e.message);
-                                  }
-                                }}
-                              >
-                                Reject Job
-                              </button>
-
-                              {/* Upload Button */}
-                              <button
-                                className="btn btn-info btn-sm btn-circle"
-                                onClick={() => setUploadJob(job)}
-                                title="Upload Photo & Remark"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
-                                </svg>
-                              </button>
-                            </div>
+                                  }}
+                                >
+                                  Reject Job
+                                </button>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -499,62 +501,6 @@ export default function JobsList() {
                     </div>
                   </div>
                 )}
-                {/* Modal สำหรับอัปโหลดรูปและเนื้อหา */}
-                {uploadJob && (
-                  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl shadow-2xl border-4 border-blue-400 p-8 max-w-md w-full relative animate-fade-in">
-                      <button
-                        className="absolute top-2 right-2 btn btn-sm btn-error"
-                        onClick={() => setUploadJob(null)}
-                      >
-                        ✕
-                      </button>
-                      <h2 className="text-xl font-Arial mb-4">Upload Photo & Remark</h2>
-                      <form
-                        onSubmit={e => {
-                          e.preventDefault();
-                          // handle upload logic here
-                          alert('Uploaded!');
-                          setUploadJob(null);
-                        }}
-                        className="space-y-4"
-                      >
-                        <div>
-                          <label className="block font-Arial mb-1">Photo</label>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="file-input file-input-bordered w-full"
-                            onChange={e => {
-                              // handle file select
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <label className="block font-Arial mb-1">Remark</label>
-                          <textarea
-                            className="textarea textarea-bordered w-full"
-                            rows={3}
-                            placeholder="Enter remark..."
-                          // onChange={...}
-                          />
-                        </div>
-                        <div className="flex justify-end gap-2">
-                          <button
-                            type="button"
-                            className="btn btn-outline"
-                            onClick={() => setUploadJob(null)}
-                          >
-                            Cancel
-                          </button>
-                          <button type="submit" className="btn btn-primary">
-                            Upload
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                )}
               </>
             )}
           </div>
@@ -562,4 +508,5 @@ export default function JobsList() {
       </div>
     </CssgGuide>
   )
+
 }
