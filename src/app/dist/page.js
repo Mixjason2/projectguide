@@ -129,7 +129,7 @@ function LoginPage() {
                     width: "160px",
                     height: "170px"
                 } },
-                React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 300 190", width: "180", height: "155", style: { transform: "translateX(-25px) scale(2.2)", transformOrigin: "top right", width: "100%", height: "auto", display: "block" } },
+                React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 300 190", width: "180", height: "155", style: { transform: "translateX(-20px) scale(2.2)", transformOrigin: "top right", width: "100%", height: "auto", display: "block" } },
                     React.createElement("path", { fill: "#95c941", d: "M251.5,65.5c0.8,1.2,1.9,2,3.3,2.4c0.8,0.3,1.8,0.4,3,0.4h8.3V49.2h-8.3c-2.9,0-5.1,1.2-6.4,3.6 \r\n        c-1,1.8-1.5,3.9-1.5,6.5c0,1,0.1,2.1,0.4,3.2S250.9,64.6,251.5,65.5" }),
                     React.createElement("path", { fill: "#95c941", stroke: "#030303", "stroke-width": "0.2", d: "M242.6,63.3c-2.5,0-4.5-2-4.5-4.5s2-4.5,4.5-4.5s4.5,2,4.5,4.5S245.1,63.3,242.6,63.3" }),
                     React.createElement("path", { fill: "#2D3E92", d: "M227.8,36c-0.9,1.2-1.3,2.5-1.3,3.9c0,0.8,0.2,1.8,0.5,3l2.6,7.9l18.2-5.9l-2.6-7.9c-0.9-2.8-2.7-4.4-5.4-5 \r\n        c-2-0.4-4.2-0.2-6.6,0.5c-0.9,0.3-1.9,0.8-2.9,1.3C229.4,34.3,228.5,35.1,227.8,36" }),
