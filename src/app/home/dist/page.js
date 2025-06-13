@@ -104,9 +104,11 @@ function JobsList() {
     var _h = react_1.useState(null), uploadJob = _h[0], setUploadJob = _h[1];
     var _j = react_1.useState({}), expandedPNRs = _j[0], setExpandedPNRs = _j[1];
     var _k = react_1.useState([]), acceptedPNRs = _k[0], setAcceptedPNRs = _k[1];
+    var _l = react_1.useState(true), isLoadingJobs = _l[0], setIsLoadingJobs = _l[1];
     var pageSize = 6;
     react_1.useEffect(function () {
         var token = localStorage.getItem("token") || "";
+        setLoading(true); // ตั้งค่า loading เป็น true ก่อนเริ่ม fetch
         fetch('https://operation.dth.travel:7082/api/guide/job', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -132,7 +134,7 @@ function JobsList() {
             .then(function (data) {
             console.log("API jobs:", data);
             setJobs(data);
-        })["catch"](function (err) { return setError(err.message); });
+        })["catch"](function (err) { return setError(err.message); })["finally"](function () { return setLoading(false); }); // ตั้งค่า loading เป็น false หลังจาก fetch เสร็จ
     }, []);
     var filteredJobs = jobs.filter(function (job) {
         var pickup = job.PickupDate;
@@ -311,14 +313,9 @@ function JobsList() {
                                 React.createElement("label", { htmlFor: "end-date", className: "mb-1 text-xs text-gray-500 font-Arial" }, "End date"),
                                 React.createElement("input", { id: "end-date", type: "date", value: endDate, min: startDate, onChange: function (e) { return setEndDate(e.target.value); }, className: "input input-bordered w-full", placeholder: "End date" }))),
                         React.createElement("span", { className: "mt-2 text-xs text-gray-400 text-center px-2" }, "Please select a date range to filter the desired tasks.")),
-                    loading ? (React.createElement("div", { className: "flex justify-center items-center p-4" },
-                        React.createElement("div", { className: "loader" }))) : error ? (React.createElement("div", { className: "flex justify-center items-center p-4" },
-                        React.createElement("div", { className: "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative", role: "alert" },
-                            React.createElement("strong", { className: "font-bold" }, "Error:"),
-                            React.createElement("span", { className: "block sm:inline" }, error)))) : !pagedJobs.length ? (React.createElement("div", { className: "flex justify-center items-center p-4" },
-                        React.createElement("div", { className: "bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative", role: "alert" },
-                            React.createElement("strong", { className: "font-bold" }, "No Jobs Found:"),
-                            React.createElement("span", { className: "block sm:inline" }, "Please adjust your filters or try again later.")))) : (React.createElement(React.Fragment, null,
+                    loading ? (React.createElement("div", { className: "w-full py-10 text-center text-lg text-gray-600 font-Arial" }, "\u23F3 \u0E01\u0E33\u0E25\u0E31\u0E07\u0E42\u0E2B\u0E25\u0E14\u0E07\u0E32\u0E19...")) : error ? (React.createElement("div", { className: "p-4 text-red-600 text-center" },
+                        "Error: ",
+                        error)) : !filteredJobs.length ? (React.createElement("div", { className: "p-4 text-center" }, "No jobs found")) : (React.createElement(React.Fragment, null,
                         React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" }, pagedJobs.map(function (job) {
                             var _a, _b, _c;
                             var isExpanded = (_a = expandedPNRs[job.PNR]) !== null && _a !== void 0 ? _a : false;
@@ -345,10 +342,7 @@ function JobsList() {
                                         React.createElement("circle", { cx: "12", cy: "12", r: "10", fill: "#F0F8FF" }),
                                         React.createElement("text", { x: "12", y: "12", textAnchor: "middle", dominantBaseline: "central", fontSize: "18", fill: "#2D3E92", fontFamily: "Arial", fontWeight: "bold" }, "i"))),
                                 React.createElement("div", { className: "inline-block p-6 pb-0 cursor-pointer mx-auto items-center gap-3", onClick: toggleExpand },
-                                    React.createElement("h2", { className: "text-xl font-Arial mb-2 text-primary underline underline-offset-4", style: { color: '#2D3E92' } },
-                                        "PNR: ",
-                                        job.PNR,
-                                        React.createElement("span", { className: "ml-2 text-sm px-2 py-1 rounded-full cursor-pointer transition-all duration-200 " + (isExpanded ? 'bg-[#6A5ACD] text-white' : 'bg-[#2D3E92] text-white') + " hover:shadow-md" }, isExpanded ? '▲' : '▼'))),
+                                    React.createElement("h2", { className: "text-xl font-Arial mb-2 text-primary underline underline-offset-4", style: { color: '#2D3E92' } }, job.PNR)),
                                 isExpanded && (React.createElement("div", { className: "p-6 pt-0 flex-1 flex flex-col" },
                                     React.createElement("div", { className: "text-sm text-gray-600 space-y-1 mb-4" },
                                         renderPlaceDate(job.Pickup, job.PickupDate, 'Pickup'),

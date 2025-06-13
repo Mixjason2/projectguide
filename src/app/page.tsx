@@ -96,7 +96,7 @@ export default function LoginPage() {
     viewBox="0 0 300 190"
     width="180"
     height="155"
-     style={{  transform: "translateX(-25px) scale(2.2)", transformOrigin: "top right",  width: "100%", height: "auto", display: "block" }}
+     style={{  transform: "translateX(-20px) scale(2.2)", transformOrigin: "top right",  width: "100%", height: "auto", display: "block" }}
   >
     <path
       fill="#95c941"

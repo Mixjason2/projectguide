@@ -81,6 +81,7 @@ export default function JobsList() {
 
   useEffect(() => {
     const token = localStorage.getItem("token") || "";
+    setLoading(true); // ตั้งค่า loading เป็น true ก่อนเริ่ม fetch
     fetch('https://operation.dth.travel:7082/api/guide/job', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -91,14 +92,15 @@ export default function JobsList() {
       }),
     })
       .then(async res => {
-        if (!res.ok) throw new Error(await res.text())
-        return res.json()
+        if (!res.ok) throw new Error(await res.text());
+        return res.json();
       })
       .then((data: Job[]) => {
-        console.log("API jobs:", data)
-        setJobs(data)
+        console.log("API jobs:", data);
+        setJobs(data);
       })
       .catch(err => setError(err.message))
+      .finally(() => setLoading(false)); // ตั้งค่า loading เป็น false หลังจาก fetch เสร็จ
   }, []);
 
   const filteredJobs = jobs.filter(job => {
