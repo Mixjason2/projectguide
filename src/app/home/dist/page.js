@@ -51,6 +51,7 @@ exports.__esModule = true;
 var react_1 = require("react");
 var cssguide_1 = require("../cssguide");
 var axios_1 = require("axios");
+var react_spinners_css_1 = require("react-spinners-css");
 function mergeJobsByPNR(jobs) {
     var map = {};
     for (var _i = 0, jobs_1 = jobs; _i < jobs_1.length; _i++) {
@@ -313,9 +314,13 @@ function JobsList() {
                                 React.createElement("label", { htmlFor: "end-date", className: "mb-1 text-xs text-gray-500 font-Arial" }, "End date"),
                                 React.createElement("input", { id: "end-date", type: "date", value: endDate, min: startDate, onChange: function (e) { return setEndDate(e.target.value); }, className: "input input-bordered w-full", placeholder: "End date" }))),
                         React.createElement("span", { className: "mt-2 text-xs text-gray-400 text-center px-2" }, "Please select a date range to filter the desired tasks.")),
-                    loading ? (React.createElement("div", { className: "w-full py-10 text-center text-lg text-gray-600 font-Arial" }, "\u23F3 \u0E01\u0E33\u0E25\u0E31\u0E07\u0E42\u0E2B\u0E25\u0E14\u0E07\u0E32\u0E19...")) : error ? (React.createElement("div", { className: "p-4 text-red-600 text-center" },
-                        "Error: ",
-                        error)) : !filteredJobs.length ? (React.createElement("div", { className: "p-4 text-center" }, "No jobs found")) : (React.createElement(React.Fragment, null,
+                    loading ? (React.createElement("div", { className: "w-full py-10 flex flex-col items-center justify-center text-gray-600" },
+                        React.createElement(react_spinners_css_1.Ripple, { color: "#32cd32", size: "medium", text: "", textColor: "" }),
+                        React.createElement("p", { className: "mt-4 text-lg font-medium" }, "Loading jobs, please wait..."))) : error ? (React.createElement("div", { className: "p-6 text-red-600 text-center bg-red-100 border border-red-300 rounded-md max-w-md mx-auto" },
+                        React.createElement("p", { className: "text-lg font-semibold" }, "Oops! Something went wrong."),
+                        React.createElement("p", { className: "text-sm mt-1" }, error))) : !filteredJobs.length ? (React.createElement("div", { className: "p-6 text-center text-gray-500" },
+                        React.createElement("p", { className: "text-lg font-semibold" }, "No jobs found"),
+                        React.createElement("p", { className: "text-sm mt-1" }, "Try adjusting your filters or search keyword."))) : (React.createElement(React.Fragment, null,
                         React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" }, pagedJobs.map(function (job) {
                             var _a, _b, _c;
                             var isExpanded = (_a = expandedPNRs[job.PNR]) !== null && _a !== void 0 ? _a : false;
@@ -330,11 +335,11 @@ function JobsList() {
                                     borderColor: '#9EE4F6',
                                     borderWidth: '1px'
                                 } },
-                                React.createElement("div", { className: "absolute top-2 left-1 text-[#2D3E92] font-Arial rounded-full px-3 py-1 text-sm shadow z-10", style: {
+                                React.createElement("div", { className: "absolute top-2 left-1 text-[#ffffff] font-Arial rounded-full px-3 py-1 text-sm shadow z-10", style: {
                                         backgroundColor: job.isNew
-                                            ? '#B2F5EA' // ตัวอย่างสีสำหรับ New
+                                            ? '	#0891b2' // ตัวอย่างสีสำหรับ New
                                             : job.isChange
-                                                ? '#FED7AA' // ตัวอย่างสีสำหรับ Change
+                                                ? '#fb923c' // ตัวอย่างสีสำหรับ Change
                                                 : '#E0E7FF'
                                     } }, (_c = (_b = job.all) === null || _b === void 0 ? void 0 : _b.length) !== null && _c !== void 0 ? _c : 1),
                                 React.createElement("button", { className: "absolute top-3.5 right-2 w-8 h-8 rounded-full bg-white border-2 border-[#2D3E92] shadow-[0_4px_10px_rgba(45,62,146,0.3)] hover:shadow-[0_6px_14px_rgba(45,62,146,0.4)] transition-all duration-200 flex items-center justify-center", title: "Show all details", onClick: function () { return setDetailJobs(job.all); }, style: { zIndex: 2 } },
@@ -342,7 +347,7 @@ function JobsList() {
                                         React.createElement("circle", { cx: "12", cy: "12", r: "10", fill: "#F0F8FF" }),
                                         React.createElement("text", { x: "12", y: "12", textAnchor: "middle", dominantBaseline: "central", fontSize: "18", fill: "#2D3E92", fontFamily: "Arial", fontWeight: "bold" }, "i"))),
                                 React.createElement("div", { className: "inline-block p-6 pb-0 cursor-pointer mx-auto items-center gap-3", onClick: toggleExpand },
-                                    React.createElement("h2", { className: "text-xl font-Arial mb-2 text-primary underline underline-offset-4", style: { color: '#2D3E92' } }, job.PNR)),
+                                    React.createElement("h2", { className: "font-Arial mt-0 mb-0 underline underline-offset-4", style: { color: '#2D3E92', fontSize: '28px' } }, job.PNR)),
                                 isExpanded && (React.createElement("div", { className: "p-6 pt-0 flex-1 flex flex-col" },
                                     React.createElement("div", { className: "text-sm text-gray-600 space-y-1 mb-4" },
                                         renderPlaceDate(job.Pickup, job.PickupDate, 'Pickup'),

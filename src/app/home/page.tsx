@@ -323,13 +323,20 @@ export default function JobsList() {
               </span>
             </div>
             {loading ? (
-              <div className="w-full py-10 text-center text-lg text-gray-600 font-Arial">
-                ⏳ กำลังโหลดงาน...
+              <div className="w-full py-10 flex flex-col items-center justify-center text-gray-600">
+                <Ripple color="#32cd32" size="medium" text="" textColor="" />
+                <p className="mt-4 text-lg font-medium">Loading jobs, please wait...</p>
               </div>
             ) : error ? (
-              <div className="p-4 text-red-600 text-center">Error: {error}</div>
+              <div className="p-6 text-red-600 text-center bg-red-100 border border-red-300 rounded-md max-w-md mx-auto">
+                <p className="text-lg font-semibold">Oops! Something went wrong.</p>
+                <p className="text-sm mt-1">{error}</p>
+              </div>
             ) : !filteredJobs.length ? (
-              <div className="p-4 text-center">No jobs found</div>
+              <div className="p-6 text-center text-gray-500">
+                <p className="text-lg font-semibold">No jobs found</p>
+                <p className="text-sm mt-1">Try adjusting your filters or search keyword.</p>
+              </div>
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -355,12 +362,12 @@ export default function JobsList() {
                       >
                         {/* Show number of jobs in this PNR at top-left */}
                         <div
-                          className="absolute top-2 left-1 text-[#2D3E92] font-Arial rounded-full px-3 py-1 text-sm shadow z-10"
+                          className="absolute top-2 left-1 text-[#ffffff] font-Arial rounded-full px-3 py-1 text-sm shadow z-10"
                           style={{
                             backgroundColor: job.isNew
-                              ? '#B2F5EA' // ตัวอย่างสีสำหรับ New
+                              ? '	#0891b2' // ตัวอย่างสีสำหรับ New
                               : job.isChange
-                                ? '#FED7AA' // ตัวอย่างสีสำหรับ Change
+                                ? '#fb923c' // ตัวอย่างสีสำหรับ Change
                                 : '#E0E7FF', // Default (Blue-ish)
                           }}
                         >
@@ -397,8 +404,8 @@ export default function JobsList() {
                           onClick={toggleExpand}
                         >
                           <h2
-                            className="text-xl font-Arial mb-2 text-primary underline underline-offset-4"
-                            style={{ color: '#2D3E92' }}
+                            className="font-Arial mt-0 mb-0 underline underline-offset-4"
+                            style={{ color: '#2D3E92', fontSize: '28px'}}
                           >
                             {job.PNR}
                           </h2>
