@@ -348,9 +348,19 @@ export default function JobsList() {
                         }}
                       >
                         {/* Show number of jobs in this PNR at top-left */}
-                        <div className="absolute top-2 left-1 bg-blue-100 text-[#2D3E92] font-Arial rounded-full px-3 py-1 text-sm shadow z-10">
+                        <div
+                          className="absolute top-2 left-1 text-[#2D3E92] font-Arial rounded-full px-3 py-1 text-sm shadow z-10"
+                          style={{
+                            backgroundColor: job.isNew
+                              ? '#B2F5EA' // ตัวอย่างสีสำหรับ New
+                              : job.isChange
+                                ? '#FED7AA' // ตัวอย่างสีสำหรับ Change
+                                : '#E0E7FF', // Default (Blue-ish)
+                          }}
+                        >
                           {job.all?.length ?? 1}
                         </div>
+
 
                         {/* Logo button */}
                         <button
@@ -375,39 +385,17 @@ export default function JobsList() {
                             </text>
                           </svg>
                         </button>
-
-
-
                         {/* PNR header (click to toggle) */}
                         <div
                           className="inline-block p-6 pb-0 cursor-pointer mx-auto flex items-center gap-3"
                           onClick={toggleExpand}
                         >
                           {/* Status indicator circles */}
-                          {job.isNew && (
-                            <span
-                              title="New Job"
-                              className="inline-block w-3 h-3 rounded-full bg-cyan-600"
-                            ></span>
-                          )}
-                          {job.isChange && (
-                            <span
-                              title="Changed Job"
-                              className="inline-block w-3 h-3 rounded-full bg-orange-500"
-                            ></span>
-                          )}
-
                           <h2
                             className="text-xl font-Arial mb-2 text-primary underline underline-offset-4"
                             style={{ color: '#2D3E92' }}
                           >
-                            PNR: {job.PNR}
-                            <span
-                              className={`ml-2 text-sm px-2 py-1 rounded-full cursor-pointer transition-all duration-200 ${isExpanded ? 'bg-[#6A5ACD] text-white' : 'bg-[#2D3E92] text-white'
-                                } hover:shadow-md`}
-                            >
-                              {isExpanded ? '▲' : '▼'}
-                            </span>
+                            {job.PNR}
                           </h2>
                         </div>
 
