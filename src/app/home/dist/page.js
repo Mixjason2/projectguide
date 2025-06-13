@@ -47,13 +47,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var __spreadArrays = (this && this.__spreadArrays) || function () {
-    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
-    for (var r = Array(s), k = 0, i = 0; i < il; i++)
-        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
-            r[k] = a[j];
-    return r;
-};
 exports.__esModule = true;
 var react_1 = require("react");
 var cssguide_1 = require("../cssguide");
@@ -111,9 +104,11 @@ function JobsList() {
     var _h = react_1.useState(null), uploadJob = _h[0], setUploadJob = _h[1];
     var _j = react_1.useState({}), expandedPNRs = _j[0], setExpandedPNRs = _j[1];
     var _k = react_1.useState([]), acceptedPNRs = _k[0], setAcceptedPNRs = _k[1];
+    var _l = react_1.useState(true), isLoadingJobs = _l[0], setIsLoadingJobs = _l[1];
     var pageSize = 6;
     react_1.useEffect(function () {
         var token = localStorage.getItem("token") || "";
+        setLoading(true); // ตั้งค่า loading เป็น true ก่อนเริ่ม fetch
         fetch('https://operation.dth.travel:7082/api/guide/job', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -139,7 +134,7 @@ function JobsList() {
             .then(function (data) {
             console.log("API jobs:", data);
             setJobs(data);
-        })["catch"](function (err) { return setError(err.message); });
+        })["catch"](function (err) { return setError(err.message); })["finally"](function () { return setLoading(false); }); // ตั้งค่า loading เป็น false หลังจาก fetch เสร็จ
     }, []);
     var filteredJobs = jobs.filter(function (job) {
         var pickup = job.PickupDate;
@@ -318,9 +313,9 @@ function JobsList() {
                                 React.createElement("label", { htmlFor: "end-date", className: "mb-1 text-xs text-gray-500 font-Arial" }, "End date"),
                                 React.createElement("input", { id: "end-date", type: "date", value: endDate, min: startDate, onChange: function (e) { return setEndDate(e.target.value); }, className: "input input-bordered w-full", placeholder: "End date" }))),
                         React.createElement("span", { className: "mt-2 text-xs text-gray-400 text-center px-2" }, "Please select a date range to filter the desired tasks.")),
-                    loading ? (React.createElement("div", { className: "p-4 " }, "Loading jobs...")) : error ? (React.createElement("div", { className: "p-4 text-red-600" },
+                    loading ? (React.createElement("div", { className: "w-full py-10 text-center text-lg text-gray-600 font-Arial" }, "\u23F3 \u0E01\u0E33\u0E25\u0E31\u0E07\u0E42\u0E2B\u0E25\u0E14\u0E07\u0E32\u0E19...")) : error ? (React.createElement("div", { className: "p-4 text-red-600 text-center" },
                         "Error: ",
-                        error)) : !pagedJobs.length ? (React.createElement("div", { className: "p-4" }, "No jobs found")) : (React.createElement(React.Fragment, null,
+                        error)) : !filteredJobs.length ? (React.createElement("div", { className: "p-4 text-center" }, "No jobs found")) : (React.createElement(React.Fragment, null,
                         React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" }, pagedJobs.map(function (job) {
                             var _a, _b, _c;
                             var isExpanded = (_a = expandedPNRs[job.PNR]) !== null && _a !== void 0 ? _a : false;
@@ -330,31 +325,32 @@ function JobsList() {
                                     return (__assign(__assign({}, prev), (_a = {}, _a[job.PNR] = !isExpanded, _a)));
                                 });
                             };
-                            return (React.createElement("div", { key: job.PNR, className: "relative bg-white border border-base-300 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col ", style: {
+                            return (React.createElement("div", { key: job.PNR, className: "relative bg-white border border-base-300 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col", style: {
                                     backgroundColor: '#ffffff',
                                     borderColor: '#9EE4F6',
                                     borderWidth: '1px'
                                 } },
-                                React.createElement("div", { className: "absolute top-2 left-1 bg-blue-100 text-[#2D3E92] font-Arial rounded-full px-3 py-1 text-sm shadow z-10" }, (_c = (_b = job.all) === null || _b === void 0 ? void 0 : _b.length) !== null && _c !== void 0 ? _c : 1),
+                                React.createElement("div", { className: "absolute top-2 left-1 text-[#2D3E92] font-Arial rounded-full px-3 py-1 text-sm shadow z-10", style: {
+                                        backgroundColor: job.isNew
+                                            ? '#B2F5EA' // ตัวอย่างสีสำหรับ New
+                                            : job.isChange
+                                                ? '#FED7AA' // ตัวอย่างสีสำหรับ Change
+                                                : '#E0E7FF'
+                                    } }, (_c = (_b = job.all) === null || _b === void 0 ? void 0 : _b.length) !== null && _c !== void 0 ? _c : 1),
                                 React.createElement("button", { className: "absolute top-3.5 right-2 w-8 h-8 rounded-full bg-white border-2 border-[#2D3E92] shadow-[0_4px_10px_rgba(45,62,146,0.3)] hover:shadow-[0_6px_14px_rgba(45,62,146,0.4)] transition-all duration-200 flex items-center justify-center", title: "Show all details", onClick: function () { return setDetailJobs(job.all); }, style: { zIndex: 2 } },
                                     React.createElement("svg", { width: "28", height: "28", viewBox: "0 0 24 24", fill: "none" },
                                         React.createElement("circle", { cx: "12", cy: "12", r: "10", fill: "#F0F8FF" }),
                                         React.createElement("text", { x: "12", y: "12", textAnchor: "middle", dominantBaseline: "central", fontSize: "18", fill: "#2D3E92", fontFamily: "Arial", fontWeight: "bold" }, "i"))),
-                                React.createElement("div", { className: "inline-block p-6 pb-0 cursor-pointer mx-auto flex items-center gap-3", onClick: toggleExpand },
-                                    job.isNew && (React.createElement("span", { title: "New Job", className: "inline-block w-3 h-3 rounded-full bg-cyan-600" })),
-                                    job.isChange && (React.createElement("span", { title: "Changed Job", className: "inline-block w-3 h-3 rounded-full bg-orange-500" })),
-                                    React.createElement("h2", { className: "text-xl font-Arial mb-2 text-primary underline underline-offset-4", style: { color: '#2D3E92' } },
-                                        "PNR: ",
-                                        job.PNR,
-                                        React.createElement("span", { className: "ml-2 text-sm px-2 py-1 rounded-full cursor-pointer transition-all duration-200 " + (isExpanded ? 'bg-[#6A5ACD] text-white' : 'bg-[#2D3E92] text-white') + " hover:shadow-md" }, isExpanded ? '▲' : '▼'))),
+                                React.createElement("div", { className: "inline-block p-6 pb-0 cursor-pointer mx-auto items-center gap-3", onClick: toggleExpand },
+                                    React.createElement("h2", { className: "text-xl font-Arial mb-2 text-primary underline underline-offset-4", style: { color: '#2D3E92' } }, job.PNR)),
                                 isExpanded && (React.createElement("div", { className: "p-6 pt-0 flex-1 flex flex-col" },
                                     React.createElement("div", { className: "text-sm text-gray-600 space-y-1 mb-4" },
                                         renderPlaceDate(job.Pickup, job.PickupDate, 'Pickup'),
                                         renderPlaceDate(job.Dropoff, job.DropoffDate, 'Dropoff'),
                                         renderField('Pax', job.Pax),
                                         renderField('Source', job.Source)),
-                                    !acceptedPNRs.includes(job.PNR) && (React.createElement("div", { className: "flex gap-3 mt-auto flex-wrap" },
-                                        React.createElement("button", { className: "btn btn-success flex-1 text-base font-Arial py-2 rounded-full shadow  text-white bg-[#95c941] hover:opacity-90", onClick: function () { return __awaiter(_this, void 0, void 0, function () {
+                                    React.createElement("div", { className: "flex gap-3 mt-auto flex-wrap" },
+                                        React.createElement("button", { className: "btn btn-success flex-1 text-base font-Arial py-2 rounded-full shadow text-white bg-[#95c941] hover:opacity-90", onClick: function () { return __awaiter(_this, void 0, void 0, function () {
                                                 var token, response, result, e_1;
                                                 return __generator(this, function (_a) {
                                                     switch (_a.label) {
@@ -370,11 +366,6 @@ function JobsList() {
                                                             result = response.data;
                                                             if (result.success) {
                                                                 alert("Accept งานสำเร็จ");
-                                                                setAcceptedPNRs(function (prev) { return __spreadArrays(prev, [job.PNR]); });
-                                                                setJobs(function (prevJobs) {
-                                                                    var remaining = prevJobs.filter(function (j) { return j.key !== job.key; });
-                                                                    return __spreadArrays([job], remaining);
-                                                                });
                                                             }
                                                             else {
                                                                 alert("Accept งานไม่สำเร็จ: " + ((result === null || result === void 0 ? void 0 : result.error) || "Unknown error"));
@@ -403,10 +394,10 @@ function JobsList() {
                                                             response = _a.sent();
                                                             result = response.data;
                                                             if (result.success) {
-                                                                alert("แจ้งยกเลิกงานสำเร็จ กรุณารอหลังบ้านส่งอีเมลยืนยันสักครู่");
+                                                                alert("Reject งานสำเร็จ");
                                                             }
                                                             else {
-                                                                alert("แจ้งยกเลิกงานไม่สำเร็จ: " + ((result === null || result === void 0 ? void 0 : result.error) || "Unknown error"));
+                                                                alert("Reject งานไม่สำเร็จ: " + ((result === null || result === void 0 ? void 0 : result.error) || "Unknown error"));
                                                             }
                                                             return [3 /*break*/, 3];
                                                         case 2:
@@ -416,7 +407,7 @@ function JobsList() {
                                                         case 3: return [2 /*return*/];
                                                     }
                                                 });
-                                            }); } }, "Reject Job")))))));
+                                            }); } }, "Reject Job"))))));
                         })),
                         React.createElement("div", { className: "w-full flex justify-center mt-6" },
                             React.createElement("div", { className: "inline-flex items-center gap-2 bg-base-100 border border-base-300 rounded-full shadow px-4 py-2" },

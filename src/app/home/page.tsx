@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import CssgGuide from '../cssguide'
 import axios from "axios";
+import { Ripple } from 'react-spinners-css';
 
 type Job = {
   isChange: boolean;
@@ -75,6 +76,8 @@ export default function JobsList() {
   const [uploadJob, setUploadJob] = useState<Job | null>(null)
   const [expandedPNRs, setExpandedPNRs] = useState<{ [pnr: string]: boolean }>({});
   const [acceptedPNRs, setAcceptedPNRs] = useState<string[]>([]);
+  const [isLoadingJobs, setIsLoadingJobs] = useState(true);
+
 
 
 
@@ -82,6 +85,7 @@ export default function JobsList() {
 
   useEffect(() => {
     const token = localStorage.getItem("token") || "";
+    setLoading(true); // ตั้งค่า loading เป็น true ก่อนเริ่ม fetch
     fetch('https://operation.dth.travel:7082/api/guide/job', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -92,14 +96,15 @@ export default function JobsList() {
       }),
     })
       .then(async res => {
-        if (!res.ok) throw new Error(await res.text())
-        return res.json()
+        if (!res.ok) throw new Error(await res.text());
+        return res.json();
       })
       .then((data: Job[]) => {
-        console.log("API jobs:", data)
-        setJobs(data)
+        console.log("API jobs:", data);
+        setJobs(data);
       })
       .catch(err => setError(err.message))
+      .finally(() => setLoading(false)); // ตั้งค่า loading เป็น false หลังจาก fetch เสร็จ
   }, []);
 
   const filteredJobs = jobs.filter(job => {
@@ -317,14 +322,14 @@ export default function JobsList() {
                 Please select a date range to filter the desired tasks.
               </span>
             </div>
-
-
             {loading ? (
-              <div className="p-4 ">Loading jobs...</div>
+              <div className="w-full py-10 text-center text-lg text-gray-600 font-Arial">
+                ⏳ กำลังโหลดงาน...
+              </div>
             ) : error ? (
-              <div className="p-4 text-red-600">Error: {error}</div>
-            ) : !pagedJobs.length ? (
-              <div className="p-4">No jobs found</div>
+              <div className="p-4 text-red-600 text-center">Error: {error}</div>
+            ) : !filteredJobs.length ? (
+              <div className="p-4 text-center">No jobs found</div>
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -341,14 +346,24 @@ export default function JobsList() {
                     return (
                       <div
                         key={job.PNR}
-                        className="relative bg-white border border-base-300 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col " style={{
+                        className="relative bg-white border border-base-300 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col"
+                        style={{
                           backgroundColor: '#ffffff',
                           borderColor: '#9EE4F6',
                           borderWidth: '1px',
                         }}
                       >
                         {/* Show number of jobs in this PNR at top-left */}
-                        <div className="absolute top-2 left-1 bg-blue-100 text-[#2D3E92] font-Arial rounded-full px-3 py-1 text-sm shadow z-10">
+                        <div
+                          className="absolute top-2 left-1 text-[#2D3E92] font-Arial rounded-full px-3 py-1 text-sm shadow z-10"
+                          style={{
+                            backgroundColor: job.isNew
+                              ? '#B2F5EA' // ตัวอย่างสีสำหรับ New
+                              : job.isChange
+                                ? '#FED7AA' // ตัวอย่างสีสำหรับ Change
+                                : '#E0E7FF', // Default (Blue-ish)
+                          }}
+                        >
                           {job.all?.length ?? 1}
                         </div>
 
@@ -376,38 +391,16 @@ export default function JobsList() {
                           </svg>
                         </button>
 
-
-
                         {/* PNR header (click to toggle) */}
                         <div
-                          className="inline-block p-6 pb-0 cursor-pointer mx-auto flex items-center gap-3"
+                          className="inline-block p-6 pb-0 cursor-pointer mx-auto items-center gap-3"
                           onClick={toggleExpand}
                         >
-                          {/* Status indicator circles */}
-                          {job.isNew && (
-                            <span
-                              title="New Job"
-                              className="inline-block w-3 h-3 rounded-full bg-cyan-600"
-                            ></span>
-                          )}
-                          {job.isChange && (
-                            <span
-                              title="Changed Job"
-                              className="inline-block w-3 h-3 rounded-full bg-orange-500"
-                            ></span>
-                          )}
-
                           <h2
                             className="text-xl font-Arial mb-2 text-primary underline underline-offset-4"
                             style={{ color: '#2D3E92' }}
                           >
-                            PNR: {job.PNR}
-                            <span
-                              className={`ml-2 text-sm px-2 py-1 rounded-full cursor-pointer transition-all duration-200 ${isExpanded ? 'bg-[#6A5ACD] text-white' : 'bg-[#2D3E92] text-white'
-                                } hover:shadow-md`}
-                            >
-                              {isExpanded ? '▲' : '▼'}
-                            </span>
+                            {job.PNR}
                           </h2>
                         </div>
 
@@ -420,73 +413,61 @@ export default function JobsList() {
                               {renderField('Pax', job.Pax)}
                               {renderField('Source', job.Source)}
                             </div>
-                            {!acceptedPNRs.includes(job.PNR) && (
-
-                              <div className="flex gap-3 mt-auto flex-wrap">
-                                {/* Accept Button */}
-                                <button
-                                  className="btn btn-success flex-1 text-base font-Arial py-2 rounded-full shadow  text-white bg-[#95c941] hover:opacity-90"
-                                  onClick={async () => {
-                                    try {
-                                      const token = localStorage.getItem("token") || "";
-                                      const response = await axios.post(
-                                        `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
-                                        {
-                                          token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
-                                          data: { isConfirmed: true }
-                                        }
-                                      );
-                                      const result = response.data;
-                                      if (result.success) {
-                                        alert("Accept งานสำเร็จ");
-
-                                        setAcceptedPNRs(prev => [...prev, job.PNR]);
-
-                                        setJobs(prevJobs => {
-                                          const remaining = prevJobs.filter(j => j.key !== job.key);
-                                          return [job, ...remaining];
-                                        });
-
-                                      } else {
-                                        alert("Accept งานไม่สำเร็จ: " + (result?.error || "Unknown error"));
+                            <div className="flex gap-3 mt-auto flex-wrap">
+                              {/* Accept Button */}
+                              <button
+                                className="btn btn-success flex-1 text-base font-Arial py-2 rounded-full shadow text-white bg-[#95c941] hover:opacity-90"
+                                onClick={async () => {
+                                  try {
+                                    const token = localStorage.getItem("token") || "";
+                                    const response = await axios.post(
+                                      `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
+                                      {
+                                        token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
+                                        data: { isConfirmed: true }
                                       }
-                                    } catch (e: any) {
-                                      alert("เกิดข้อผิดพลาด: " + e.message);
+                                    );
+                                    const result = response.data;
+                                    if (result.success) {
+                                      alert("Accept งานสำเร็จ");
+                                    } else {
+                                      alert("Accept งานไม่สำเร็จ: " + (result?.error || "Unknown error"));
                                     }
-                                  }}
-                                >
-                                  Accept
-                                </button>
+                                  } catch (e: any) {
+                                    alert("เกิดข้อผิดพลาด: " + e.message);
+                                  }
+                                }}
+                              >
+                                Accept
+                              </button>
 
-
-                                {/* Reject Button */}
-                                <button
-                                  className="btn flex-1 text-base font-Arial py-2 rounded-full shadow text-white bg-[#E44949] hover:opacity-90"
-                                  onClick={async () => {
-                                    try {
-                                      const token = localStorage.getItem("token") || "";
-                                      const response = await axios.post(
-                                        `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
-                                        {
-                                          token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
-                                          data: { isCancel: true }
-                                        }
-                                      );
-                                      const result = response.data;
-                                      if (result.success) {
-                                        alert("แจ้งยกเลิกงานสำเร็จ กรุณารอหลังบ้านส่งอีเมลยืนยันสักครู่");
-                                      } else {
-                                        alert("แจ้งยกเลิกงานไม่สำเร็จ: " + (result?.error || "Unknown error"));
+                              {/* Reject Button */}
+                              <button
+                                className="btn flex-1 text-base font-Arial py-2 rounded-full shadow text-white bg-[#E44949] hover:opacity-90"
+                                onClick={async () => {
+                                  try {
+                                    const token = localStorage.getItem("token") || "";
+                                    const response = await axios.post(
+                                      `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
+                                      {
+                                        token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
+                                        data: { isCancel: true }
                                       }
-                                    } catch (e: any) {
-                                      alert("เกิดข้อผิดพลาด: " + e.message);
+                                    );
+                                    const result = response.data;
+                                    if (result.success) {
+                                      alert("Reject งานสำเร็จ");
+                                    } else {
+                                      alert("Reject งานไม่สำเร็จ: " + (result?.error || "Unknown error"));
                                     }
-                                  }}
-                                >
-                                  Reject Job
-                                </button>
-                              </div>
-                            )}
+                                  } catch (e: any) {
+                                    alert("เกิดข้อผิดพลาด: " + e.message);
+                                  }
+                                }}
+                              >
+                                Reject Job
+                              </button>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -535,5 +516,4 @@ export default function JobsList() {
       </div>
     </CssgGuide>
   )
-
 }
