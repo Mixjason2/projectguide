@@ -47,6 +47,13 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __spreadArrays = (this && this.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
 exports.__esModule = true;
 var react_1 = require("react");
 var cssguide_1 = require("../cssguide");
@@ -195,7 +202,7 @@ function JobsList() {
         React.createElement("div", { className: "font-Arial  text-[#2D3E92] mb-1 underline underline-offset-4" },
             "PNR: ",
             job.PNR),
-        React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm" },
+        React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm [&>div>span:first-child]:font-bold" },
             React.createElement("div", { className: "flex flex-wrap" },
                 React.createElement("span", { className: "font-Arial w-28 shrink-0" }, "Pickup:"),
                 React.createElement("span", { className: "break-words ml-2" },
@@ -203,13 +210,13 @@ function JobsList() {
                     job.Pickup && job.PickupDate ? ' - ' : '',
                     job.PickupDate ? formatDate(job.PickupDate) : '')),
             React.createElement("div", { className: "flex flex-wrap" },
-                React.createElement("span", { className: "font-semibold w-28 shrink-0" }, "Dropoff:"),
+                React.createElement("span", { className: "font-Arial w-28 shrink-0" }, "Dropoff:"),
                 React.createElement("span", { className: "break-words ml-2" },
                     job.Dropoff,
                     job.Dropoff && job.DropoffDate ? ' - ' : '',
                     job.DropoffDate ? formatDate(job.DropoffDate) : '')),
             React.createElement("div", { className: "flex flex-wrap" },
-                React.createElement("span", { className: "font-Arial w-28 shrink-0" }, "PNRDate:"),
+                React.createElement("span", { className: "font-Arial w-28 shrink-0" }, "Date:"),
                 React.createElement("span", { className: "break-words ml-2" }, formatDate(job.PNRDate))),
             Object.entries(job)
                 .filter(function (_a) {
@@ -224,7 +231,14 @@ function JobsList() {
                     k !== "DropoffDate" &&
                     k !== "PNRDate" &&
                     k !== "all" &&
-                    k !== "keys";
+                    k !== "keys" &&
+                    k !== "isNew" &&
+                    k !== "isChange" &&
+                    k !== "isDelete" &&
+                    k !== "PNR" &&
+                    k !== "NotAvailable" &&
+                    k !== "agentCode" &&
+                    k !== "agentLogo";
             })
                 .map(function (_a) {
                 var k = _a[0], v = _a[1];
@@ -330,7 +344,7 @@ function JobsList() {
                                     return (__assign(__assign({}, prev), (_a = {}, _a[job.PNR] = !isExpanded, _a)));
                                 });
                             };
-                            return (React.createElement("div", { key: job.PNR, className: "relative bg-white border border-base-300 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col", style: {
+                            return (React.createElement("div", { key: job.PNR, className: "relative bg-white border border-base-300 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col ", style: {
                                     backgroundColor: '#ffffff',
                                     borderColor: '#9EE4F6',
                                     borderWidth: '1px'
@@ -354,8 +368,8 @@ function JobsList() {
                                         renderPlaceDate(job.Dropoff, job.DropoffDate, 'Dropoff'),
                                         renderField('Pax', job.Pax),
                                         renderField('Source', job.Source)),
-                                    React.createElement("div", { className: "flex gap-3 mt-auto flex-wrap" },
-                                        React.createElement("button", { className: "btn btn-success flex-1 text-base font-Arial py-2 rounded-full shadow text-white bg-[#95c941] hover:opacity-90", onClick: function () { return __awaiter(_this, void 0, void 0, function () {
+                                    !acceptedPNRs.includes(job.PNR) && (React.createElement("div", { className: "flex gap-3 mt-auto flex-wrap" },
+                                        React.createElement("button", { className: "btn btn-success flex-1 text-base font-Arial py-2 rounded-full shadow  text-white bg-[#95c941] hover:opacity-90", onClick: function () { return __awaiter(_this, void 0, void 0, function () {
                                                 var token, response, result, e_1;
                                                 return __generator(this, function (_a) {
                                                     switch (_a.label) {
@@ -371,6 +385,11 @@ function JobsList() {
                                                             result = response.data;
                                                             if (result.success) {
                                                                 alert("Accept งานสำเร็จ");
+                                                                setAcceptedPNRs(function (prev) { return __spreadArrays(prev, [job.PNR]); });
+                                                                setJobs(function (prevJobs) {
+                                                                    var remaining = prevJobs.filter(function (j) { return j.key !== job.key; });
+                                                                    return __spreadArrays([job], remaining);
+                                                                });
                                                             }
                                                             else {
                                                                 alert("Accept งานไม่สำเร็จ: " + ((result === null || result === void 0 ? void 0 : result.error) || "Unknown error"));
@@ -399,10 +418,10 @@ function JobsList() {
                                                             response = _a.sent();
                                                             result = response.data;
                                                             if (result.success) {
-                                                                alert("Reject งานสำเร็จ");
+                                                                alert("แจ้งยกเลิกงานสำเร็จ กรุณารอหลังบ้านส่งอีเมลยืนยันสักครู่");
                                                             }
                                                             else {
-                                                                alert("Reject งานไม่สำเร็จ: " + ((result === null || result === void 0 ? void 0 : result.error) || "Unknown error"));
+                                                                alert("แจ้งยกเลิกงานไม่สำเร็จ: " + ((result === null || result === void 0 ? void 0 : result.error) || "Unknown error"));
                                                             }
                                                             return [3 /*break*/, 3];
                                                         case 2:
@@ -412,7 +431,7 @@ function JobsList() {
                                                         case 3: return [2 /*return*/];
                                                     }
                                                 });
-                                            }); } }, "Reject Job"))))));
+                                            }); } }, "Reject Job")))))));
                         })),
                         React.createElement("div", { className: "w-full flex justify-center mt-6" },
                             React.createElement("div", { className: "inline-flex items-center gap-2 bg-base-100 border border-base-300 rounded-full shadow px-4 py-2" },

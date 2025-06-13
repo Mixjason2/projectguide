@@ -402,7 +402,7 @@ export default function JobsList() {
                         </button>
                         {/* PNR header (click to toggle) */}
                         <div
-                          className="inline-block p-6 pb-0 cursor-pointer mx-auto flex items-center gap-3"
+                          className="inline-block p-6 pb-0 cursor-pointer mx-auto items-center gap-3"
                           onClick={toggleExpand}
                         >
                           {/* Status indicator circles */}
