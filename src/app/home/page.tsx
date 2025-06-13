@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import CssgGuide from '../cssguide'
 import axios from "axios";
+import { Ripple } from 'react-spinners-css';
 
 type Job = {
   isChange: boolean;
@@ -75,6 +76,7 @@ export default function JobsList() {
   const [uploadJob, setUploadJob] = useState<Job | null>(null)
   const [expandedPNRs, setExpandedPNRs] = useState<{ [pnr: string]: boolean }>({});
   const [acceptedPNRs, setAcceptedPNRs] = useState<string[]>([]);
+  
 
 
 
@@ -320,7 +322,9 @@ export default function JobsList() {
 
 
             {loading ? (
-              <div className="p-4 ">Loading jobs...</div>
+              <div className="flex justify-center items-center p-4">
+                <Ripple color="#32cd32" size="medium" text="" textColor="" />
+              </div>
             ) : error ? (
               <div className="p-4 text-red-600">Error: {error}</div>
             ) : !pagedJobs.length ? (

@@ -58,6 +58,7 @@ exports.__esModule = true;
 var react_1 = require("react");
 var cssguide_1 = require("../cssguide");
 var axios_1 = require("axios");
+var react_spinners_css_1 = require("react-spinners-css");
 function mergeJobsByPNR(jobs) {
     var map = {};
     for (var _i = 0, jobs_1 = jobs; _i < jobs_1.length; _i++) {
@@ -318,7 +319,8 @@ function JobsList() {
                                 React.createElement("label", { htmlFor: "end-date", className: "mb-1 text-xs text-gray-500 font-Arial" }, "End date"),
                                 React.createElement("input", { id: "end-date", type: "date", value: endDate, min: startDate, onChange: function (e) { return setEndDate(e.target.value); }, className: "input input-bordered w-full", placeholder: "End date" }))),
                         React.createElement("span", { className: "mt-2 text-xs text-gray-400 text-center px-2" }, "Please select a date range to filter the desired tasks.")),
-                    loading ? (React.createElement("div", { className: "p-4 " }, "Loading jobs...")) : error ? (React.createElement("div", { className: "p-4 text-red-600" },
+                    loading ? (React.createElement("div", { className: "flex justify-center items-center p-4" },
+                        React.createElement(react_spinners_css_1.Ripple, { color: "#32cd32", size: "medium", text: "", textColor: "" }))) : error ? (React.createElement("div", { className: "p-4 text-red-600" },
                         "Error: ",
                         error)) : !pagedJobs.length ? (React.createElement("div", { className: "p-4" }, "No jobs found")) : (React.createElement(React.Fragment, null,
                         React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" }, pagedJobs.map(function (job) {
