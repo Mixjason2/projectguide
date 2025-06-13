@@ -75,6 +75,8 @@ export default function JobsList() {
   const [uploadJob, setUploadJob] = useState<Job | null>(null)
   const [expandedPNRs, setExpandedPNRs] = useState<{ [pnr: string]: boolean }>({});
   const [acceptedPNRs, setAcceptedPNRs] = useState<string[]>([]);
+  const [isLoadingJobs, setIsLoadingJobs] = useState(true);
+
 
 
 
@@ -317,14 +319,14 @@ export default function JobsList() {
                 Please select a date range to filter the desired tasks.
               </span>
             </div>
-
-
             {loading ? (
-              <div className="p-4 ">Loading jobs...</div>
+              <div className="w-full py-10 text-center text-lg text-gray-600 font-Arial">
+                ⏳ กำลังโหลดงาน...
+              </div>
             ) : error ? (
-              <div className="p-4 text-red-600">Error: {error}</div>
-            ) : !pagedJobs.length ? (
-              <div className="p-4">No jobs found</div>
+              <div className="p-4 text-red-600 text-center">Error: {error}</div>
+            ) : !filteredJobs.length ? (
+              <div className="p-4 text-center">No jobs found</div>
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -523,5 +525,4 @@ export default function JobsList() {
       </div>
     </CssgGuide>
   )
-
 }
