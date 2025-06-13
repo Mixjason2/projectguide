@@ -8,7 +8,6 @@ export async function POST(req: NextRequest) {
   const token = body.token
 
   try {
-    // เรียก API จริงเพื่อดึง job by id
     const res = await axios.post(
       `${API_URL}/api/guide/job/845`,
       { token },
@@ -26,7 +25,6 @@ export async function PUT(req: NextRequest) {
   const data = body.data
 
   try {
-    // เรียก API จริงเพื่ออัปเดต job by id
     const res = await axios.put(
       `${API_URL}/api/guide/job/845`,
       { ...data, token },
