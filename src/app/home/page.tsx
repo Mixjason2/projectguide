@@ -5,6 +5,8 @@ import CssgGuide from '../cssguide'
 import axios from "axios";
 
 type Job = {
+  isChange: boolean;
+  isNew: boolean;
   key: number
   PNR: string
   PNRDate: string
@@ -220,13 +222,23 @@ export default function JobsList() {
     <div className="w-full flex justify-end mb-6">
       <div className="flex flex-row flex-wrap gap-6 bg-white border border-blue-300 rounded-xl shadow-lg px-8 py-4 items-center max-w-3xl">
         <div className="flex items-center gap-2">
-          <span className="inline-block w-3 h-3 rounded-full bg-orange-400"></span>
+          <span className="inline-block w-3 h-3 rounded-full bg-green-500"></span>
           <span className="text-gray-500">All Jobs:</span>
           <span className="font-Arial text-[#2D3E92]">{filteredJobs.length}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-gray-500">Unique PNR:</span>
-          <span className="font-Arial text-[#2D3E92]">{mergedJobs.length}</span>
+          <span className="inline-block w-3 h-3 rounded-full bg-blue-400"></span>
+          <span className="text-gray-500">New Jobs:</span>
+          <span className="font-Arial text-[#2D3E92]">
+            {filteredJobs.filter(job => job.isNew === true).length}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="inline-block w-3 h-3 rounded-full bg-orange-400"></span>
+          <span className="text-gray-500">Changed Jobs:</span>
+          <span className="font-Arial text-[#2D3E92]">
+            {filteredJobs.filter(job => job.isChange === true).length}
+          </span>
         </div>
       </div>
     </div>
@@ -368,8 +380,23 @@ export default function JobsList() {
 
                         {/* PNR header (click to toggle) */}
                         <div
-                          className="inline-block p-6 pb-0 cursor-pointer mx-auto"
-                          onClick={toggleExpand}>
+                          className="inline-block p-6 pb-0 cursor-pointer mx-auto flex items-center gap-3"
+                          onClick={toggleExpand}
+                        >
+                          {/* Status indicator circles */}
+                          {job.isNew && (
+                            <span
+                              title="New Job"
+                              className="inline-block w-3 h-3 rounded-full bg-blue-400"
+                            ></span>
+                          )}
+                          {job.isChange && (
+                            <span
+                              title="Changed Job"
+                              className="inline-block w-3 h-3 rounded-full bg-orange-500"
+                            ></span>
+                          )}
+
                           <h2
                             className="text-xl font-Arial mb-2 text-primary underline underline-offset-4"
                             style={{ color: '#2D3E92' }}
