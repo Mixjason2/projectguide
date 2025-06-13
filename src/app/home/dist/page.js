@@ -47,6 +47,13 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __spreadArrays = (this && this.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
 exports.__esModule = true;
 var react_1 = require("react");
 var cssguide_1 = require("../cssguide");
@@ -103,6 +110,7 @@ function JobsList() {
     var _g = react_1.useState(1), page = _g[0], setPage = _g[1];
     var _h = react_1.useState(null), uploadJob = _h[0], setUploadJob = _h[1];
     var _j = react_1.useState({}), expandedPNRs = _j[0], setExpandedPNRs = _j[1];
+    var _k = react_1.useState([]), acceptedPNRs = _k[0], setAcceptedPNRs = _k[1];
     var pageSize = 6;
     react_1.useEffect(function () {
         var token = localStorage.getItem("token") || "";
@@ -131,7 +139,7 @@ function JobsList() {
             .then(function (data) {
             console.log("API jobs:", data);
             setJobs(data);
-        })["catch"](function (err) { return setError(err.message); })["finally"](function () { return setLoading(false); });
+        })["catch"](function (err) { return setError(err.message); });
     }, []);
     var filteredJobs = jobs.filter(function (job) {
         var pickup = job.PickupDate;
@@ -218,7 +226,9 @@ function JobsList() {
                     k !== "PickupDate" &&
                     k !== "Dropoff" &&
                     k !== "DropoffDate" &&
-                    k !== "PNRDate";
+                    k !== "PNRDate" &&
+                    k !== "all" &&
+                    k !== "keys";
             })
                 .map(function (_a) {
                 var k = _a[0], v = _a[1];
@@ -240,12 +250,17 @@ function JobsList() {
     var summary = (React.createElement("div", { className: "w-full flex justify-end mb-6" },
         React.createElement("div", { className: "flex flex-row flex-wrap gap-6 bg-white border border-blue-300 rounded-xl shadow-lg px-8 py-4 items-center max-w-3xl" },
             React.createElement("div", { className: "flex items-center gap-2" },
-                React.createElement("span", { className: "inline-block w-3 h-3 rounded-full bg-orange-400" }),
+                React.createElement("span", { className: "inline-block w-3 h-3 rounded-full bg-gray-400" }),
                 React.createElement("span", { className: "text-gray-500" }, "All Jobs:"),
                 React.createElement("span", { className: "font-Arial text-[#2D3E92]" }, filteredJobs.length)),
             React.createElement("div", { className: "flex items-center gap-2" },
-                React.createElement("span", { className: "text-gray-500" }, "Unique PNR:"),
-                React.createElement("span", { className: "font-Arial text-[#2D3E92]" }, mergedJobs.length)))));
+                React.createElement("span", { className: "inline-block w-3 h-3 rounded-full bg-cyan-600" }),
+                React.createElement("span", { className: "text-gray-500" }, "New Jobs:"),
+                React.createElement("span", { className: "font-Arial text-[#2D3E92]" }, filteredJobs.filter(function (job) { return job.isNew === true; }).length)),
+            React.createElement("div", { className: "flex items-center gap-2" },
+                React.createElement("span", { className: "inline-block w-3 h-3 rounded-full bg-orange-400" }),
+                React.createElement("span", { className: "text-gray-500" }, "Changed Jobs:"),
+                React.createElement("span", { className: "font-Arial text-[#2D3E92]" }, filteredJobs.filter(function (job) { return job.isChange === true; }).length)))));
     function fetchJobs(token, startDate, endDate) {
         return __awaiter(this, void 0, void 0, function () {
             var res, _a, data, err_1;
@@ -325,7 +340,9 @@ function JobsList() {
                                     React.createElement("svg", { width: "28", height: "28", viewBox: "0 0 24 24", fill: "none" },
                                         React.createElement("circle", { cx: "12", cy: "12", r: "10", fill: "#F0F8FF" }),
                                         React.createElement("text", { x: "12", y: "12", textAnchor: "middle", dominantBaseline: "central", fontSize: "18", fill: "#2D3E92", fontFamily: "Arial", fontWeight: "bold" }, "i"))),
-                                React.createElement("div", { className: "inline-block p-6 pb-0 cursor-pointer mx-auto", onClick: toggleExpand },
+                                React.createElement("div", { className: "inline-block p-6 pb-0 cursor-pointer mx-auto flex items-center gap-3", onClick: toggleExpand },
+                                    job.isNew && (React.createElement("span", { title: "New Job", className: "inline-block w-3 h-3 rounded-full bg-cyan-600" })),
+                                    job.isChange && (React.createElement("span", { title: "Changed Job", className: "inline-block w-3 h-3 rounded-full bg-orange-500" })),
                                     React.createElement("h2", { className: "text-xl font-Arial mb-2 text-primary underline underline-offset-4", style: { color: '#2D3E92' } },
                                         "PNR: ",
                                         job.PNR,
@@ -336,7 +353,7 @@ function JobsList() {
                                         renderPlaceDate(job.Dropoff, job.DropoffDate, 'Dropoff'),
                                         renderField('Pax', job.Pax),
                                         renderField('Source', job.Source)),
-                                    React.createElement("div", { className: "flex gap-3 mt-auto flex-wrap" },
+                                    !acceptedPNRs.includes(job.PNR) && (React.createElement("div", { className: "flex gap-3 mt-auto flex-wrap" },
                                         React.createElement("button", { className: "btn btn-success flex-1 text-base font-Arial py-2 rounded-full shadow  text-white bg-[#95c941] hover:opacity-90", onClick: function () { return __awaiter(_this, void 0, void 0, function () {
                                                 var token, response, result, e_1;
                                                 return __generator(this, function (_a) {
@@ -353,6 +370,11 @@ function JobsList() {
                                                             result = response.data;
                                                             if (result.success) {
                                                                 alert("Accept งานสำเร็จ");
+                                                                setAcceptedPNRs(function (prev) { return __spreadArrays(prev, [job.PNR]); });
+                                                                setJobs(function (prevJobs) {
+                                                                    var remaining = prevJobs.filter(function (j) { return j.key !== job.key; });
+                                                                    return __spreadArrays([job], remaining);
+                                                                });
                                                             }
                                                             else {
                                                                 alert("Accept งานไม่สำเร็จ: " + ((result === null || result === void 0 ? void 0 : result.error) || "Unknown error"));
@@ -381,10 +403,10 @@ function JobsList() {
                                                             response = _a.sent();
                                                             result = response.data;
                                                             if (result.success) {
-                                                                alert("Reject งานสำเร็จ");
+                                                                alert("แจ้งยกเลิกงานสำเร็จ กรุณารอหลังบ้านส่งอีเมลยืนยันสักครู่");
                                                             }
                                                             else {
-                                                                alert("Reject งานไม่สำเร็จ: " + ((result === null || result === void 0 ? void 0 : result.error) || "Unknown error"));
+                                                                alert("แจ้งยกเลิกงานไม่สำเร็จ: " + ((result === null || result === void 0 ? void 0 : result.error) || "Unknown error"));
                                                             }
                                                             return [3 /*break*/, 3];
                                                         case 2:
@@ -394,10 +416,7 @@ function JobsList() {
                                                         case 3: return [2 /*return*/];
                                                     }
                                                 });
-                                            }); } }, "Reject Job"),
-                                        React.createElement("button", { className: "btn btn-info btn-sm btn-circle", onClick: function () { return setUploadJob(job); }, title: "Upload Photo & Remark" },
-                                            React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", className: "w-4 h-4", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor" },
-                                                React.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" }))))))));
+                                            }); } }, "Reject Job")))))));
                         })),
                         React.createElement("div", { className: "w-full flex justify-center mt-6" },
                             React.createElement("div", { className: "inline-flex items-center gap-2 bg-base-100 border border-base-300 rounded-full shadow px-4 py-2" },
@@ -413,27 +432,6 @@ function JobsList() {
                             React.createElement("div", { className: "bg-white rounded-xl shadow-2xl border-4 border-blue-400 p-8 max-w-2xl w-full relative animate-fade-in" },
                                 React.createElement("button", { className: "absolute top-2 right-2 btn btn-sm btn-error", onClick: function () { return setDetailJobs(null); } }, "\u2715"),
                                 React.createElement("h2", { className: "text-xl font-Arial mb-4" }, "All Job Details"),
-                                renderAllDetails(detailJobs)))),
-                        uploadJob && (React.createElement("div", { className: "fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50" },
-                            React.createElement("div", { className: "bg-white rounded-xl shadow-2xl border-4 border-blue-400 p-8 max-w-md w-full relative animate-fade-in" },
-                                React.createElement("button", { className: "absolute top-2 right-2 btn btn-sm btn-error", onClick: function () { return setUploadJob(null); } }, "\u2715"),
-                                React.createElement("h2", { className: "text-xl font-Arial mb-4" }, "Upload Photo & Remark"),
-                                React.createElement("form", { onSubmit: function (e) {
-                                        e.preventDefault();
-                                        // handle upload logic here
-                                        alert('Uploaded!');
-                                        setUploadJob(null);
-                                    }, className: "space-y-4" },
-                                    React.createElement("div", null,
-                                        React.createElement("label", { className: "block font-Arial mb-1" }, "Photo"),
-                                        React.createElement("input", { type: "file", accept: "image/*", className: "file-input file-input-bordered w-full", onChange: function (e) {
-                                                // handle file select
-                                            } })),
-                                    React.createElement("div", null,
-                                        React.createElement("label", { className: "block font-Arial mb-1" }, "Remark"),
-                                        React.createElement("textarea", { className: "textarea textarea-bordered w-full", rows: 3, placeholder: "Enter remark..." })),
-                                    React.createElement("div", { className: "flex justify-end gap-2" },
-                                        React.createElement("button", { type: "button", className: "btn btn-outline", onClick: function () { return setUploadJob(null); } }, "Cancel"),
-                                        React.createElement("button", { type: "submit", className: "btn btn-primary" }, "Upload")))))))))))));
+                                renderAllDetails(detailJobs)))))))))));
 }
 exports["default"] = JobsList;
