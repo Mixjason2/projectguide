@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import CssgGuide from '../cssguide'
 import axios from "axios";
-
+import {Ripple} from 'react-spinners-css';
 type Job = {
   isChange: boolean;
   isNew: boolean;
@@ -169,7 +169,7 @@ export default function JobsList() {
           <div className="font-Arial  text-[#2D3E92] mb-1 underline underline-offset-4">
             PNR: {job.PNR}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm [&>div>span:first-child]:font-bold">
             {/* Pickup + PickupDate */}
             <div className="flex flex-wrap">
               <span className="font-Arial w-28 shrink-0">Pickup:</span>
@@ -177,12 +177,12 @@ export default function JobsList() {
             </div>
             {/* Dropoff + DropoffDate */}
             <div className="flex flex-wrap">
-              <span className="font-semibold w-28 shrink-0">Dropoff:</span>
+              <span className="font-Arial w-28 shrink-0">Dropoff:</span>
               <span className="break-words ml-2">{job.Dropoff}{job.Dropoff && job.DropoffDate ? ' - ' : ''}{job.DropoffDate ? formatDate(job.DropoffDate) : ''}</span>
             </div>
             {/* PNRDate */}
             <div className="flex flex-wrap">
-              <span className="font-Arial w-28 shrink-0">PNRDate:</span>
+              <span className="font-Arial w-28 shrink-0">Date:</span>
               <span className="break-words ml-2">{formatDate(job.PNRDate)}</span>
             </div>
             {Object.entries(job)
@@ -197,7 +197,14 @@ export default function JobsList() {
                 k !== "DropoffDate" &&
                 k !== "PNRDate" &&
                 k !== "all" &&
-                k !== "keys"
+                k !== "keys" &&
+                k !== "isNew" &&
+                k !== "isChange" &&
+                k !== "isDelete" &&
+                k !== "PNR" &&
+                k !== "NotAvailable" &&
+                k !== "agentCode" &&
+                k !== "agentLogo"
               )
               .map(([k, v]) => {
                 // ถ้า key คือ serviceSupplierCode_TP หรือ serviceProductName ให้ตัดคำว่า "service" ออก
@@ -319,13 +326,20 @@ export default function JobsList() {
               </span>
             </div>
             {loading ? (
-              <div className="w-full py-10 text-center text-lg text-gray-600 font-Arial">
-                ⏳ กำลังโหลดงาน...
+              <div className="w-full py-10 flex flex-col items-center justify-center text-gray-600">
+                <Ripple color="#32cd32" size="medium" text="" textColor="" />
+                <p className="mt-4 text-lg font-medium">Loading jobs, please wait...</p>
               </div>
             ) : error ? (
-              <div className="p-4 text-red-600 text-center">Error: {error}</div>
+              <div className="p-6 text-red-600 text-center bg-red-100 border border-red-300 rounded-md max-w-md mx-auto">
+                <p className="text-lg font-semibold">Oops! Something went wrong.</p>
+                <p className="text-sm mt-1">{error}</p>
+              </div>
             ) : !filteredJobs.length ? (
-              <div className="p-4 text-center">No jobs found</div>
+              <div className="p-6 text-center text-gray-500">
+                <p className="text-lg font-semibold">No jobs found</p>
+                <p className="text-sm mt-1">Try adjusting your filters or search keyword.</p>
+              </div>
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -350,12 +364,12 @@ export default function JobsList() {
                       >
                         {/* Show number of jobs in this PNR at top-left */}
                         <div
-                          className="absolute top-2 left-1 text-[#2D3E92] font-Arial rounded-full px-3 py-1 text-sm shadow z-10"
+                          className="absolute top-2 left-1 text-[#ffffff] font-Arial rounded-full px-3 py-1 text-sm shadow z-10"
                           style={{
                             backgroundColor: job.isNew
-                              ? '#B2F5EA' // ตัวอย่างสีสำหรับ New
+                              ? '	#0891b2' // ตัวอย่างสีสำหรับ New
                               : job.isChange
-                                ? '#FED7AA' // ตัวอย่างสีสำหรับ Change
+                                ? '#fb923c' // ตัวอย่างสีสำหรับ Change
                                 : '#E0E7FF', // Default (Blue-ish)
                           }}
                         >
@@ -393,8 +407,8 @@ export default function JobsList() {
                         >
                           {/* Status indicator circles */}
                           <h2
-                            className="text-xl font-Arial mb-2 text-primary underline underline-offset-4"
-                            style={{ color: '#2D3E92' }}
+                            className="font-Arial mt-0 mb-0 underline underline-offset-4"
+                            style={{ color: '#2D3E92', fontSize: '28px'}}
                           >
                             {job.PNR}
                           </h2>
