@@ -233,15 +233,23 @@ function JobsList() {
                     "PNR: ",
                     job.PNR),
                 React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-y-4 text-sm" },
-                    React.createElement("div", { className: "flex items-center" },
+                    React.createElement("div", { className: "flex items-start" },
                         React.createElement("span", { className: "font-bold text-gray-600 w-28 shrink-0" }, "Pickup:"),
-                        React.createElement("span", { className: "text-gray-800" },
+                        React.createElement("span", { className: "text-gray-800 break-words", style: {
+                                wordBreak: "break-word",
+                                whiteSpace: "normal",
+                                overflowWrap: "break-word"
+                            } },
                             job.Pickup,
                             job.Pickup && job.PickupDate ? " - " : "",
                             job.PickupDate ? formatDate(job.PickupDate) : "")),
-                    React.createElement("div", { className: "flex items-center" },
+                    React.createElement("div", { className: "flex items-start" },
                         React.createElement("span", { className: "font-bold text-gray-600 w-28 shrink-0" }, "Dropoff:"),
-                        React.createElement("span", { className: "text-gray-800" },
+                        React.createElement("span", { className: "text-gray-800 break-words", style: {
+                                wordBreak: "break-word",
+                                whiteSpace: "normal",
+                                overflowWrap: "break-word"
+                            } },
                             job.Dropoff,
                             job.Dropoff && job.DropoffDate ? " - " : "",
                             job.DropoffDate ? formatDate(job.DropoffDate) : "")),
@@ -297,29 +305,37 @@ function JobsList() {
                             label = "Supplier";
                         if (k === "ServiceLocationName")
                             label = "Location";
-                        return (React.createElement("div", { key: k, className: "flex items-center" },
+                        return (React.createElement("div", { key: k, className: "flex items-start" },
                             React.createElement("span", { className: "font-bold text-gray-600 w-28 shrink-0" },
                                 label,
                                 ":"),
-                            React.createElement("span", { className: "text-gray-800" }, typeof v === "object" ? JSON.stringify(v) : String(v))));
+                            React.createElement("span", { className: "text-gray-800 break-words", style: {
+                                    wordBreak: "break-word",
+                                    whiteSpace: "normal",
+                                    overflowWrap: "break-word"
+                                } }, typeof v === "object" ? JSON.stringify(v) : String(v))));
                     })),
                 React.createElement("div", { className: "flex items-center mt-4" },
                     React.createElement("span", { className: "font-bold text-gray-600 w-28 shrink-0" }, "TypeName:"),
-                    React.createElement("span", { className: "text-gray-800" }, __spreadArrays(new Set(typeNames)).join(", "))),
+                    React.createElement("span", { className: "text-gray-800 break-words", style: {
+                            wordBreak: "break-word",
+                            whiteSpace: "normal",
+                            overflowWrap: "break-word"
+                        } }, __spreadArrays(new Set(typeNames)).join(", "))),
                 React.createElement("div", { className: "overflow-x-auto mt-4" },
-                    React.createElement("table", { className: "table-auto min-w-full border text-sm" },
+                    React.createElement("table", { className: "table-auto border text-sm w-full" },
                         React.createElement("thead", { className: "bg-[#2D3E92] text-white" },
                             React.createElement("tr", null,
-                                React.createElement("th", { className: "px-3 py-2 text-left" }, "AdultQty"),
-                                React.createElement("th", { className: "px-3 py-2 text-left" }, "ChildQty"),
-                                React.createElement("th", { className: "px-3 py-2 text-left" }, "ChildShareQty"),
-                                React.createElement("th", { className: "px-3 py-2 text-left" }, "InfantQty"))),
+                                React.createElement("th", { className: "px-2 py-1 text-left" }, "AdultQty"),
+                                React.createElement("th", { className: "px-2 py-1 text-left" }, "ChildQty"),
+                                React.createElement("th", { className: "px-2 py-1 text-left" }, "ChildShareQty"),
+                                React.createElement("th", { className: "px-2 py-1 text-left" }, "InfantQty"))),
                         React.createElement("tbody", null,
                             React.createElement("tr", null,
-                                React.createElement("td", { className: "px-3 py-2 text-left" }, job.AdultQty || 0),
-                                React.createElement("td", { className: "px-3 py-2 text-left" }, job.ChildQty || 0),
-                                React.createElement("td", { className: "px-3 py-2 text-left" }, job.ChildShareQty || 0),
-                                React.createElement("td", { className: "px-3 py-2 text-left" }, job.InfantQty || 0)))))));
+                                React.createElement("td", { className: "px-2 py-1 text-left" }, job.AdultQty || 0),
+                                React.createElement("td", { className: "px-2 py-1 text-left" }, job.ChildQty || 0),
+                                React.createElement("td", { className: "px-2 py-1 text-left" }, job.ChildShareQty || 0),
+                                React.createElement("td", { className: "px-2 py-1 text-left" }, job.InfantQty || 0)))))));
         })));
     };
     // ปรับ summary เป็นแถวแนวนอน สวยงาม และวางไว้บนหัว card Jobs List
