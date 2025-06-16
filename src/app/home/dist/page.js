@@ -168,8 +168,8 @@ function JobsList() {
             // ถ้าไม่ใช่ string แปลงเป็น string ก่อน
             dateStr = String(dateStr);
         }
-        var match = dateStr.match(/^\d{4}-\d{2}-\d{2}/);
-        return match ? match[0] : dateStr;
+        var match = dateStr.match(/^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2})?/);
+        return match ? match[0].replace('T', ' ') : dateStr; // แปลง 'T' เป็น ' ' เพื่อแสดงเวลา
     }
     // Helper to combine Pickup + PickupDate, Dropoff + DropoffDate
     function renderPlaceDate(place, date, label) {
