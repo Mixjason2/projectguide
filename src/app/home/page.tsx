@@ -235,6 +235,14 @@ export default function JobsList() {
                   {job.DropoffDate ? formatDate(job.DropoffDate) : ""}
                 </span>
               </div>
+              <div className="flex items-center">
+                <span className="font-bold text-gray-600 w-28 shrink-0">Booking_Consultant:</span>
+                <span className="text-gray-800">
+                  {job.Booking_Consultant}
+                  {job.Booking_Consultant && job.Phone ? "," : ""}
+                  {job.Phone}
+                </span>
+              </div>
 
               {/* Render Other Fields */}
               {Object.entries(job)
