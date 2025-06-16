@@ -232,7 +232,7 @@ function JobsList() {
                 React.createElement("div", { className: "font-Arial text-[#2D3E92] mb-2 underline underline-offset-4" },
                     "PNR: ",
                     job.PNR),
-                React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-y-4 text-sm" },
+                React.createElement("div", { className: "grid grid-cols-1 gap-y-4 text-sm" },
                     React.createElement("div", { className: "flex items-start" },
                         React.createElement("span", { className: "font-bold text-gray-600 w-28 shrink-0" }, "Pickup:"),
                         React.createElement("span", { className: "text-gray-800 break-words", style: {
@@ -253,6 +253,16 @@ function JobsList() {
                             job.Dropoff,
                             job.Dropoff && job.DropoffDate ? " - " : "",
                             job.DropoffDate ? formatDate(job.DropoffDate) : "")),
+                    React.createElement("div", { className: "flex items-start" },
+                        React.createElement("span", { className: "font-bold text-gray-600 w-28 shrink-0" }, "Booking Consultant:"),
+                        React.createElement("span", { className: "text-gray-800 break-words", style: {
+                                wordBreak: "break-word",
+                                whiteSpace: "normal",
+                                overflowWrap: "break-word"
+                            } },
+                            job.Booking_Consultant,
+                            job.Booking_Consultant && job.Phone ? ", " : "",
+                            job.Phone)),
                     Object.entries(job)
                         .filter(function (_a) {
                         var k = _a[0];

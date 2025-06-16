@@ -215,7 +215,7 @@ export default function JobsList() {
             </div>
 
             {/* Details Section */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 text-sm">
+            <div className="grid grid-cols-1 gap-y-4 text-sm">
               {/* Pickup + PickupDate */}
               <div className="flex items-start">
                 <span className="font-bold text-gray-600 w-28 shrink-0">Pickup:</span>
@@ -247,6 +247,23 @@ export default function JobsList() {
                   {job.Dropoff}
                   {job.Dropoff && job.DropoffDate ? " - " : ""}
                   {job.DropoffDate ? formatDate(job.DropoffDate) : ""}
+                </span>
+              </div>
+
+              {/* Booking Consultant */}
+              <div className="flex items-start">
+                <span className="font-bold text-gray-600 w-28 shrink-0">Booking Consultant:</span>
+                <span
+                  className="text-gray-800 break-words"
+                  style={{
+                    wordBreak: "break-word",
+                    whiteSpace: "normal",
+                    overflowWrap: "break-word",
+                  }}
+                >
+                  {job.Booking_Consultant}
+                  {job.Booking_Consultant && job.Phone ? ", " : ""}
+                  {job.Phone}
                 </span>
               </div>
 
