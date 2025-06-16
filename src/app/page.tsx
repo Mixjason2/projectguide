@@ -105,7 +105,7 @@ export default function LoginPage() {
     ></path>
     <path
       fill="#95c941"
-      stroke="#030303"stroke-width="0.2"
+      stroke="#030303"strokeWidth="0.2"
       d="M242.6,63.3c-2.5,0-4.5-2-4.5-4.5s2-4.5,4.5-4.5s4.5,2,4.5,4.5S245.1,63.3,242.6,63.3"
     ></path>
     <path
