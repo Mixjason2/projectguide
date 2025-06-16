@@ -38,28 +38,40 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 exports.__esModule = true;
 var react_1 = require("react");
-var react_2 = require("@fullcalendar/react");
-var daygrid_1 = require("@fullcalendar/daygrid");
-var timegrid_1 = require("@fullcalendar/timegrid");
-var list_1 = require("@fullcalendar/list");
-var interaction_1 = require("@fullcalendar/interaction");
-var cssguide_1 = require("../cssguide");
 require("./calendar.css");
+var Loading = function () {
+    var dotStyle = function (delay) { return ({
+        width: 12,
+        height: 12,
+        backgroundColor: '#95c941',
+        borderRadius: '50%',
+        display: 'inline-block',
+        animation: 'bounce 1.4s infinite ease-in-out both',
+        animationDelay: delay * 0.2 + "s"
+    }); };
+    return (react_1["default"].createElement("div", { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', fontSize: '1.2rem', color: '#555' } },
+        react_1["default"].createElement("div", { style: { display: 'flex', gap: 8, marginBottom: 12 } }, [0, 1, 2].map(function (i) { return react_1["default"].createElement("span", { key: i, style: dotStyle(i) }); })),
+        "Loading jobs...",
+        react_1["default"].createElement("style", null, "\n        @keyframes bounce {\n          0%, 80%, 100% { transform: scale(0); }\n          40% { transform: scale(1); }\n        }\n      ")));
+};
+var ErrorMessage = function (_a) {
+    var error = _a.error;
+    return (react_1["default"].createElement("div", { className: "max-w-md mx-auto my-5 p-4 text-red-700 bg-red-100 border border-red-300 rounded-lg font-semibold text-center shadow-md" },
+        "Error: ",
+        error));
+};
 function CalendarExcel() {
     var _this = this;
     var _a = react_1.useState([]), jobs = _a[0], setJobs = _a[1];
     var _b = react_1.useState(true), loading = _b[0], setLoading = _b[1];
     var _c = react_1.useState(null), error = _c[0], setError = _c[1];
+    var _d = react_1.useState('dayGridMonth'), currentView = _d[0], setCurrentView = _d[1];
     react_1.useEffect(function () {
         var token = localStorage.getItem("token") || "";
         fetch('https://operation.dth.travel:7082/api/guide/job', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
-                startdate: "2025-01-01",
-                enddate: "2025-05-31"
-            })
+            body: JSON.stringify({ token: token, startdate: "2025-01-01", enddate: "2025-05-31" })
         })
             .then(function (res) { return __awaiter(_this, void 0, void 0, function () {
             var _a;
@@ -74,64 +86,91 @@ function CalendarExcel() {
                 }
             });
         }); })
-            .then(function (data) {
-            console.log("API jobs:", data);
-            setJobs(data);
-        })["catch"](function (err) { return setError(err.message); })["finally"](function () { return setLoading(false); });
+            .then(setJobs)["catch"](function (err) { return setError(err.message); })["finally"](function () { return setLoading(false); });
     }, []);
-    // สร้าง events สำหรับ FullCalendar จาก jobs
-    var events = react_1["default"].useMemo(function () {
-        var countByDate = {};
-        jobs.forEach(function (job) {
-            if (job.PickupDate) {
-                countByDate[job.PickupDate] = (countByDate[job.PickupDate] || 0) + 1;
+    var events = react_1.useMemo(function () {
+        if (currentView === 'dayGridMonth') {
+            var grouped_1 = {};
+            jobs.forEach(function (job) {
+                var _a;
+                var date = job.PickupDate.split('T')[0];
+                ((_a = grouped_1[date]) !== null && _a !== void 0 ? _a : ) = [];
+            }).push(job);
+        }
+    });
+    return Object.entries(grouped).map(function (_a) {
+        var date = _a[0], jobsOnDate = _a[1];
+        return ({
+            title: "job : (" + jobsOnDate.length + ") ",
+            start: date,
+            allDay: true,
+            backgroundColor: '#95c941',
+            borderColor: '#0369a1',
+            textColor: 'white',
+            extendedProps: {
+                jobs: jobsOnDate,
+                isChanged: jobsOnDate.some(function (j) { return j.isChange; })
             }
         });
-        return Object.entries(countByDate).map(function (_a) {
-            var date = _a[0], count = _a[1];
-            return ({
-                title: "Jobs: " + count,
-                date: date
-            });
-        });
-    }, [jobs]);
-    if (loading)
-        return (react_1["default"].createElement("div", { style: {
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                height: '100vh',
-                fontSize: '1.2rem',
-                color: '#555'
-            } },
-            react_1["default"].createElement("div", { style: { display: 'flex', gap: '8px', marginBottom: '12px' } },
-                react_1["default"].createElement("span", { style: dotStyle(0) }),
-                react_1["default"].createElement("span", { style: dotStyle(1) }),
-                react_1["default"].createElement("span", { style: dotStyle(2) })),
-            "Loading jobs...",
-            react_1["default"].createElement("style", null, "\n      @keyframes bounce {\n        0%, 80%, 100% {\n          transform: scale(0);\n        } 40% {\n          transform: scale(1);\n        }\n      }\n    ")));
-    // ฟังก์ชันช่วยสร้างสไตล์แต่ละ dot พร้อมดีเลย์
-    function dotStyle(delayIndex) {
-        return {
-            width: '12px',
-            height: '12px',
-            backgroundColor: '#95c941',
-            borderRadius: '50%',
-            display: 'inline-block',
-            animation: 'bounce 1.4s infinite ease-in-out both',
-            animationDelay: delayIndex * 0.2 + "s"
-        };
-    }
-    if (error)
-        return (react_1["default"].createElement("div", { className: "max-w-md mx-auto my-5 p-4 text-red-700 bg-red-100 border border-red-300 rounded-lg font-semibold text-center shadow-md" },
-            "Error: ",
-            error));
-    return (react_1["default"].createElement(cssguide_1["default"], null,
-        react_1["default"].createElement(react_2["default"], { plugins: [daygrid_1["default"], timegrid_1["default"], list_1["default"], interaction_1["default"]], initialView: "dayGridMonth", events: events, height: "100%", contentHeight: "auto", aspectRatio: 1.7, headerToolbar: {
-                start: 'title',
-                center: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth',
-                end: 'today prev,next'
-            }, editable: false, selectable: true, expandRows: true })));
+    });
 }
 exports["default"] = CalendarExcel;
+{
+    return jobs.map(function (job) { return ({
+        id: job.key.toString(),
+        title: " " + job.PNR + " ",
+        start: job.PickupDate,
+        backgroundColor: job.isChange ? '#fb923c' : '#95c941',
+        borderColor: '#0369a1',
+        textColor: 'white',
+        extendedProps: {
+            job: job
+        }
+    }); });
+}
+[jobs, currentView];
+;
+var handleEventClick = function (info) {
+    if (currentView === 'dayGridMonth') {
+        var jobsOnDate = info.event.extendedProps.jobs || [];
+        var clickedDate = info.event.startStr.split('T')[0];
+        var details = jobsOnDate.map(function (job, i) {
+            var pickupTime = new Date(job.PickupDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+            return i + 1 + ". \uD83D\uDD52 " + pickupTime + " \uD83D\uDCCD " + job.Pickup + " | \uD83D\uDC64 " + job.Pax + " Pax | \uD83C\uDFAB PNR: " + job.PNR;
+        }).join('\n');
+        alert("\uD83D\uDCC5 Date: " + clickedDate + "\n\uD83D\uDCCC Jobs:\n" + details);
+    }
+    else {
+        var job = info.event.extendedProps.job;
+        var pickupTime = new Date(job.PickupDate).toLocaleString('en-GB', {
+            dateStyle: 'short',
+            timeStyle: 'short'
+        });
+        alert("\uD83C\uDFAB PNR: " + job.PNR + "\n\uD83D\uDD52 Pickup: " + pickupTime + "\n\uD83D\uDCCD Location: " + job.Pickup + "\n\uD83D\uDC64 Pax: " + job.Pax);
+    }
+};
+var renderEventContent = function (arg) {
+    var _a, _b;
+    var job = (_a = arg.event.extendedProps) === null || _a === void 0 ? void 0 : _a.job;
+    var isChanged = (_b = arg.event.extendedProps) === null || _b === void 0 ? void 0 : _b.isChanged;
+    return (react_1["default"].createElement("div", { className: "flex items-center" },
+        react_1["default"].createElement("span", { style: {
+                backgroundColor: isChanged ? '#fb923c' : ((job === null || job === void 0 ? void 0 : job.isChange) ? '#fb923c' : '#0891b2'),
+                width: 10,
+                height: 10,
+                borderRadius: '50%',
+                display: 'inline-block',
+                marginRight: 8
+            } }),
+        react_1["default"].createElement("span", null, arg.event.title)));
+};
+if (loading)
+    return react_1["default"].createElement(Loading, null);
+if (error)
+    return react_1["default"].createElement(ErrorMessage, { error: error });
+return (react_1["default"].createElement(cssguide_1["default"], null,
+    react_1["default"].createElement(react_2["default"], { plugins: [daygrid_1["default"], timegrid_1["default"], list_1["default"], interaction_1["default"]], initialView: "dayGridMonth", events: events, datesSet: function (arg) { return setCurrentView(arg.view.type); }, height: "100%", contentHeight: "auto", aspectRatio: 1.7, headerToolbar: {
+            start: 'title',
+            center: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth',
+            end: 'today prev,next'
+        }, editable: false, selectable: true, expandRows: true, eventClick: handleEventClick, eventContent: renderEventContent })));

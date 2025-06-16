@@ -112,7 +112,8 @@ function JobsList() {
     var _h = react_1.useState(null), uploadJob = _h[0], setUploadJob = _h[1];
     var _j = react_1.useState({}), expandedPNRs = _j[0], setExpandedPNRs = _j[1];
     var _k = react_1.useState([]), acceptedPNRs = _k[0], setAcceptedPNRs = _k[1];
-    var _l = react_1.useState(true), isLoadingJobs = _l[0], setIsLoadingJobs = _l[1];
+    var _l = react_1.useState([]), rejectPNRs = _l[0], setrejectPNRs = _l[1];
+    var _m = react_1.useState(true), isLoadingJobs = _m[0], setIsLoadingJobs = _m[1];
     var pageSize = 6;
     react_1.useEffect(function () {
         var token = localStorage.getItem("token") || "";
@@ -368,8 +369,16 @@ function JobsList() {
                                         renderPlaceDate(job.Dropoff, job.DropoffDate, 'Dropoff'),
                                         renderField('Pax', job.Pax),
                                         renderField('Source', job.Source)),
-                                    !acceptedPNRs.includes(job.PNR) && (React.createElement("div", { className: "flex gap-3 mt-auto flex-wrap" },
-                                        React.createElement("button", { className: "btn btn-success flex-1 text-base font-Arial py-2 rounded-full shadow  text-white bg-[#95c941] hover:opacity-90", onClick: function () { return __awaiter(_this, void 0, void 0, function () {
+                                    jobs
+                                        .filter(function (j) { return j.PNR === job.PNR && j.key !== job.key; })
+                                        .map(function (relatedJob) { return (React.createElement("div", { key: relatedJob.key, className: "bg-gray-100 border border-gray-300 rounded p-3 mb-4 text-sm text-gray-700" },
+                                        React.createElement("div", { className: "font-semibold text-gray-800 mb-1" }, "Another PNR"),
+                                        renderPlaceDate(relatedJob.Pickup, relatedJob.PickupDate, 'Pickup'),
+                                        renderPlaceDate(relatedJob.Dropoff, relatedJob.DropoffDate, 'Dropoff'),
+                                        renderField('Pax', relatedJob.Pax),
+                                        renderField('Source', relatedJob.Source))); }),
+                                    !acceptedPNRs.includes(job.PNR) && !rejectPNRs.includes(job.PNR) && (React.createElement("div", { className: "flex gap-3 mt-auto flex-wrap" },
+                                        React.createElement("button", { className: "btn btn-success flex-1 text-base font-Arial py-2 rounded-full shadow text-white bg-[#95c941] hover:opacity-90", onClick: function () { return __awaiter(_this, void 0, void 0, function () {
                                                 var token, response, result, e_1;
                                                 return __generator(this, function (_a) {
                                                     switch (_a.label) {
@@ -419,6 +428,12 @@ function JobsList() {
                                                             result = response.data;
                                                             if (result.success) {
                                                                 alert("แจ้งยกเลิกงานสำเร็จ กรุณารอหลังบ้านส่งอีเมลยืนยันสักครู่");
+                                                                // เพิ่มตรงนี้เพื่อให้ปุ่มหายเหมือน Accept
+                                                                setrejectPNRs(function (prev) { return __spreadArrays(prev, [job.PNR]); });
+                                                                setJobs(function (prevJobs) {
+                                                                    var remaining = prevJobs.filter(function (j) { return j.key !== job.key; });
+                                                                    return __spreadArrays([job], remaining);
+                                                                });
                                                             }
                                                             else {
                                                                 alert("แจ้งยกเลิกงานไม่สำเร็จ: " + ((result === null || result === void 0 ? void 0 : result.error) || "Unknown error"));

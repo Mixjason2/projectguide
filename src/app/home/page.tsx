@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import CssgGuide from '../cssguide'
 import axios from "axios";
-import {Ripple} from 'react-spinners-css';
+import { Ripple } from 'react-spinners-css';
 type Job = {
   isChange: boolean;
   isNew: boolean;
@@ -75,6 +75,7 @@ export default function JobsList() {
   const [uploadJob, setUploadJob] = useState<Job | null>(null)
   const [expandedPNRs, setExpandedPNRs] = useState<{ [pnr: string]: boolean }>({});
   const [acceptedPNRs, setAcceptedPNRs] = useState<string[]>([]);
+  const [rejectPNRs, setrejectPNRs] = useState<string[]>([]);
   const [isLoadingJobs, setIsLoadingJobs] = useState(true);
 
   const pageSize = 6
@@ -408,7 +409,7 @@ export default function JobsList() {
                           {/* Status indicator circles */}
                           <h2
                             className="font-Arial mt-0 mb-0 underline underline-offset-4"
-                            style={{ color: '#2D3E92', fontSize: '28px'}}
+                            style={{ color: '#2D3E92', fontSize: '28px' }}
                           >
                             {job.PNR}
                           </h2>
@@ -423,20 +424,39 @@ export default function JobsList() {
                               {renderField('Pax', job.Pax)}
                               {renderField('Source', job.Source)}
                             </div>
-                            {!acceptedPNRs.includes(job.PNR) && (
 
+                            {/* รายการอื่นที่มี PNR เดียวกัน */}
+                            {jobs
+                              .filter(j => j.PNR === job.PNR && j.key !== job.key)
+                              .map(relatedJob => (
+                                <div
+                                  key={relatedJob.key}
+                                  className="bg-gray-100 border border-gray-300 rounded p-3 mb-4 text-sm text-gray-700"
+                                >
+                                  <div className="font-semibold text-gray-800 mb-1">
+                                    Another PNR
+                                  </div>
+                                  {renderPlaceDate(relatedJob.Pickup, relatedJob.PickupDate, 'Pickup')}
+                                  {renderPlaceDate(relatedJob.Dropoff, relatedJob.DropoffDate, 'Dropoff')}
+                                  {renderField('Pax', relatedJob.Pax)}
+                                  {renderField('Source', relatedJob.Source)}
+                                </div>
+                              ))}
+
+                            {!acceptedPNRs.includes(job.PNR) && !rejectPNRs.includes(job.PNR) && (
                               <div className="flex gap-3 mt-auto flex-wrap">
                                 {/* Accept Button */}
                                 <button
-                                  className="btn btn-success flex-1 text-base font-Arial py-2 rounded-full shadow  text-white bg-[#95c941] hover:opacity-90"
+                                  className="btn btn-success flex-1 text-base font-Arial py-2 rounded-full shadow text-white bg-[#95c941] hover:opacity-90"
                                   onClick={async () => {
                                     try {
                                       const token = localStorage.getItem("token") || "";
                                       const response = await axios.post(
                                         `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
                                         {
-                                          token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
-                                          data: { isConfirmed: true }
+                                          token:
+                                            "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
+                                          data: { isConfirmed: true },
                                         }
                                       );
                                       const result = response.data;
@@ -478,6 +498,13 @@ export default function JobsList() {
                                       const result = response.data;
                                       if (result.success) {
                                         alert("แจ้งยกเลิกงานสำเร็จ กรุณารอหลังบ้านส่งอีเมลยืนยันสักครู่");
+                                        // เพิ่มตรงนี้เพื่อให้ปุ่มหายเหมือน Accept
+                                        setrejectPNRs(prev => [...prev, job.PNR]);
+                                        setJobs(prevJobs => {
+                                          const remaining = prevJobs.filter(j => j.key !== job.key);
+                                          return [job, ...remaining];
+                                        });
+
                                       } else {
                                         alert("แจ้งยกเลิกงานไม่สำเร็จ: " + (result?.error || "Unknown error"));
                                       }
@@ -488,6 +515,7 @@ export default function JobsList() {
                                 >
                                   Reject Job
                                 </button>
+
                               </div>
                             )}
                           </div>

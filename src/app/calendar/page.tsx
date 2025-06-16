@@ -1,130 +1,184 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
+import { DatesSetArg } from '@fullcalendar/core';
 import CssgGuide from '../cssguide';
 import './calendar.css';
 
-interface Job {
-  PickupDate: string; // สมมติฟิลด์นี้มีวันที่ pickup
-  // ... ฟิลด์อื่นๆตาม API
-}
+type Job = {
+  isChange: boolean;
+  key: number;
+  PNR: string;
+  PickupDate: string;
+  Pickup: string;
+  Pax: number;
+};
+
+const Loading = () => {
+  const dotStyle = (delay: number) => ({
+    width: 12,
+    height: 12,
+    backgroundColor: '#95c941',
+    borderRadius: '50%',
+    display: 'inline-block',
+    animation: 'bounce 1.4s infinite ease-in-out both',
+    animationDelay: `${delay * 0.2}s`,
+  });
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', fontSize: '1.2rem', color: '#555' }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+        {[0, 1, 2].map(i => <span key={i} style={dotStyle(i)}></span>)}
+      </div>
+      Loading jobs...
+      <style>{`
+        @keyframes bounce {
+          0%, 80%, 100% { transform: scale(0); }
+          40% { transform: scale(1); }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+const ErrorMessage = ({ error }: { error: string }) => (
+  <div className="max-w-md mx-auto my-5 p-4 text-red-700 bg-red-100 border border-red-300 rounded-lg font-semibold text-center shadow-md">
+    Error: {error}
+  </div>
+);
 
 export default function CalendarExcel() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentView, setCurrentView] = useState<string>('dayGridMonth');
 
   useEffect(() => {
     const token = localStorage.getItem("token") || "";
     fetch('https://operation.dth.travel:7082/api/guide/job', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",  // ใช้ token จาก localStorage
-        startdate: "2025-01-01",
-        enddate: "2025-05-31",
-      }),
+      body: JSON.stringify({ token, startdate: "2025-01-01", enddate: "2025-05-31" }),
     })
       .then(async res => {
         if (!res.ok) throw new Error(await res.text());
         return res.json();
       })
-      .then((data: Job[]) => {
-        console.log("API jobs:", data);
-        setJobs(data);
-      })
+      .then(setJobs)
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
 
-  // สร้าง events สำหรับ FullCalendar จาก jobs
-  const events = React.useMemo(() => {
-    const countByDate: Record<string, number> = {};
+  const events = useMemo(() => {
+    if (currentView === 'dayGridMonth') {
+      const grouped: Record<string, Job[]> = {};
+      jobs.forEach(job => {
+        const date = job.PickupDate.split('T')[0];
+        (grouped[date] ??= []).push(job);
+      });
 
-    jobs.forEach(job => {
-      if (job.PickupDate) {
-        countByDate[job.PickupDate] = (countByDate[job.PickupDate] || 0) + 1;
-      }
-    });
+      return Object.entries(grouped).map(([date, jobsOnDate]) => ({
+        title: `job : (${jobsOnDate.length}) `,
+        start: date,
+        allDay: true,
+        backgroundColor: '#95c941',
+        borderColor: '#0369a1',
+        textColor: 'white',
+        extendedProps: {
+          jobs: jobsOnDate,
+          isChanged: jobsOnDate.some(j => j.isChange),
+        },
+      }));
+    } else {
+      return jobs.map(job => ({
+        id: job.key.toString(),
+        title: ` ${job.PNR} `,
+        start: job.PickupDate,
+        backgroundColor: job.isChange ? '#fb923c' : '#95c941',
+        borderColor: '#0369a1',
+        textColor: 'white',
+        extendedProps: {
+          job,
+        },
+      }));
+    }
+  }, [jobs, currentView]);
 
-    return Object.entries(countByDate).map(([date, count]) => ({
-      title: `Jobs: ${count}`,
-      date,
-    }));
-  }, [jobs]);
+  const handleEventClick = (info: any) => {
+    if (currentView === 'dayGridMonth') {
+      const jobsOnDate: Job[] = info.event.extendedProps.jobs || [];
+      const clickedDate = info.event.startStr.split('T')[0];
 
-if (loading) return (
-  <div style={{
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '100vh',
-    fontSize: '1.2rem',
-    color: '#555'
-  }}>
-    <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-      <span style={dotStyle(0)}></span>
-      <span style={dotStyle(1)}></span>
-      <span style={dotStyle(2)}></span>
-    </div>
-    Loading jobs...
-    <style>{`
-      @keyframes bounce {
-        0%, 80%, 100% {
-          transform: scale(0);
-        } 40% {
-          transform: scale(1);
-        }
-      }
-    `}</style>
-  </div>
-);
+      const details = jobsOnDate.map((job, i) => {
+        const pickupTime = new Date(job.PickupDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+        return `${i + 1}. 🕒 ${pickupTime} 📍 ${job.Pickup} | 👤 ${job.Pax} Pax | 🎫 PNR: ${job.PNR}`;
+      }).join('\n');
 
-// ฟังก์ชันช่วยสร้างสไตล์แต่ละ dot พร้อมดีเลย์
-function dotStyle(delayIndex: number) {
-  return {
-    width: '12px',
-    height: '12px',
-    backgroundColor: '#95c941', // สีเขียวสดใสเหมือนที่ขอ
-    borderRadius: '50%',
-    display: 'inline-block',
-    animation: 'bounce 1.4s infinite ease-in-out both',
-    animationDelay: `${delayIndex * 0.2}s`,
+      alert(`📅 Date: ${clickedDate}\n📌 Jobs:\n${details}`);
+    } else {
+      const job: Job = info.event.extendedProps.job;
+      const pickupTime = new Date(job.PickupDate).toLocaleString('en-GB', {
+        dateStyle: 'short',
+        timeStyle: 'short',
+      });
+
+      alert(`🎫 PNR: ${job.PNR}
+🕒 Pickup: ${pickupTime}
+📍 Location: ${job.Pickup}
+👤 Pax: ${job.Pax}`);
+    }
   };
-}
 
-  if (error) return (
-  <div className="max-w-md mx-auto my-5 p-4 text-red-700 bg-red-100 border border-red-300 rounded-lg font-semibold text-center shadow-md">
-    Error: {error}
-  </div>
-);
+  const renderEventContent = (arg: any) => {
+    const job = arg.event.extendedProps?.job;
+    const isChanged = arg.event.extendedProps?.isChanged;
 
+    return (
+      <div className="flex items-center">
+        <span
+          style={{
+            backgroundColor: isChanged ? '#fb923c' : (job?.isChange ? '#fb923c' : '#0891b2'),
+            width: 10,
+            height: 10,
+            borderRadius: '50%',
+            display: 'inline-block',
+            marginRight: 8,
+          }}
+        />
+        <span>{arg.event.title}</span>
+      </div>
+    );
+  };
+
+  if (loading) return <Loading />;
+  if (error) return <ErrorMessage error={error} />;
 
   return (
-
     <CssgGuide>
-          <FullCalendar
-            plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
-            initialView="dayGridMonth"
-            events={events}
-            height="100%"
-            contentHeight="auto"
-            aspectRatio={1.7}
-            headerToolbar={{
-              start: 'title', // title ชิดซ้าย
-              center: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth', // ปุ่มมุมมองไว้กลาง
-              end: 'today prev,next', // ปุ่ม today / เลื่อนเดือนไว้ขวา
-            }}
-            editable={false}
-            selectable={true}
-            expandRows={true}
-          />
+      <FullCalendar
+        plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
+        initialView="dayGridMonth"
+        events={events}
+        datesSet={(arg: DatesSetArg) => setCurrentView(arg.view.type)}
+        height="100%"
+        contentHeight="auto"
+        aspectRatio={1.7}
+        headerToolbar={{
+          start: 'title',
+          center: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth',
+          end: 'today prev,next',
+        }}
+        editable={false}
+        selectable={true}
+        expandRows={true}
+        eventClick={handleEventClick}
+        eventContent={renderEventContent}
+      />
     </CssgGuide>
   );
 }
