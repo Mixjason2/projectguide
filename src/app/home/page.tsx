@@ -132,21 +132,21 @@ export default function JobsList() {
 
   // Helper to format date and time, keep only วัน/เดือน/ปี (YYYY-MM-DD)
   function formatDate(dateStr: any) {
-  if (!dateStr) return '';
-  if (typeof dateStr !== 'string') {
-    // ถ้าไม่ใช่ string แปลงเป็น string ก่อน
-    dateStr = String(dateStr);
+    if (!dateStr) return '';
+    if (typeof dateStr !== 'string') {
+      // ถ้าไม่ใช่ string แปลงเป็น string ก่อน
+      dateStr = String(dateStr);
+    }
+    const match = dateStr.match(/^\d{4}-\d{2}-\d{2}/);
+    return match ? match[0] : dateStr;
   }
-  const match = dateStr.match(/^\d{4}-\d{2}-\d{2}/);
-  return match ? match[0] : dateStr;
-}
 
   // Helper to combine Pickup + PickupDate, Dropoff + DropoffDate
   function renderPlaceDate(place: string, date: string, label: string) {
     if (!place && !date) return null
     return (
       <div>
-        <span className="font-Arial">{label}:</span>{' '}
+        <span className="font-Arial font-semibold">{label}:</span>{' '}
         {place ? place : ''}{place && date ? ' - ' : ''}{date ? formatDate(date) : ''}
       </div>
     )
@@ -158,7 +158,7 @@ export default function JobsList() {
     if (Array.isArray(value)) {
       return (
         <div>
-          <span className="font-Arial">{label}:</span>
+          <span className="font-Arial font-semibold">{label}:</span>
           <ul className="list-disc ml-6">
             {value.map((v, i) => (
               <li key={i}>{String(v)}</li>
@@ -169,10 +169,11 @@ export default function JobsList() {
     }
     return (
       <div>
-        <span className="font-Arial">{label}:</span> {String(value)}
+        <span className="font-Arial font-semibold">{label}:</span> {String(value)}
       </div>
     )
   }
+
 
   // Render all job details for a PNR
   const renderAllDetails = (jobs: Job[]) => {
@@ -462,7 +463,7 @@ export default function JobsList() {
                         [job.PNR]: !isExpanded
                       }));
                     };
-                    
+
 
                     return (
                       <div
