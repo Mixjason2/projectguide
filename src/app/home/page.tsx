@@ -127,11 +127,15 @@ export default function JobsList() {
   const pagedJobs = mergedJobs.slice((page - 1) * pageSize, page * pageSize)
 
   // Helper to format date and time, keep only วัน/เดือน/ปี (YYYY-MM-DD)
-  function formatDate(dateStr: string) {
-    if (!dateStr) return ''
-    const match = dateStr.match(/^\d{4}-\d{2}-\d{2}/)
-    return match ? match[0] : dateStr
+  function formatDate(dateStr: any) {
+  if (!dateStr) return '';
+  if (typeof dateStr !== 'string') {
+    // ถ้าไม่ใช่ string แปลงเป็น string ก่อน
+    dateStr = String(dateStr);
   }
+  const match = dateStr.match(/^\d{4}-\d{2}-\d{2}/);
+  return match ? match[0] : dateStr;
+}
 
   // Helper to combine Pickup + PickupDate, Dropoff + DropoffDate
   function renderPlaceDate(place: string, date: string, label: string) {
@@ -240,11 +244,11 @@ export default function JobsList() {
                     "Pickup", "PickupDate", "Dropoff", "DropoffDate",
                     "PNRDate", "all", "keys", "isNew", "isChange",
                     "isDelete", "PNR", "NotAvailable", "agentCode",
-                    "agentLogo", "serviceTypeName", "TypeName","SupplierCode_TP",
-                    "SupplierName_TP","ProductName_TP","ServiceLocationName",
-                    "serviceSupplierCode_TP","serviceProductName","serviceSupplierName",
-                    "ServiceLocationName_TP","Source","Phone","Booking_Consultant","AdultQty",
-                    "ChildQty","ChildShareQty","InfantQty"
+                    "agentLogo", "serviceTypeName", "TypeName", "SupplierCode_TP",
+                    "SupplierName_TP", "ProductName_TP", "ServiceLocationName",
+                    "serviceSupplierCode_TP", "serviceProductName", "serviceSupplierName",
+                    "ServiceLocationName_TP", "Source", "Phone", "Booking_Consultant", "AdultQty",
+                    "ChildQty", "ChildShareQty", "InfantQty"
                   ].includes(k)
                 )
                 .map(([k, v]) => {
@@ -260,22 +264,22 @@ export default function JobsList() {
                     </div>
                   );
                 })}
-                <table className="min-w-full border text-sm">
-            <thead className="bg-[#2D3E92] text-black">
-              <tr>
-                <th className="px-3 py-2 text-left">AdultQty</th>
-                <th className="px-3 py-2 text-left">ChildQty</th>
-                <th className="px-3 py-2 text-left">ChildShareQty</th>
-                <th className="px-3 py-2 text-left">InfantQty</th>
-              </tr>
-              <tr>
-                <th className="px-3 py-2 text-left">0</th>
-                <th className="px-3 py-2 text-left">0</th>
-                <th className="px-3 py-2 text-left">0</th>
-                <th className="px-3 py-2 text-left">0</th>
-              </tr>
-            </thead>
-            </table>
+              <table className="min-w-full border text-sm">
+                <thead className="bg-[#2D3E92] text-black">
+                  <tr>
+                    <th className="px-3 py-2 text-left">AdultQty</th>
+                    <th className="px-3 py-2 text-left">ChildQty</th>
+                    <th className="px-3 py-2 text-left">ChildShareQty</th>
+                    <th className="px-3 py-2 text-left">InfantQty</th>
+                  </tr>
+                  <tr>
+                    <th className="px-3 py-2 text-left">0</th>
+                    <th className="px-3 py-2 text-left">0</th>
+                    <th className="px-3 py-2 text-left">0</th>
+                    <th className="px-3 py-2 text-left">0</th>
+                  </tr>
+                </thead>
+              </table>
 
 
               {/* Show merged TypeNames */}
@@ -417,16 +421,14 @@ export default function JobsList() {
                         [job.PNR]: !isExpanded
                       }));
                     };
+                    
 
                     return (
                       <div
                         key={job.PNR}
-                        className="relative bg-white border border-base-300 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col " style={{
-                          backgroundColor: '#ffffff',
-                          borderColor: '#9EE4F6',
-                          borderWidth: '1px',
-                        }}
+                        className="relative bg-white border border-[#9EE4F6] border-[1px] rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col"
                       >
+
                         {/* Show number of jobs in this PNR at top-left */}
                         <div
                           className="absolute top-2 left-1 text-[#ffffff] font-Arial rounded-full px-3 py-1 text-sm shadow z-10"
