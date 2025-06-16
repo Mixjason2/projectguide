@@ -1,10 +1,18 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import CssgGuide from '../cssguide'
 import axios from "axios";
 import { Ripple } from 'react-spinners-css';
 type Job = {
+  AdultQty: number;
+  ChildQty: number;
+  ChildShareQty: number;
+  InfantQty: number;
+  Phone: any;
+  Booking_Consultant: ReactNode;
+  TypeName: any;
+  serviceTypeName: any;
   isChange: boolean;
   isNew: boolean;
   key: number
@@ -87,8 +95,8 @@ export default function JobsList() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
-        startdate: "2025-01-01",
+        token: "yMaEinVpfboebobeC8x5fsVRXjKf4Gw2xrpnVaNpIyv8YaCuVFaqsyjnDdWt66IpXm8LNYpPcWnTNf0uF0VbfcKMfY7HdatLCHNLw3f8kQtk/qTyUEcIkQTzUG45tLh+lVMJc++IZ9eoCi/NFpd4iTyhYWUaB1RC+Ef7nwNJ6zY=",
+        startdate: "2025-05-01",
         enddate: "2025-05-31",
       }),
     })
@@ -163,68 +171,157 @@ export default function JobsList() {
   }
 
   // Render all job details for a PNR
-  const renderAllDetails = (jobs: Job[]) => (
-    <div className="max-h-[60vh] overflow-auto">
-      {jobs.map((job, idx) => (
-        <div key={job.key} className="mb-4 border-b border-blue-200 pb-2 last:border-b-0 last:pb-0">
-          <div className="font-Arial  text-[#2D3E92] mb-1 underline underline-offset-4">
-            PNR: {job.PNR}
+  const renderAllDetails = (jobs: Job[]) => {
+    // Step 1: Group jobs by their common properties (excluding TypeName)
+    const groupedJobs: Record<string, { job: Job; typeNames: string[] }> = {};
+
+    jobs.forEach((job) => {
+      const groupKey = JSON.stringify({
+        PNR: job.PNR,
+        Pickup: job.Pickup,
+        PickupDate: job.PickupDate,
+        Dropoff: job.Dropoff,
+        DropoffDate: job.DropoffDate,
+        PNRDate: job.PNRDate,
+        // add other fields that should be merged
+      });
+
+      const typeName = job.serviceTypeName || job.TypeName || "Unknown";
+
+      if (!groupedJobs[groupKey]) {
+        groupedJobs[groupKey] = {
+          job: { ...job },
+          typeNames: [typeName],
+        };
+      } else {
+        groupedJobs[groupKey].typeNames.push(typeName);
+      }
+    });
+
+    return (
+      <div className="max-h-[60vh] overflow-auto">
+        {Object.values(groupedJobs).map(({ job, typeNames }, idx) => (
+          <div
+            key={job.key + "-" + idx}
+            className="mb-4 border-b border-gray-200 pb-4 last:border-b-0"
+          >
+            {/* PNR Header */}
+            <div className="font-Arial text-[#2D3E92] mb-2 underline underline-offset-4">
+              PNR: {job.PNR}
+            </div>
+
+            {/* Details Section */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 text-sm">
+              {/* Pickup + PickupDate */}
+              <div className="flex items-center">
+                <span className="font-bold text-gray-600 w-28 shrink-0">Pickup:</span>
+                <span className="text-gray-800">
+                  {job.Pickup}
+                  {job.Pickup && job.PickupDate ? " - " : ""}
+                  {job.PickupDate ? formatDate(job.PickupDate) : ""}
+                </span>
+              </div>
+
+              {/* Dropoff + DropoffDate */}
+              <div className="flex items-center">
+                <span className="font-bold text-gray-600 w-28 shrink-0">Dropoff:</span>
+                <span className="text-gray-800">
+                  {job.Dropoff}
+                  {job.Dropoff && job.DropoffDate ? " - " : ""}
+                  {job.DropoffDate ? formatDate(job.DropoffDate) : ""}
+                </span>
+              </div>
+
+              {/* Render Other Fields */}
+              {Object.entries(job)
+                .filter(([k]) =>
+                  ![
+                    "IsConfirmed",
+                    "IsCancel",
+                    "key",
+                    "BSL_ID",
+                    "Pickup",
+                    "PickupDate",
+                    "Dropoff",
+                    "DropoffDate",
+                    "PNRDate",
+                    "all",
+                    "keys",
+                    "isNew",
+                    "isChange",
+                    "isDelete",
+                    "PNR",
+                    "NotAvailable",
+                    "agentCode",
+                    "agentLogo",
+                    "serviceTypeName",
+                    "TypeName",
+                    "SupplierCode_TP",
+                    "SupplierName_TP",
+                    "ProductName_TP",
+                    "ServiceLocationName",
+                    "serviceSupplierCode_TP",
+                    "serviceProductName",
+                    "serviceSupplierName",
+                    "ServiceLocationName_TP",
+                    "Source",
+                    "Phone",
+                    "Booking_Consultant",
+                    "AdultQty",
+                    "ChildQty",
+                    "ChildShareQty",
+                    "InfantQty",
+                  ].includes(k)
+                )
+                .map(([k, v]) => {
+                  let label = k;
+                  if (k === "serviceSupplierCode_TP") label = "SupplierCode_TP";
+                  if (k === "serviceProductName") label = "ProductName";
+                  if (k === "serviceSupplierName") label = "Supplier";
+                  if (k === "ServiceLocationName") label = "Location";
+                  return (
+                    <div key={k} className="flex items-center">
+                      <span className="font-bold text-gray-600 w-28 shrink-0">{label}:</span>
+                      <span className="text-gray-800">
+                        {typeof v === "object" ? JSON.stringify(v) : String(v)}
+                      </span>
+                    </div>
+                  );
+                })}
+            </div>
+
+            {/* Show Merged TypeNames */}
+            <div className="flex items-center mt-4">
+              <span className="font-bold text-gray-600 w-28 shrink-0">TypeName:</span>
+              <span className="text-gray-800">{[...new Set(typeNames)].join(", ")}</span>
+            </div>
+
+            {/* Table Section */}
+            <div className="overflow-x-auto mt-4">
+              <table className="table-auto min-w-full border text-sm">
+                <thead className="bg-[#2D3E92] text-white">
+                  <tr>
+                    <th className="px-3 py-2 text-left">AdultQty</th>
+                    <th className="px-3 py-2 text-left">ChildQty</th>
+                    <th className="px-3 py-2 text-left">ChildShareQty</th>
+                    <th className="px-3 py-2 text-left">InfantQty</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="px-3 py-2 text-left">{job.AdultQty || 0}</td>
+                    <td className="px-3 py-2 text-left">{job.ChildQty || 0}</td>
+                    <td className="px-3 py-2 text-left">{job.ChildShareQty || 0}</td>
+                    <td className="px-3 py-2 text-left">{job.InfantQty || 0}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm [&>div>span:first-child]:font-bold">
-            {/* Pickup + PickupDate */}
-            <div className="flex flex-wrap">
-              <span className="font-Arial w-28 shrink-0">Pickup:</span>
-              <span className="break-words ml-2">{job.Pickup}{job.Pickup && job.PickupDate ? ' - ' : ''}{job.PickupDate ? formatDate(job.PickupDate) : ''}</span>
-            </div>
-            {/* Dropoff + DropoffDate */}
-            <div className="flex flex-wrap">
-              <span className="font-Arial w-28 shrink-0">Dropoff:</span>
-              <span className="break-words ml-2">{job.Dropoff}{job.Dropoff && job.DropoffDate ? ' - ' : ''}{job.DropoffDate ? formatDate(job.DropoffDate) : ''}</span>
-            </div>
-            {/* PNRDate */}
-            <div className="flex flex-wrap">
-              <span className="font-Arial w-28 shrink-0">Date:</span>
-              <span className="break-words ml-2">{formatDate(job.PNRDate)}</span>
-            </div>
-            {Object.entries(job)
-              .filter(([k]) =>
-                k !== "IsConfirmed" &&
-                k !== "IsCancel" &&
-                k !== "key" &&
-                k !== "BSL_ID" &&
-                k !== "Pickup" &&
-                k !== "PickupDate" &&
-                k !== "Dropoff" &&
-                k !== "DropoffDate" &&
-                k !== "PNRDate" &&
-                k !== "all" &&
-                k !== "keys" &&
-                k !== "isNew" &&
-                k !== "isChange" &&
-                k !== "isDelete" &&
-                k !== "PNR" &&
-                k !== "NotAvailable" &&
-                k !== "agentCode" &&
-                k !== "agentLogo"
-              )
-              .map(([k, v]) => {
-                // ถ้า key คือ serviceSupplierCode_TP หรือ serviceProductName ให้ตัดคำว่า "service" ออก
-                let label = k;
-                if (k === "serviceSupplierCode_TP") label = "SupplierCode_TP";
-                if (k === "serviceProductName") label = "ProductName";
-                if (k === "serviceTypeName") label = "TypeName";
-                return (
-                  <div key={k} className="flex flex-wrap">
-                    <span className="font-Arial w-28 shrink-0">{label}:</span>
-                    <span className="break-words ml-2">{typeof v === 'object' ? JSON.stringify(v) : String(v)}</span>
-                  </div>
-                );
-              })}
-          </div>
-        </div>
-      ))}
-    </div>
-  )
+        ))}
+      </div>
+    );
+  };
 
   // ปรับ summary เป็นแถวแนวนอน สวยงาม และวางไว้บนหัว card Jobs List
   const summary = (
@@ -368,16 +465,22 @@ export default function JobsList() {
                           className="absolute top-2 left-1 text-[#ffffff] font-Arial rounded-full px-3 py-1 text-sm shadow z-10"
                           style={{
                             backgroundColor: job.isNew
-                              ? '	#0891b2' // ตัวอย่างสีสำหรับ New
+                              ? '#0891b2'
                               : job.isChange
-                                ? '#fb923c' // ตัวอย่างสีสำหรับ Change
-                                : '#E0E7FF', // Default (Blue-ish)
+                                ? '#fb923c'
+                                : '#E0E7FF',
                           }}
                         >
-                          {job.all?.length ?? 1}
+                          {job.all
+                            ? job.all.filter((j: { Pickup: any; PickupDate: any; Dropoff: any; DropoffDate: any; PNRDate: any; }) =>
+                              j.Pickup !== job.Pickup ||
+                              j.PickupDate !== job.PickupDate ||
+                              j.Dropoff !== job.Dropoff ||
+                              j.DropoffDate !== job.DropoffDate ||
+                              j.PNRDate !== job.PNRDate
+                            ).length + 1 // รวม job หลักด้วย
+                            : 1}
                         </div>
-
-
                         {/* Logo button */}
                         <button
                           className="absolute top-3.5 right-2 w-8 h-8 rounded-full bg-white border-2 border-[#2D3E92] shadow-[0_4px_10px_rgba(45,62,146,0.3)] hover:shadow-[0_6px_14px_rgba(45,62,146,0.4)] transition-all duration-200 flex items-center justify-center"
@@ -428,6 +531,14 @@ export default function JobsList() {
                             {/* รายการอื่นที่มี PNR เดียวกัน */}
                             {jobs
                               .filter(j => j.PNR === job.PNR && j.key !== job.key)
+                              .filter(j =>
+                                j.Pickup !== job.Pickup ||
+                                j.PickupDate !== job.PickupDate ||
+                                j.Dropoff !== job.Dropoff ||
+                                j.DropoffDate !== job.DropoffDate ||
+                                j.Pax !== job.Pax ||
+                                j.Source !== job.Source
+                              )
                               .map(relatedJob => (
                                 <div
                                   key={relatedJob.key}
@@ -442,6 +553,7 @@ export default function JobsList() {
                                   {renderField('Source', relatedJob.Source)}
                                 </div>
                               ))}
+
 
                             {!acceptedPNRs.includes(job.PNR) && !rejectPNRs.includes(job.PNR) && (
                               <div className="flex gap-3 mt-auto flex-wrap">

@@ -122,8 +122,8 @@ function JobsList() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
-                startdate: "2025-01-01",
+                token: "yMaEinVpfboebobeC8x5fsVRXjKf4Gw2xrpnVaNpIyv8YaCuVFaqsyjnDdWt66IpXm8LNYpPcWnTNf0uF0VbfcKMfY7HdatLCHNLw3f8kQtk/qTyUEcIkQTzUG45tLh+lVMJc++IZ9eoCi/NFpd4iTyhYWUaB1RC+Ef7nwNJ6zY=",
+                startdate: "2025-05-01",
                 enddate: "2025-05-31"
             })
         })
@@ -199,64 +199,125 @@ function JobsList() {
             String(value)));
     };
     // Render all job details for a PNR
-    var renderAllDetails = function (jobs) { return (React.createElement("div", { className: "max-h-[60vh] overflow-auto" }, jobs.map(function (job, idx) { return (React.createElement("div", { key: job.key, className: "mb-4 border-b border-blue-200 pb-2 last:border-b-0 last:pb-0" },
-        React.createElement("div", { className: "font-Arial  text-[#2D3E92] mb-1 underline underline-offset-4" },
-            "PNR: ",
-            job.PNR),
-        React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm [&>div>span:first-child]:font-bold" },
-            React.createElement("div", { className: "flex flex-wrap" },
-                React.createElement("span", { className: "font-Arial w-28 shrink-0" }, "Pickup:"),
-                React.createElement("span", { className: "break-words ml-2" },
-                    job.Pickup,
-                    job.Pickup && job.PickupDate ? ' - ' : '',
-                    job.PickupDate ? formatDate(job.PickupDate) : '')),
-            React.createElement("div", { className: "flex flex-wrap" },
-                React.createElement("span", { className: "font-Arial w-28 shrink-0" }, "Dropoff:"),
-                React.createElement("span", { className: "break-words ml-2" },
-                    job.Dropoff,
-                    job.Dropoff && job.DropoffDate ? ' - ' : '',
-                    job.DropoffDate ? formatDate(job.DropoffDate) : '')),
-            React.createElement("div", { className: "flex flex-wrap" },
-                React.createElement("span", { className: "font-Arial w-28 shrink-0" }, "Date:"),
-                React.createElement("span", { className: "break-words ml-2" }, formatDate(job.PNRDate))),
-            Object.entries(job)
-                .filter(function (_a) {
-                var k = _a[0];
-                return k !== "IsConfirmed" &&
-                    k !== "IsCancel" &&
-                    k !== "key" &&
-                    k !== "BSL_ID" &&
-                    k !== "Pickup" &&
-                    k !== "PickupDate" &&
-                    k !== "Dropoff" &&
-                    k !== "DropoffDate" &&
-                    k !== "PNRDate" &&
-                    k !== "all" &&
-                    k !== "keys" &&
-                    k !== "isNew" &&
-                    k !== "isChange" &&
-                    k !== "isDelete" &&
-                    k !== "PNR" &&
-                    k !== "NotAvailable" &&
-                    k !== "agentCode" &&
-                    k !== "agentLogo";
-            })
-                .map(function (_a) {
-                var k = _a[0], v = _a[1];
-                // ถ้า key คือ serviceSupplierCode_TP หรือ serviceProductName ให้ตัดคำว่า "service" ออก
-                var label = k;
-                if (k === "serviceSupplierCode_TP")
-                    label = "SupplierCode_TP";
-                if (k === "serviceProductName")
-                    label = "ProductName";
-                if (k === "serviceTypeName")
-                    label = "TypeName";
-                return (React.createElement("div", { key: k, className: "flex flex-wrap" },
-                    React.createElement("span", { className: "font-Arial w-28 shrink-0" },
-                        label,
-                        ":"),
-                    React.createElement("span", { className: "break-words ml-2" }, typeof v === 'object' ? JSON.stringify(v) : String(v))));
-            })))); }))); };
+    var renderAllDetails = function (jobs) {
+        // Step 1: Group jobs by their common properties (excluding TypeName)
+        var groupedJobs = {};
+        jobs.forEach(function (job) {
+            var groupKey = JSON.stringify({
+                PNR: job.PNR,
+                Pickup: job.Pickup,
+                PickupDate: job.PickupDate,
+                Dropoff: job.Dropoff,
+                DropoffDate: job.DropoffDate,
+                PNRDate: job.PNRDate
+            });
+            var typeName = job.serviceTypeName || job.TypeName || "Unknown";
+            if (!groupedJobs[groupKey]) {
+                groupedJobs[groupKey] = {
+                    job: __assign({}, job),
+                    typeNames: [typeName]
+                };
+            }
+            else {
+                groupedJobs[groupKey].typeNames.push(typeName);
+            }
+        });
+        return (React.createElement("div", { className: "max-h-[60vh] overflow-auto" }, Object.values(groupedJobs).map(function (_a, idx) {
+            var job = _a.job, typeNames = _a.typeNames;
+            return (React.createElement("div", { key: job.key + "-" + idx, className: "mb-4 border-b border-gray-200 pb-4 last:border-b-0" },
+                React.createElement("div", { className: "font-Arial text-[#2D3E92] mb-2 underline underline-offset-4" },
+                    "PNR: ",
+                    job.PNR),
+                React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-y-4 text-sm" },
+                    React.createElement("div", { className: "flex items-center" },
+                        React.createElement("span", { className: "font-bold text-gray-600 w-28 shrink-0" }, "Pickup:"),
+                        React.createElement("span", { className: "text-gray-800" },
+                            job.Pickup,
+                            job.Pickup && job.PickupDate ? " - " : "",
+                            job.PickupDate ? formatDate(job.PickupDate) : "")),
+                    React.createElement("div", { className: "flex items-center" },
+                        React.createElement("span", { className: "font-bold text-gray-600 w-28 shrink-0" }, "Dropoff:"),
+                        React.createElement("span", { className: "text-gray-800" },
+                            job.Dropoff,
+                            job.Dropoff && job.DropoffDate ? " - " : "",
+                            job.DropoffDate ? formatDate(job.DropoffDate) : "")),
+                    Object.entries(job)
+                        .filter(function (_a) {
+                        var k = _a[0];
+                        return ![
+                            "IsConfirmed",
+                            "IsCancel",
+                            "key",
+                            "BSL_ID",
+                            "Pickup",
+                            "PickupDate",
+                            "Dropoff",
+                            "DropoffDate",
+                            "PNRDate",
+                            "all",
+                            "keys",
+                            "isNew",
+                            "isChange",
+                            "isDelete",
+                            "PNR",
+                            "NotAvailable",
+                            "agentCode",
+                            "agentLogo",
+                            "serviceTypeName",
+                            "TypeName",
+                            "SupplierCode_TP",
+                            "SupplierName_TP",
+                            "ProductName_TP",
+                            "ServiceLocationName",
+                            "serviceSupplierCode_TP",
+                            "serviceProductName",
+                            "serviceSupplierName",
+                            "ServiceLocationName_TP",
+                            "Source",
+                            "Phone",
+                            "Booking_Consultant",
+                            "AdultQty",
+                            "ChildQty",
+                            "ChildShareQty",
+                            "InfantQty",
+                        ].includes(k);
+                    })
+                        .map(function (_a) {
+                        var k = _a[0], v = _a[1];
+                        var label = k;
+                        if (k === "serviceSupplierCode_TP")
+                            label = "SupplierCode_TP";
+                        if (k === "serviceProductName")
+                            label = "ProductName";
+                        if (k === "serviceSupplierName")
+                            label = "Supplier";
+                        if (k === "ServiceLocationName")
+                            label = "Location";
+                        return (React.createElement("div", { key: k, className: "flex items-center" },
+                            React.createElement("span", { className: "font-bold text-gray-600 w-28 shrink-0" },
+                                label,
+                                ":"),
+                            React.createElement("span", { className: "text-gray-800" }, typeof v === "object" ? JSON.stringify(v) : String(v))));
+                    })),
+                React.createElement("div", { className: "flex items-center mt-4" },
+                    React.createElement("span", { className: "font-bold text-gray-600 w-28 shrink-0" }, "TypeName:"),
+                    React.createElement("span", { className: "text-gray-800" }, __spreadArrays(new Set(typeNames)).join(", "))),
+                React.createElement("div", { className: "overflow-x-auto mt-4" },
+                    React.createElement("table", { className: "table-auto min-w-full border text-sm" },
+                        React.createElement("thead", { className: "bg-[#2D3E92] text-white" },
+                            React.createElement("tr", null,
+                                React.createElement("th", { className: "px-3 py-2 text-left" }, "AdultQty"),
+                                React.createElement("th", { className: "px-3 py-2 text-left" }, "ChildQty"),
+                                React.createElement("th", { className: "px-3 py-2 text-left" }, "ChildShareQty"),
+                                React.createElement("th", { className: "px-3 py-2 text-left" }, "InfantQty"))),
+                        React.createElement("tbody", null,
+                            React.createElement("tr", null,
+                                React.createElement("td", { className: "px-3 py-2 text-left" }, job.AdultQty || 0),
+                                React.createElement("td", { className: "px-3 py-2 text-left" }, job.ChildQty || 0),
+                                React.createElement("td", { className: "px-3 py-2 text-left" }, job.ChildShareQty || 0),
+                                React.createElement("td", { className: "px-3 py-2 text-left" }, job.InfantQty || 0)))))));
+        })));
+    };
     // ปรับ summary เป็นแถวแนวนอน สวยงาม และวางไว้บนหัว card Jobs List
     var summary = (React.createElement("div", { className: "w-full flex justify-end mb-6" },
         React.createElement("div", { className: "flex flex-row flex-wrap gap-6 bg-white border border-blue-300 rounded-xl shadow-lg px-8 py-4 items-center max-w-3xl" },
@@ -337,7 +398,7 @@ function JobsList() {
                         React.createElement("p", { className: "text-lg font-semibold" }, "No jobs found"),
                         React.createElement("p", { className: "text-sm mt-1" }, "Try adjusting your filters or search keyword."))) : (React.createElement(React.Fragment, null,
                         React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" }, pagedJobs.map(function (job) {
-                            var _a, _b, _c;
+                            var _a;
                             var isExpanded = (_a = expandedPNRs[job.PNR]) !== null && _a !== void 0 ? _a : false;
                             var toggleExpand = function () {
                                 setExpandedPNRs(function (prev) {
@@ -352,11 +413,19 @@ function JobsList() {
                                 } },
                                 React.createElement("div", { className: "absolute top-2 left-1 text-[#ffffff] font-Arial rounded-full px-3 py-1 text-sm shadow z-10", style: {
                                         backgroundColor: job.isNew
-                                            ? '	#0891b2' // ตัวอย่างสีสำหรับ New
+                                            ? '#0891b2'
                                             : job.isChange
-                                                ? '#fb923c' // ตัวอย่างสีสำหรับ Change
+                                                ? '#fb923c'
                                                 : '#E0E7FF'
-                                    } }, (_c = (_b = job.all) === null || _b === void 0 ? void 0 : _b.length) !== null && _c !== void 0 ? _c : 1),
+                                    } }, job.all
+                                    ? job.all.filter(function (j) {
+                                        return j.Pickup !== job.Pickup ||
+                                            j.PickupDate !== job.PickupDate ||
+                                            j.Dropoff !== job.Dropoff ||
+                                            j.DropoffDate !== job.DropoffDate ||
+                                            j.PNRDate !== job.PNRDate;
+                                    }).length + 1 // รวม job หลักด้วย
+                                    : 1),
                                 React.createElement("button", { className: "absolute top-3.5 right-2 w-8 h-8 rounded-full bg-white border-2 border-[#2D3E92] shadow-[0_4px_10px_rgba(45,62,146,0.3)] hover:shadow-[0_6px_14px_rgba(45,62,146,0.4)] transition-all duration-200 flex items-center justify-center", title: "Show all details", onClick: function () { return setDetailJobs(job.all); }, style: { zIndex: 2 } },
                                     React.createElement("svg", { width: "28", height: "28", viewBox: "0 0 24 24", fill: "none" },
                                         React.createElement("circle", { cx: "12", cy: "12", r: "10", fill: "#F0F8FF" }),
@@ -371,6 +440,14 @@ function JobsList() {
                                         renderField('Source', job.Source)),
                                     jobs
                                         .filter(function (j) { return j.PNR === job.PNR && j.key !== job.key; })
+                                        .filter(function (j) {
+                                        return j.Pickup !== job.Pickup ||
+                                            j.PickupDate !== job.PickupDate ||
+                                            j.Dropoff !== job.Dropoff ||
+                                            j.DropoffDate !== job.DropoffDate ||
+                                            j.Pax !== job.Pax ||
+                                            j.Source !== job.Source;
+                                    })
                                         .map(function (relatedJob) { return (React.createElement("div", { key: relatedJob.key, className: "bg-gray-100 border border-gray-300 rounded p-3 mb-4 text-sm text-gray-700" },
                                         React.createElement("div", { className: "font-semibold text-gray-800 mb-1" }, "Another PNR"),
                                         renderPlaceDate(relatedJob.Pickup, relatedJob.PickupDate, 'Pickup'),
