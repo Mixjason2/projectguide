@@ -164,6 +164,10 @@ function JobsList() {
     function formatDate(dateStr) {
         if (!dateStr)
             return '';
+        if (typeof dateStr !== 'string') {
+            // ถ้าไม่ใช่ string แปลงเป็น string ก่อน
+            dateStr = String(dateStr);
+        }
         var match = dateStr.match(/^\d{4}-\d{2}-\d{2}/);
         return match ? match[0] : dateStr;
     }
@@ -406,11 +410,7 @@ function JobsList() {
                                     return (__assign(__assign({}, prev), (_a = {}, _a[job.PNR] = !isExpanded, _a)));
                                 });
                             };
-                            return (React.createElement("div", { key: job.PNR, className: "relative bg-white border border-base-300 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col ", style: {
-                                    backgroundColor: '#ffffff',
-                                    borderColor: '#9EE4F6',
-                                    borderWidth: '1px'
-                                } },
+                            return (React.createElement("div", { key: job.PNR, className: "relative bg-white border border-[#9EE4F6] border-[1px] rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col" },
                                 React.createElement("div", { className: "absolute top-2 left-1 text-[#ffffff] font-Arial rounded-full px-3 py-1 text-sm shadow z-10", style: {
                                         backgroundColor: job.isNew
                                             ? '#0891b2'
