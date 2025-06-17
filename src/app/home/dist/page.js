@@ -59,6 +59,8 @@ var react_1 = require("react");
 var cssguide_1 = require("../cssguide");
 var axios_1 = require("axios");
 var react_spinners_css_1 = require("react-spinners-css");
+var dayjs_1 = require("dayjs");
+var antd_1 = require("antd");
 function mergeJobsByPNR(jobs) {
     var map = {};
     for (var _i = 0, jobs_1 = jobs; _i < jobs_1.length; _i++) {
@@ -409,16 +411,23 @@ function JobsList() {
                 React.createElement("div", { className: "p-4 w-full /* min-h-screen */ overflow-auto bg-[#F9FAFB]" },
                     React.createElement("h1", { className: "text-2xl font-Arial mb-4" }, "Jobs List"),
                     React.createElement("div", { className: "mb-6 flex flex-col items-center w-full px-4" },
-                        React.createElement("div", { className: "w-full rounded-xl shadow-md px-4 py-4 flex flex-row items-end justify-between gap-2", style: {
+                        React.createElement("div", { className: "w-full rounded-xl shadow-md px-4 py-4 flex flex-row items-center justify-between gap-2", style: {
                                 backgroundColor: '#E6F0FA',
                                 border: '1px solid #2D3E92'
                             } },
-                            React.createElement("div", { className: "flex flex-col w-[48%]" },
-                                React.createElement("label", { htmlFor: "start-date", className: "mb-1 text-xs text-gray-500 font-Arial" }, "Start date"),
-                                React.createElement("input", { id: "start-date", type: "date", value: startDate, max: endDate, onChange: function (e) { return setStartDate(e.target.value); }, className: "input input-bordered w-full", placeholder: "Start date" })),
-                            React.createElement("div", { className: "flex flex-col w-[48%]" },
-                                React.createElement("label", { htmlFor: "end-date", className: "mb-1 text-xs text-gray-500 font-Arial" }, "End date"),
-                                React.createElement("input", { id: "end-date", type: "date", value: endDate, min: startDate, onChange: function (e) { return setEndDate(e.target.value); }, className: "input input-bordered w-full", placeholder: "End date" }))),
+                            React.createElement("div", { className: "flex flex-col w-full" },
+                                React.createElement("label", { htmlFor: "date-range", className: "mb-1 text-xs text-gray-500 font-Arial" }, "Select Date Range"),
+                                React.createElement(antd_1.DatePicker.RangePicker, { id: "date-range", defaultValue: [dayjs_1["default"](startDate, 'YYYY-MM-DD'), dayjs_1["default"](endDate, 'YYYY-MM-DD')], format: "YYYY/MM/DD", onChange: function (dates) {
+                                        var _a, _b;
+                                        if (dates) {
+                                            setStartDate(((_a = dates[0]) === null || _a === void 0 ? void 0 : _a.format('YYYY-MM-DD')) || '');
+                                            setEndDate(((_b = dates[1]) === null || _b === void 0 ? void 0 : _b.format('YYYY-MM-DD')) || '');
+                                        }
+                                        else {
+                                            setStartDate('');
+                                            setEndDate('');
+                                        }
+                                    }, className: "w-full" }))),
                         React.createElement("span", { className: "mt-2 text-xs text-gray-400 text-center px-2" }, "Please select a date range to filter the desired tasks.")),
                     loading ? (React.createElement("div", { className: "w-full py-10 flex flex-col items-center justify-center text-gray-600" },
                         React.createElement(react_spinners_css_1.Ripple, { color: "#32cd32", size: "medium", text: "", textColor: "" }),
@@ -436,7 +445,7 @@ function JobsList() {
                                     return (__assign(__assign({}, prev), (_a = {}, _a[job.PNR] = !isExpanded, _a)));
                                 });
                             };
-                            return (React.createElement("div", { key: job.PNR, className: "relative bg-white border border-[#9EE4F6] border-[1px] rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col" },
+                            return (React.createElement("div", { key: job.PNR, className: "relative bg-white border border-[#9EE4F6] rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col" },
                                 React.createElement("div", { className: "absolute top-2 left-1 text-[#ffffff] font-Arial rounded-full px-3 py-1 text-sm shadow z-10", style: {
                                         backgroundColor: job.isNew
                                             ? '#0891b2'
