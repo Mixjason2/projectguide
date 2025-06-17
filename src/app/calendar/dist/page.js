@@ -42,10 +42,29 @@ require("./calendar.css");
 function getTotalPax(job) {
     return job.AdultQty + job.ChildQty + job.ChildShareQty + job.InfantQty;
 }
-function getColor(job) {
-    return job.isChange ? '#f97316' /* orange-500 */ : '#0891b2'; /* cyan-600 */
-}
-var CalendarExcel = function () {
+var Loading = function () {
+    var dotStyle = function (delay) { return ({
+        width: 12,
+        height: 12,
+        backgroundColor: '#95c941',
+        borderRadius: '50%',
+        display: 'inline-block',
+        animation: 'bounce 1.4s infinite ease-in-out both',
+        animationDelay: delay * 0.2 + "s"
+    }); };
+    return (react_1["default"].createElement("div", { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', fontSize: '1.2rem', color: '#555' } },
+        react_1["default"].createElement("div", { style: { display: 'flex', gap: 8, marginBottom: 12 } }, [0, 1, 2].map(function (i) { return react_1["default"].createElement("span", { key: i, style: dotStyle(i) }); })),
+        "Loading jobs...",
+        react_1["default"].createElement("style", null, "\n        @keyframes bounce {\n          0%, 80%, 100% { transform: scale(0); }\n          40% { transform: scale(1); }\n        }\n      ")));
+};
+var ErrorMessage = function (_a) {
+    var error = _a.error;
+    return (react_1["default"].createElement("div", { className: "max-w-md mx-auto my-5 p-4 text-red-700 bg-red-100 border border-red-300 rounded-lg font-semibold text-center shadow-md" },
+        "Error: ",
+        error));
+};
+function CalendarExcel() {
+    var _this = this;
     var _a = react_1.useState([]), jobs = _a[0], setJobs = _a[1];
     var _b = react_1.useState(true), loading = _b[0], setLoading = _b[1];
     var _c = react_1.useState(null), error = _c[0], setError = _c[1];
@@ -57,7 +76,7 @@ var CalendarExcel = function () {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token: token, startdate: "2025-01-01", enddate: "2025-05-31" })
         })
-            .then(function (res) { return __awaiter(void 0, void 0, void 0, function () {
+            .then(function (res) { return __awaiter(_this, void 0, void 0, function () {
             var _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
@@ -74,7 +93,6 @@ var CalendarExcel = function () {
     }, []);
     var events = react_1.useMemo(function () {
         if (currentView === 'dayGridMonth') {
-            // group by date
             var grouped_1 = {};
             jobs.forEach(function (job) {
                 var _a;
@@ -85,85 +103,114 @@ var CalendarExcel = function () {
     });
     return Object.entries(grouped).map(function (_a) {
         var date = _a[0], jobsOnDate = _a[1];
-        var firstJob = jobsOnDate[0];
-        var color = getColor(firstJob);
-        return {
-            title: "job: " + jobsOnDate.length,
+        return ({
+            title: "job : (" + jobsOnDate.length + ") ",
             start: date,
             allDay: true,
-            backgroundColor: color,
-            borderColor: color,
+            backgroundColor: '#95c941',
+            borderColor: '#0369a1',
             textColor: 'white',
             extendedProps: {
                 jobs: jobsOnDate,
-                color: color
+                isChanged: jobsOnDate.some(function (j) { return j.isChange; })
             }
-        };
+        });
     });
-}, _a = void 0, jobs = _a["return"], map = _a.map;
-(function (job) {
-    var color = getColor(job);
-    return {
+}
+exports["default"] = CalendarExcel;
+{
+    return jobs.map(function (job) { return ({
         id: job.key.toString(),
-        title: job.PNR,
+        title: " " + job.PNR + " ",
         start: job.PickupDate,
-        backgroundColor: color,
-        borderColor: color,
+        backgroundColor: job.isChange ? '#fb923c' : '#95c941',
+        borderColor: '#0369a1',
         textColor: 'white',
         extendedProps: {
-            job: job,
-            color: color
+            job: job
         }
-    };
-});
+    }); });
+}
 [jobs, currentView];
 ;
 var handleEventClick = function (info) {
     if (currentView === 'dayGridMonth') {
         var jobsOnDate = info.event.extendedProps.jobs || [];
-        var date = info.event.startStr.split('T')[0];
-        var detail = jobsOnDate.map(function (job, idx) {
-            var time = new Date(job.PickupDate).toLocaleTimeString('en-GB', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-            return idx + 1 + ". \u23F0 " + time + " \uD83D\uDCCD " + job.Pickup + " | \uD83C\uDFAB " + job.PNR;
+        var clickedDate = info.event.startStr.split('T')[0];
+        var details = jobsOnDate.map(function (job, i) {
+            var pickupTime = new Date(job.PickupDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+            var totalPax = getTotalPax(job);
+            return i + 1 + ". \uD83D\uDD52 " + pickupTime + " \uD83D\uDCCD " + job.Pickup + " | \uD83D\uDC64 " + totalPax + " Pax | \uD83C\uDFAB PNR: " + job.PNR;
         }).join('\n');
-        alert("\uD83D\uDCC5 " + date + "\n\n" + detail);
+        alert("\uD83D\uDCC5 Date: " + clickedDate + "\n\uD83D\uDCCC Jobs:\n" + details);
     }
     else {
         var job = info.event.extendedProps.job;
-        var time = new Date(job.PickupDate).toLocaleString('en-GB', {
+        var pickupTime = new Date(job.PickupDate).toLocaleString('en-GB', {
             dateStyle: 'short',
             timeStyle: 'short'
         });
-        alert("\uD83C\uDFAB PNR: " + job.PNR + "\n\uD83D\uDCCD Pickup: " + job.Pickup + "\n\uD83D\uDD52 Time: " + time + "\n\uD83D\uDC64 Pax: " + getTotalPax(job));
+        var totalPax = getTotalPax(job);
+        alert("\uD83C\uDFAB PNR: " + job.PNR + "\n\uD83D\uDD52 Pickup: " + pickupTime + "\n\uD83D\uDCCD Location: " + job.Pickup + "\n\uD83D\uDC64 Pax: " + totalPax + " (Adult: " + job.AdultQty + ", Child: " + job.ChildQty + ", Share: " + job.ChildShareQty + ", Infant: " + job.InfantQty + ")");
     }
 };
 var renderEventContent = function (arg) {
-    var color = arg.event.extendedProps.color || '#0891b2';
-    return (react_1["default"].createElement("div", { className: "fc-event-main flex items-center" },
-        react_1["default"].createElement("span", { className: "fc-event-dot-custom", style: { backgroundColor: color } }),
+    var _a, _b;
+    var job = (_a = arg.event.extendedProps) === null || _a === void 0 ? void 0 : _a.job;
+    var isChanged = (_b = arg.event.extendedProps) === null || _b === void 0 ? void 0 : _b.isChanged;
+    return (react_1["default"].createElement("div", { className: "fc-event-main flex items-center", style: {
+            backgroundColor: '#95c941',
+            color: 'white',
+            borderColor: '#0369a1',
+            borderRadius: '4px',
+            padding: '4px 8px',
+            display: 'flex',
+            alignItems: 'center'
+        } },
+        react_1["default"].createElement("span", { style: {
+                backgroundColor: isChanged ? '#fb923c' : ((job === null || job === void 0 ? void 0 : job.isChange) ? '#fb923c' : '#0891b2'),
+                width: 10,
+                height: 10,
+                borderRadius: '50%',
+                display: 'inline-block',
+                marginRight: 8,
+                borderWidth: 1
+            } }),
         react_1["default"].createElement("span", null, arg.event.title)));
 };
 if (loading)
-    return react_1["default"].createElement("p", { className: "text-center py-20 text-lg text-gray-600" }, "\u23F3 \u0E01\u0E33\u0E25\u0E31\u0E07\u0E42\u0E2B\u0E25\u0E14\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25...");
+    return react_1["default"].createElement(Loading, null);
 if (error)
-    return react_1["default"].createElement("p", { className: "text-red-500 text-center mt-4" },
-        "\u274C ",
-        error);
-return (react_1["default"].createElement("div", { className: "p-4" },
-    react_1["default"].createElement(react_2["default"], { plugins: [daygrid_1["default"], timegrid_1["default"], list_1["default"], interaction_1["default"]], initialView: "timeGridWeek", events: events, datesSet: function (arg) { return setCurrentView(arg.view.type); }, height: "auto", headerToolbar: {
+    return react_1["default"].createElement(ErrorMessage, { error: error });
+return (react_1["default"].createElement(cssguide_1["default"], null,
+    react_1["default"].createElement(react_2["default"], { plugins: [daygrid_1["default"], timegrid_1["default"], list_1["default"], interaction_1["default"]], initialView: "timeGridWeek", events: events, datesSet: function (arg) { return setCurrentView(arg.view.type); }, height: "100%", contentHeight: "auto", aspectRatio: 1.7, headerToolbar: {
             start: 'title',
             center: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth',
             end: 'today prev,next'
-        }, eventClick: handleEventClick, eventContent: renderEventContent, slotLabelFormat: {
+        }, editable: false, selectable: true, expandRows: true, eventClick: handleEventClick, eventContent: renderEventContent, slotLabelFormat: {
             hour: '2-digit',
             minute: '2-digit',
             meridiem: false
         }, dayHeaderFormat: {
             weekday: 'short',
             day: 'numeric'
+        }, views: {
+            timeGridWeek: {
+                slotLabelFormat: {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    meridiem: false
+                },
+                dayHeaderFormat: {
+                    weekday: 'short',
+                    day: 'numeric'
+                }
+            }
+        }, customButtons: {
+            swapAxes: {
+                text: 'Swap Axes',
+                click: function () {
+                    alert('Custom axis swapping is not natively supported.');
+                }
+            }
         } })));
-;
-exports["default"] = CalendarExcel;

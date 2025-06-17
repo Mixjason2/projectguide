@@ -59,6 +59,7 @@ var react_1 = require("react");
 var cssguide_1 = require("../cssguide");
 var axios_1 = require("axios");
 var react_spinners_css_1 = require("react-spinners-css");
+var react_2 = require("react");
 function mergeJobsByPNR(jobs) {
     var map = {};
     for (var _i = 0, jobs_1 = jobs; _i < jobs_1.length; _i++) {
@@ -112,7 +113,7 @@ function JobsList() {
     var _h = react_1.useState(null), uploadJob = _h[0], setUploadJob = _h[1];
     var _j = react_1.useState({}), expandedPNRs = _j[0], setExpandedPNRs = _j[1];
     var _k = react_1.useState([]), acceptedPNRs = _k[0], setAcceptedPNRs = _k[1];
-    var _l = react_1.useState([]), rejectPNRs = _l[0], setrejectPNRs = _l[1];
+    var _l = react_2["default"].useState([]), rejectPNRs = _l[0], setRejectPNRs = _l[1];
     var _m = react_1.useState(true), isLoadingJobs = _m[0], setIsLoadingJobs = _m[1];
     var pageSize = 6;
     react_1.useEffect(function () {
@@ -188,8 +189,8 @@ function JobsList() {
     function renderPlaceDate(place, date, label) {
         if (!place && !date)
             return null;
-        return (React.createElement("div", null,
-            React.createElement("span", { className: "font-Arial" },
+        return (react_2["default"].createElement("div", null,
+            react_2["default"].createElement("span", { className: "font-Arial" },
                 label,
                 ":"),
             ' ',
@@ -202,14 +203,14 @@ function JobsList() {
         if (label === 'BSL ID' || label === 'Pickup' || label === 'PickupDate' || label === 'Dropoff' || label === 'DropoffDate')
             return null; // Remove BSL ID and handled fields
         if (Array.isArray(value)) {
-            return (React.createElement("div", null,
-                React.createElement("span", { className: "font-Arial" },
+            return (react_2["default"].createElement("div", null,
+                react_2["default"].createElement("span", { className: "font-Arial" },
                     label,
                     ":"),
-                React.createElement("ul", { className: "list-disc ml-6" }, value.map(function (v, i) { return (React.createElement("li", { key: i }, String(v))); }))));
+                react_2["default"].createElement("ul", { className: "list-disc ml-6" }, value.map(function (v, i) { return (react_2["default"].createElement("li", { key: i }, String(v))); }))));
         }
-        return (React.createElement("div", null,
-            React.createElement("span", { className: "font-Arial" },
+        return (react_2["default"].createElement("div", null,
+            react_2["default"].createElement("span", { className: "font-Arial" },
                 label,
                 ":"),
             " ",
@@ -227,7 +228,8 @@ function JobsList() {
                 Dropoff: job.Dropoff,
                 DropoffDate: job.DropoffDate,
                 PNRDate: job.PNRDate,
-                GuideName: job.Guide
+                GuideName: job.Guide,
+                Vehicle: job.Vehicle
             });
             var typeName = job.serviceTypeName || job.TypeName || "Unknown";
             if (!groupedJobs[groupKey]) {
@@ -240,64 +242,68 @@ function JobsList() {
                 groupedJobs[groupKey].typeNames.push(typeName);
             }
         });
-        return (React.createElement("div", { className: "max-h-[60vh] overflow-auto text-xs" },
+        return (react_2["default"].createElement("div", { className: "max-h-[60vh] overflow-auto text-xs" },
             " ",
             Object.values(groupedJobs).map(function (_a, idx) {
                 var job = _a.job, typeNames = _a.typeNames;
-                return (React.createElement("div", { key: job.key + "-" + idx, className: "mb-3 border-b border-gray-200 pb-3 last:border-b-0", style: {
+                return (react_2["default"].createElement("div", { key: job.key + "-" + idx, className: "mb-3 border-b border-gray-200 pb-3 last:border-b-0", style: {
                         borderBottom: "5px solid #000000",
                         boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)"
                     } },
-                    React.createElement("div", { className: "font-Arial text-[#2D3E92] mb-1 text-sm" },
-                        React.createElement("span", { className: "underline-offset-4" },
+                    react_2["default"].createElement("div", { className: "font-Arial text-sm bg-gray-100 p-3 shadow text-black mb-3 flex items-center gap-2" },
+                        react_2["default"].createElement("span", null,
                             "PNR: ",
                             job.PNR),
-                        job.PNR && job.serviceSupplierName ? " / SupplierName: " : "",
-                        React.createElement("span", { className: "font-Arial italic" }, job.serviceSupplierName)),
-                    React.createElement("div", { className: "grid grid-cols-1 gap-y-2 text-xs" },
+                        job.PNR && job.serviceSupplierName && (react_2["default"].createElement("span", null,
+                            "/ SupplierName: ",
+                            job.serviceSupplierName))),
+                    react_2["default"].createElement("div", { className: "grid grid-cols-1 gap-y-2 text-xs" },
                         " ",
-                        React.createElement("div", { className: "flex items-start" },
-                            React.createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" }, "Comment:"),
-                            React.createElement("span", { className: "text-gray-800 break-words" }, job.Comment)),
-                        React.createElement("div", { className: "flex items-start" },
-                            React.createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" }, "Pickup:"),
-                            React.createElement("span", { className: "text-gray-800 break-words" },
-                                React.createElement("span", { className: "font-Arial" },
+                        react_2["default"].createElement("div", { className: "flex items-start" },
+                            react_2["default"].createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" }, "Comment:"),
+                            react_2["default"].createElement("span", { className: "text-gray-800 break-words" }, job.Comment)),
+                        react_2["default"].createElement("div", { className: "flex items-start" },
+                            react_2["default"].createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" }, "Pickup:"),
+                            react_2["default"].createElement("span", { className: "text-gray-800 break-words" },
+                                react_2["default"].createElement("span", { className: "font-Arial" },
                                     job.Pickup,
                                     job.Pickup && job.PickupDate ? " / " : ""),
-                                React.createElement("span", { className: "font-Arial font-bold" }, job.PickupDate ? formatDate(job.PickupDate) : ""))),
-                        React.createElement("div", { className: "flex items-start" },
-                            React.createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" }, "Dropoff:"),
-                            React.createElement("span", { className: "text-gray-800 break-words" },
+                                react_2["default"].createElement("span", { className: "font-Arial font-bold" }, job.PickupDate ? formatDate(job.PickupDate) : ""))),
+                        react_2["default"].createElement("div", { className: "flex items-start" },
+                            react_2["default"].createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" }, "Dropoff:"),
+                            react_2["default"].createElement("span", { className: "text-gray-800 break-words" },
                                 job.Dropoff,
                                 job.Dropoff && job.DropoffDate ? " / " : "",
-                                React.createElement("span", { className: "font-Arial font-bold" }, job.DropoffDate ? formatDate(job.DropoffDate) : ""))),
-                        React.createElement("div", { className: "flex items-start" },
-                            React.createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" }, "Consultant:"),
-                            React.createElement("span", { className: "text-gray-800 break-words" },
+                                react_2["default"].createElement("span", { className: "font-Arial font-bold" }, job.DropoffDate ? formatDate(job.DropoffDate) : ""))),
+                        react_2["default"].createElement("div", { className: "flex items-start" },
+                            react_2["default"].createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" }, "Consultant:"),
+                            react_2["default"].createElement("span", { className: "text-gray-800 break-words" },
                                 job.Booking_Consultant,
                                 job.Booking_Consultant && job.Phone ? "," : "",
                                 job.Phone)),
-                        React.createElement("div", { className: "flex items-start" },
-                            React.createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" }, "Booking Name:"),
-                            React.createElement("span", { className: "text-gray-800 break-words" }, [job.Booking_Name].filter(Boolean).join(", "))),
-                        React.createElement("div", { className: "flex items-start" },
-                            React.createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" }, "Client Name:"),
-                            React.createElement("span", { className: "text-gray-800 break-words" }, job.pax_name)),
-                        React.createElement("div", { className: "overflow-x-auto mt-2" },
-                            React.createElement("table", { className: "table-auto border text-xs w-full" },
-                                React.createElement("thead", { className: "bg-[#2D3E92] text-white" },
-                                    React.createElement("tr", null,
-                                        React.createElement("th", { className: "px-1 py-1 text-left" }, "Adult"),
-                                        React.createElement("th", { className: "px-1 py-1 text-left" }, "Child"),
-                                        React.createElement("th", { className: "px-1 py-1 text-left" }, "Share"),
-                                        React.createElement("th", { className: "px-1 py-1 text-left" }, "Infant"))),
-                                React.createElement("tbody", null,
-                                    React.createElement("tr", null,
-                                        React.createElement("td", { className: "px-1 py-1 text-left" }, job.AdultQty || 0),
-                                        React.createElement("td", { className: "px-1 py-1 text-left" }, job.ChildQty || 0),
-                                        React.createElement("td", { className: "px-1 py-1 text-left" }, job.ChildShareQty || 0),
-                                        React.createElement("td", { className: "px-1 py-1 text-left" }, job.InfantQty || 0))))),
+                        react_2["default"].createElement("div", { className: "flex items-start" },
+                            react_2["default"].createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" }, "Booking Name:"),
+                            react_2["default"].createElement("span", { className: "text-gray-800 break-words" }, [job.Booking_Name].filter(Boolean).join(", "))),
+                        react_2["default"].createElement("div", { className: "flex items-start" },
+                            react_2["default"].createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" }, "Client Name:"),
+                            react_2["default"].createElement("span", { className: "text-gray-800 break-words" }, job.pax_name)),
+                        react_2["default"].createElement("div", { className: "overflow-x-auto mt-2" },
+                            react_2["default"].createElement("table", { className: "table-auto border text-xs w-full" },
+                                react_2["default"].createElement("thead", { className: "bg-[#2D3E92] text-white" },
+                                    react_2["default"].createElement("tr", null,
+                                        react_2["default"].createElement("th", { className: "px-1 py-1 text-left" }, "Adult"),
+                                        react_2["default"].createElement("th", { className: "px-1 py-1 text-left" }, "Child"),
+                                        react_2["default"].createElement("th", { className: "px-1 py-1 text-left" }, "Share"),
+                                        react_2["default"].createElement("th", { className: "px-1 py-1 text-left" }, "Infant"))),
+                                react_2["default"].createElement("tbody", null,
+                                    react_2["default"].createElement("tr", null,
+                                        react_2["default"].createElement("td", { className: "px-1 py-1 text-left" }, job.AdultQty || 0),
+                                        react_2["default"].createElement("td", { className: "px-1 py-1 text-left" }, job.ChildQty || 0),
+                                        react_2["default"].createElement("td", { className: "px-1 py-1 text-left" }, job.ChildShareQty || 0),
+                                        react_2["default"].createElement("td", { className: "px-1 py-1 text-left" }, job.InfantQty || 0))))),
+                        react_2["default"].createElement("div", { className: "flex items-start" },
+                            react_2["default"].createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" }, "Guide:"),
+                            react_2["default"].createElement("span", { className: "text-gray-800 break-words" }, [job.Guide, job.Vehicle, job.Driver].filter(Boolean).join(", "))),
                         Object.entries(job)
                             .filter(function (_a) {
                             var k = _a[0];
@@ -310,7 +316,7 @@ function JobsList() {
                                 "serviceSupplierCode_TP", "serviceProductName", "serviceSupplierName",
                                 "ServiceLocationName_TP", "Source", "Phone", "Booking_Consultant",
                                 "AdultQty", "ChildQty", "ChildShareQty", "InfantQty", "pax_name",
-                                "Booking_Name", "Class", "Comment"
+                                "Booking_Name", "Class", "Comment", "Guide", "Vehicle", "Driver"
                             ].includes(k);
                         })
                             .map(function (_a) {
@@ -326,32 +332,32 @@ function JobsList() {
                                 label = "Location";
                             if (k === "pax_name")
                                 label = "Client Name";
-                            return (React.createElement("div", { key: k, className: "flex items-start" },
-                                React.createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" },
+                            return (react_2["default"].createElement("div", { key: k, className: "flex items-start" },
+                                react_2["default"].createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" },
                                     label,
                                     ":"),
-                                React.createElement("span", { className: "text-gray-800 break-words" }, typeof v === "object" ? JSON.stringify(v) : String(v))));
+                                react_2["default"].createElement("span", { className: "text-gray-800 break-words" }, typeof v === "object" ? JSON.stringify(v) : String(v))));
                         })),
-                    React.createElement("div", { className: "flex items-center mt-3" },
-                        React.createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" }, "TypeName:"),
-                        React.createElement("span", { className: "text-gray-800 break-words" }, __spreadArrays(new Set(typeNames)).join(", ")))));
+                    react_2["default"].createElement("div", { className: "flex items-center mt-3" },
+                        react_2["default"].createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" }, "TypeName:"),
+                        react_2["default"].createElement("span", { className: "text-gray-800 break-words" }, __spreadArrays(new Set(typeNames)).join(", ")))));
             })));
     };
     // ปรับ summary เป็นแถวแนวนอน สวยงาม และวางไว้บนหัว card Jobs List
-    var summary = (React.createElement("div", { className: "w-full flex justify-end mb-6" },
-        React.createElement("div", { className: "flex flex-row flex-wrap gap-6 bg-white border border-blue-300 rounded-xl shadow-lg px-8 py-4 items-center max-w-3xl" },
-            React.createElement("div", { className: "flex items-center gap-2" },
-                React.createElement("span", { className: "inline-block w-3 h-3 rounded-full bg-gray-400" }),
-                React.createElement("span", { className: "text-gray-500" }, "All Jobs:"),
-                React.createElement("span", { className: "font-Arial text-[#2D3E92]" }, filteredJobs.length)),
-            React.createElement("div", { className: "flex items-center gap-2" },
-                React.createElement("span", { className: "inline-block w-3 h-3 rounded-full bg-cyan-600" }),
-                React.createElement("span", { className: "text-gray-500" }, "New Jobs:"),
-                React.createElement("span", { className: "font-Arial text-[#2D3E92]" }, filteredJobs.filter(function (job) { return job.isNew === true; }).length)),
-            React.createElement("div", { className: "flex items-center gap-2" },
-                React.createElement("span", { className: "inline-block w-3 h-3 rounded-full bg-orange-400" }),
-                React.createElement("span", { className: "text-gray-500" }, "Changed Jobs:"),
-                React.createElement("span", { className: "font-Arial text-[#2D3E92]" }, filteredJobs.filter(function (job) { return job.isChange === true; }).length)))));
+    var summary = (react_2["default"].createElement("div", { className: "w-full flex justify-end mb-6" },
+        react_2["default"].createElement("div", { className: "flex flex-row flex-wrap gap-6 bg-white border border-blue-300 rounded-xl shadow-lg px-8 py-4 items-center max-w-3xl" },
+            react_2["default"].createElement("div", { className: "flex items-center gap-2" },
+                react_2["default"].createElement("span", { className: "inline-block w-3 h-3 rounded-full bg-gray-400" }),
+                react_2["default"].createElement("span", { className: "text-gray-500" }, "All Jobs:"),
+                react_2["default"].createElement("span", { className: "font-Arial text-[#2D3E92]" }, filteredJobs.length)),
+            react_2["default"].createElement("div", { className: "flex items-center gap-2" },
+                react_2["default"].createElement("span", { className: "inline-block w-3 h-3 rounded-full bg-cyan-600" }),
+                react_2["default"].createElement("span", { className: "text-gray-500" }, "New Jobs:"),
+                react_2["default"].createElement("span", { className: "font-Arial text-[#2D3E92]" }, filteredJobs.filter(function (job) { return job.isNew === true; }).length)),
+            react_2["default"].createElement("div", { className: "flex items-center gap-2" },
+                react_2["default"].createElement("span", { className: "inline-block w-3 h-3 rounded-full bg-orange-400" }),
+                react_2["default"].createElement("span", { className: "text-gray-500" }, "Changed Jobs:"),
+                react_2["default"].createElement("span", { className: "font-Arial text-[#2D3E92]" }, filteredJobs.filter(function (job) { return job.isChange === true; }).length)))));
     function fetchJobs(token, startDate, endDate) {
         return __awaiter(this, void 0, void 0, function () {
             var res, _a, data, err_1;
@@ -391,40 +397,40 @@ function JobsList() {
             });
         });
     }
-    return (React.createElement(cssguide_1["default"], null,
-        React.createElement("div", { className: "flex flex-col items-center py-8 min-h-screen bg-base-200 relative bg-[#9EE4F6]" },
+    return (react_2["default"].createElement(cssguide_1["default"], null,
+        react_2["default"].createElement("div", { className: "flex flex-col items-center py-8 min-h-screen bg-base-200 relative bg-[#9EE4F6]" },
             summary,
-            React.createElement("div", { className: "bg-[#F9FAFB] rounded-3xl shadow-lg border border-gray-300 w-full max-w-7xl p-6" },
-                React.createElement("div", { className: "p-4 w-full /* min-h-screen */ overflow-auto bg-[#F9FAFB]" },
-                    React.createElement("h1", { className: "text-2xl font-Arial mb-4" }, "Jobs List"),
-                    React.createElement("div", { className: "mb-6 flex flex-col items-center w-full px-4" },
-                        React.createElement("div", { className: "w-full rounded-xl shadow-md px-4 py-4 flex flex-row items-center justify-between gap-2", style: {
+            react_2["default"].createElement("div", { className: "bg-[#F9FAFB] rounded-3xl shadow-lg border border-gray-300 w-full max-w-7xl p-6" },
+                react_2["default"].createElement("div", { className: "p-4 w-full /* min-h-screen */ overflow-auto bg-[#F9FAFB]" },
+                    react_2["default"].createElement("h1", { className: "text-2xl font-Arial mb-4" }, "Jobs List"),
+                    react_2["default"].createElement("div", { className: "mb-6 flex flex-col items-center w-full px-4" },
+                        react_2["default"].createElement("div", { className: "w-full rounded-xl shadow-md px-4 py-4 flex flex-row items-center justify-between gap-2", style: {
                                 backgroundColor: '#E6F0FA',
                                 border: '1px solid #2D3E92'
                             } },
-                            React.createElement("div", { className: "flex flex-col w-[48%]" },
-                                React.createElement("label", { htmlFor: "start-date", className: "mb-1 text-xs text-gray-500 font-Arial" }, "Start date"),
-                                React.createElement("input", { id: "start-date", type: "date", value: startDate, max: endDate, onChange: function (e) {
+                            react_2["default"].createElement("div", { className: "flex flex-col w-[48%]" },
+                                react_2["default"].createElement("label", { htmlFor: "start-date", className: "mb-1 text-xs text-gray-500 font-Arial" }, "Start date"),
+                                react_2["default"].createElement("input", { id: "start-date", type: "date", value: startDate, max: endDate, onChange: function (e) {
                                         var newStartDate = e.target.value;
                                         setStartDate(newStartDate);
                                         fetchJobs(localStorage.getItem("token") || "", newStartDate, endDate);
                                     }, className: "input input-bordered w-full", placeholder: "Start date" })),
-                            React.createElement("div", { className: "flex flex-col w-[48%]" },
-                                React.createElement("label", { htmlFor: "end-date", className: "mb-1 text-xs text-gray-500 font-Arial" }, "End date"),
-                                React.createElement("input", { id: "end-date", type: "date", value: endDate, min: startDate, onChange: function (e) {
+                            react_2["default"].createElement("div", { className: "flex flex-col w-[48%]" },
+                                react_2["default"].createElement("label", { htmlFor: "end-date", className: "mb-1 text-xs text-gray-500 font-Arial" }, "End date"),
+                                react_2["default"].createElement("input", { id: "end-date", type: "date", value: endDate, min: startDate, onChange: function (e) {
                                         var newEndDate = e.target.value;
                                         setEndDate(newEndDate);
                                         fetchJobs(localStorage.getItem("token") || "", startDate, newEndDate);
                                     }, className: "input input-bordered w-full", placeholder: "End date" }))),
-                        React.createElement("span", { className: "mt-2 text-xs text-gray-400 text-center px-2" }, "Please select a date range to filter the desired tasks.")),
-                    loading ? (React.createElement("div", { className: "w-full py-10 flex flex-col items-center justify-center text-gray-600" },
-                        React.createElement(react_spinners_css_1.Ripple, { color: "#32cd32", size: "medium", text: "", textColor: "" }),
-                        React.createElement("p", { className: "mt-4 text-lg font-medium" }, "Loading jobs, please wait..."))) : error ? (React.createElement("div", { className: "p-6 text-red-600 text-center bg-red-100 border border-red-300 rounded-md max-w-md mx-auto" },
-                        React.createElement("p", { className: "text-lg font-semibold" }, "Oops! Something went wrong."),
-                        React.createElement("p", { className: "text-sm mt-1" }, error))) : !filteredJobs.length ? (React.createElement("div", { className: "p-6 text-center text-gray-500" },
-                        React.createElement("p", { className: "text-lg font-semibold" }, "No jobs found"),
-                        React.createElement("p", { className: "text-sm mt-1" }, "Try adjusting your filters or search keyword."))) : (React.createElement(React.Fragment, null,
-                        React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" }, pagedJobs.map(function (job) {
+                        react_2["default"].createElement("span", { className: "mt-2 text-xs text-gray-400 text-center px-2" }, "Please select a date range to filter the desired tasks.")),
+                    loading ? (react_2["default"].createElement("div", { className: "w-full py-10 flex flex-col items-center justify-center text-gray-600" },
+                        react_2["default"].createElement(react_spinners_css_1.Ripple, { color: "#32cd32", size: "medium", text: "", textColor: "" }),
+                        react_2["default"].createElement("p", { className: "mt-4 text-lg font-medium" }, "Loading jobs, please wait..."))) : error ? (react_2["default"].createElement("div", { className: "p-6 text-red-600 text-center bg-red-100 border border-red-300 rounded-md max-w-md mx-auto" },
+                        react_2["default"].createElement("p", { className: "text-lg font-semibold" }, "Oops! Something went wrong."),
+                        react_2["default"].createElement("p", { className: "text-sm mt-1" }, error))) : !filteredJobs.length ? (react_2["default"].createElement("div", { className: "p-6 text-center text-gray-500" },
+                        react_2["default"].createElement("p", { className: "text-lg font-semibold" }, "No jobs found"),
+                        react_2["default"].createElement("p", { className: "text-sm mt-1" }, "Try adjusting your filters or search keyword."))) : (react_2["default"].createElement(react_2["default"].Fragment, null,
+                        react_2["default"].createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" }, pagedJobs.map(function (job) {
                             var _a;
                             var isExpanded = (_a = expandedPNRs[job.PNR]) !== null && _a !== void 0 ? _a : false;
                             var toggleExpand = function () {
@@ -433,13 +439,17 @@ function JobsList() {
                                     return (__assign(__assign({}, prev), (_a = {}, _a[job.PNR] = !isExpanded, _a)));
                                 });
                             };
-                            return (React.createElement("div", { key: job.PNR, className: "relative bg-white border border-[#9EE4F6] rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col" },
-                                React.createElement("div", { className: "absolute top-2 left-1 text-[#ffffff] font-Arial rounded-full px-3 py-1 text-sm shadow z-10", style: {
-                                        backgroundColor: job.isNew
-                                            ? '#0891b2'
-                                            : job.isChange
-                                                ? '#fb923c'
-                                                : '#E0E7FF'
+                            return (react_2["default"].createElement("div", { key: job.PNR, className: "relative bg-white border border-[#9EE4F6] rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col" },
+                                react_2["default"].createElement("div", { className: "absolute top-2 left-1 text-[#ffffff] font-Arial rounded-full px-3 py-1 text-sm shadow z-10", style: {
+                                        backgroundColor: job.isCancel
+                                            ? '#ef4444' // สีแดงถ้า cancel
+                                            : job.isConfirmed
+                                                ? '#22c55e' // สีเขียวถ้า accept แล้ว
+                                                : job.isNew
+                                                    ? '#0891b2'
+                                                    : job.isChange
+                                                        ? '#fb923c'
+                                                        : '#E0E7FF'
                                     } }, job.all
                                     ? job.all.filter(function (j) {
                                         return j.Pickup !== job.Pickup ||
@@ -447,16 +457,16 @@ function JobsList() {
                                             j.Dropoff !== job.Dropoff ||
                                             j.DropoffDate !== job.DropoffDate ||
                                             j.PNRDate !== job.PNRDate;
-                                    }).length + 1 // รวม job หลักด้วย
+                                    }).length + 1
                                     : 1),
-                                React.createElement("button", { className: "absolute top-3.5 right-2 w-8 h-8 rounded-full bg-white border-2 border-[#2D3E92] shadow-[0_4px_10px_rgba(45,62,146,0.3)] hover:shadow-[0_6px_14px_rgba(45,62,146,0.4)] transition-all duration-200 flex items-center justify-center", title: "Show all details", onClick: function () { return setDetailJobs(job.all); }, style: { zIndex: 2 } },
-                                    React.createElement("svg", { width: "28", height: "28", viewBox: "0 0 24 24", fill: "none" },
-                                        React.createElement("circle", { cx: "12", cy: "12", r: "10", fill: "#F0F8FF" }),
-                                        React.createElement("text", { x: "12", y: "12", textAnchor: "middle", dominantBaseline: "central", fontSize: "18", fill: "#2D3E92", fontFamily: "Arial", fontWeight: "bold" }, "i"))),
-                                React.createElement("div", { className: "inline-block p-6 pb-0 cursor-pointer mx-auto items-center gap-3", onClick: toggleExpand },
-                                    React.createElement("h2", { className: "font-Arial mt-0 mb-0 underline underline-offset-4", style: { color: '#2D3E92', fontSize: '28px' } }, job.PNR)),
-                                isExpanded && (React.createElement("div", { className: "p-6 pt-0 flex-1 flex flex-col" },
-                                    React.createElement("div", { className: "text-sm text-gray-600 space-y-1 mb-4" },
+                                react_2["default"].createElement("button", { className: "absolute top-3.5 right-2 w-8 h-8 rounded-full bg-white border-2 border-[#2D3E92] shadow-[0_4px_10px_rgba(45,62,146,0.3)] hover:shadow-[0_6px_14px_rgba(45,62,146,0.4)] transition-all duration-200 flex items-center justify-center", title: "Show all details", onClick: function () { return setDetailJobs(job.all); }, style: { zIndex: 2 } },
+                                    react_2["default"].createElement("svg", { width: "28", height: "28", viewBox: "0 0 24 24", fill: "none" },
+                                        react_2["default"].createElement("circle", { cx: "12", cy: "12", r: "10", fill: "#F0F8FF" }),
+                                        react_2["default"].createElement("text", { x: "12", y: "12", textAnchor: "middle", dominantBaseline: "central", fontSize: "18", fill: "#2D3E92", fontFamily: "Arial", fontWeight: "bold" }, "i"))),
+                                react_2["default"].createElement("div", { className: "inline-block p-6 pb-0 cursor-pointer mx-auto items-center gap-3", onClick: toggleExpand },
+                                    react_2["default"].createElement("h2", { className: "font-Arial mt-0 mb-0 underline underline-offset-4", style: { color: '#2D3E92', fontSize: '28px' } }, job.PNR)),
+                                isExpanded && (react_2["default"].createElement("div", { className: "p-6 pt-0 flex-1 flex flex-col" },
+                                    react_2["default"].createElement("div", { className: "text-sm text-gray-600 space-y-1 mb-4" },
                                         renderPlaceDate(job.Pickup, job.PickupDate, 'Pickup'),
                                         renderPlaceDate(job.Dropoff, job.DropoffDate, 'Dropoff'),
                                         renderField('Pax', job.Pax),
@@ -471,14 +481,14 @@ function JobsList() {
                                             j.Pax !== job.Pax ||
                                             j.Source !== job.Source;
                                     })
-                                        .map(function (relatedJob) { return (React.createElement("div", { key: relatedJob.key, className: "bg-gray-100 border border-gray-300 rounded p-3 mb-4 text-sm text-gray-700" },
-                                        React.createElement("div", { className: "font-semibold text-gray-800 mb-1" }, "Another PNR"),
+                                        .map(function (relatedJob) { return (react_2["default"].createElement("div", { key: relatedJob.key, className: "bg-gray-100 border border-gray-300 rounded p-3 mb-4 text-sm text-gray-700" },
+                                        react_2["default"].createElement("div", { className: "font-semibold text-gray-800 mb-1" }, "Another PNR"),
                                         renderPlaceDate(relatedJob.Pickup, relatedJob.PickupDate, 'Pickup'),
                                         renderPlaceDate(relatedJob.Dropoff, relatedJob.DropoffDate, 'Dropoff'),
                                         renderField('Pax', relatedJob.Pax),
                                         renderField('Source', relatedJob.Source))); }),
-                                    !acceptedPNRs.includes(job.PNR) && !rejectPNRs.includes(job.PNR) && (React.createElement("div", { className: "flex gap-3 mt-auto flex-wrap" },
-                                        React.createElement("button", { className: "btn btn-success flex-1 text-base font-Arial py-2 rounded-full shadow text-white bg-[#95c941] hover:opacity-90", onClick: function () { return __awaiter(_this, void 0, void 0, function () {
+                                    !acceptedPNRs.includes(job.PNR) && !rejectPNRs.includes(job.PNR) && (react_2["default"].createElement("div", { className: "flex gap-3 mt-auto flex-wrap" },
+                                        react_2["default"].createElement("button", { className: "btn btn-success flex-1 text-base font-Arial py-2 rounded-full shadow text-white bg-[#95c941] hover:opacity-90", onClick: function () { return __awaiter(_this, void 0, void 0, function () {
                                                 var token, response, result, e_1;
                                                 return __generator(this, function (_a) {
                                                     switch (_a.label) {
@@ -486,18 +496,25 @@ function JobsList() {
                                                             _a.trys.push([0, 2, , 3]);
                                                             token = localStorage.getItem("token") || "";
                                                             return [4 /*yield*/, axios_1["default"].post("https://operation.dth.travel:7082/api/guide/job/" + job.key + "/update", {
-                                                                    token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
-                                                                    data: { isConfirmed: true }
+                                                                    token: token,
+                                                                    data: { isConfirmed: true, isCancel: false }
                                                                 })];
                                                         case 1:
                                                             response = _a.sent();
                                                             result = response.data;
                                                             if (result.success) {
                                                                 alert("Accept งานสำเร็จ");
-                                                                setAcceptedPNRs(function (prev) { return __spreadArrays(prev, [job.PNR]); });
+                                                                setAcceptedPNRs(function (prev) {
+                                                                    if (!prev.includes(job.PNR))
+                                                                        return __spreadArrays(prev, [job.PNR]);
+                                                                    return prev;
+                                                                });
+                                                                setRejectPNRs(function (prev) { return prev.filter(function (pnr) { return pnr !== job.PNR; }); });
                                                                 setJobs(function (prevJobs) {
-                                                                    var remaining = prevJobs.filter(function (j) { return j.key !== job.key; });
-                                                                    return __spreadArrays([job], remaining);
+                                                                    return prevJobs.map(function (j) {
+                                                                        return j.key === job.key
+                                                                            ? __assign(__assign({}, j), { isConfirmed: true, isCancel: false }) : j;
+                                                                    });
                                                                 });
                                                             }
                                                             else {
@@ -512,7 +529,7 @@ function JobsList() {
                                                     }
                                                 });
                                             }); } }, "Accept"),
-                                        React.createElement("button", { className: "btn flex-1 text-base font-Arial py-2 rounded-full shadow text-white bg-[#E44949] hover:opacity-90", onClick: function () { return __awaiter(_this, void 0, void 0, function () {
+                                        react_2["default"].createElement("button", { className: "btn btn-danger flex-1 text-base font-Arial py-2 rounded-full shadow text-white bg-[#ef4444] hover:opacity-90", onClick: function () { return __awaiter(_this, void 0, void 0, function () {
                                                 var token, response, result, e_2;
                                                 return __generator(this, function (_a) {
                                                     switch (_a.label) {
@@ -520,23 +537,29 @@ function JobsList() {
                                                             _a.trys.push([0, 2, , 3]);
                                                             token = localStorage.getItem("token") || "";
                                                             return [4 /*yield*/, axios_1["default"].post("https://operation.dth.travel:7082/api/guide/job/" + job.key + "/update", {
-                                                                    token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
-                                                                    data: { isCancel: true }
+                                                                    token: token,
+                                                                    data: { isCancel: true, isConfirmed: false }
                                                                 })];
                                                         case 1:
                                                             response = _a.sent();
                                                             result = response.data;
                                                             if (result.success) {
-                                                                alert("แจ้งยกเลิกงานสำเร็จ กรุณารอหลังบ้านส่งอีเมลยืนยันสักครู่");
-                                                                // เพิ่มตรงนี้เพื่อให้ปุ่มหายเหมือน Accept
-                                                                setrejectPNRs(function (prev) { return __spreadArrays(prev, [job.PNR]); });
+                                                                alert("Cancel งานสำเร็จ");
+                                                                setRejectPNRs(function (prev) {
+                                                                    if (!prev.includes(job.PNR))
+                                                                        return __spreadArrays(prev, [job.PNR]);
+                                                                    return prev;
+                                                                });
+                                                                setAcceptedPNRs(function (prev) { return prev.filter(function (pnr) { return pnr !== job.PNR; }); });
                                                                 setJobs(function (prevJobs) {
-                                                                    var remaining = prevJobs.filter(function (j) { return j.key !== job.key; });
-                                                                    return __spreadArrays([job], remaining);
+                                                                    return prevJobs.map(function (j) {
+                                                                        return j.key === job.key
+                                                                            ? __assign(__assign({}, j), { isCancel: true, isConfirmed: false }) : j;
+                                                                    });
                                                                 });
                                                             }
                                                             else {
-                                                                alert("แจ้งยกเลิกงานไม่สำเร็จ: " + ((result === null || result === void 0 ? void 0 : result.error) || "Unknown error"));
+                                                                alert("Cancel งานไม่สำเร็จ: " + ((result === null || result === void 0 ? void 0 : result.error) || "Unknown error"));
                                                             }
                                                             return [3 /*break*/, 3];
                                                         case 2:
@@ -546,22 +569,22 @@ function JobsList() {
                                                         case 3: return [2 /*return*/];
                                                     }
                                                 });
-                                            }); } }, "Reject Job")))))));
+                                            }); } }, "Reject")))))));
                         })),
-                        React.createElement("div", { className: "w-full flex justify-center mt-6" },
-                            React.createElement("div", { className: "inline-flex items-center gap-2 bg-base-100 border border-base-300 rounded-full shadow px-4 py-2" },
-                                React.createElement("button", { className: "btn btn-outline btn-sm rounded-full min-w-[64px]", disabled: page === 1, onClick: function () { return setPage(page - 1); } }, "Prev"),
-                                React.createElement("span", { className: "px-2 py-1 font-Arial text-base-content" },
+                        react_2["default"].createElement("div", { className: "w-full flex justify-center mt-6" },
+                            react_2["default"].createElement("div", { className: "inline-flex items-center gap-2 bg-base-100 border border-base-300 rounded-full shadow px-4 py-2" },
+                                react_2["default"].createElement("button", { className: "btn btn-outline btn-sm rounded-full min-w-[64px]", disabled: page === 1, onClick: function () { return setPage(page - 1); } }, "Prev"),
+                                react_2["default"].createElement("span", { className: "px-2 py-1 font-Arial text-base-content" },
                                     page,
                                     " ",
-                                    React.createElement("span", { className: "text-gray-400" }, "/"),
+                                    react_2["default"].createElement("span", { className: "text-gray-400" }, "/"),
                                     " ",
                                     totalPages),
-                                React.createElement("button", { className: "btn btn-outline btn-sm rounded-full min-w-[64px]", disabled: page === totalPages, onClick: function () { return setPage(page + 1); } }, "Next"))),
-                        detailJobs && (React.createElement("div", { className: "fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50" },
-                            React.createElement("div", { className: "bg-white rounded-xl shadow-2xl border-4 border-blue-400 p-8 max-w-2xl w-full relative animate-fade-in" },
-                                React.createElement("button", { className: "absolute top-2 right-2 btn btn-sm btn-error", onClick: function () { return setDetailJobs(null); } }, "\u2715"),
-                                React.createElement("h2", { className: "text-xl font-Arial mb-4" }, "All Job Details"),
+                                react_2["default"].createElement("button", { className: "btn btn-outline btn-sm rounded-full min-w-[64px]", disabled: page === totalPages, onClick: function () { return setPage(page + 1); } }, "Next"))),
+                        detailJobs && (react_2["default"].createElement("div", { className: "fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50" },
+                            react_2["default"].createElement("div", { className: "bg-white rounded-xl shadow-2xl border-4 border-blue-400 p-8 max-w-2xl w-full relative animate-fade-in" },
+                                react_2["default"].createElement("button", { className: "absolute top-2 right-2 btn btn-sm btn-error", onClick: function () { return setDetailJobs(null); } }, "\u2715"),
+                                react_2["default"].createElement("h2", { className: "text-xl font-Arial mb-4" }, "All Job Details"),
                                 renderAllDetails(detailJobs)))))))))));
 }
 exports["default"] = JobsList;
