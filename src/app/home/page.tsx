@@ -5,6 +5,8 @@ import CssgGuide from '../cssguide'
 import axios from "axios";
 import { Ripple } from 'react-spinners-css';
 type Job = {
+  Driver: any;
+  Vehicle: any;
   Guide: any;
   serviceSupplierName: string;
   Comment: any;
@@ -212,6 +214,7 @@ export default function JobsList() {
         DropoffDate: job.DropoffDate,
         PNRDate: job.PNRDate,
         GuideName: job.Guide,
+        Vehicle: job.Vehicle,
         // add other fields that should be merged
       });
 
@@ -322,6 +325,13 @@ export default function JobsList() {
                 </table>
               </div>
 
+              <div className="flex items-start">
+                <span className="font-bold text-gray-600 w-24 shrink-0">Guide:</span>
+                <span className="text-gray-800 break-words">
+                  {[job.Guide,job.Vehicle,job.Driver].filter(Boolean).join(", ")}
+                </span>
+              </div>
+
               {/* Render Other Fields */}
               {Object.entries(job)
                 .filter(([k]) =>
@@ -334,7 +344,7 @@ export default function JobsList() {
                     "serviceSupplierCode_TP", "serviceProductName", "serviceSupplierName",
                     "ServiceLocationName_TP", "Source", "Phone", "Booking_Consultant",
                     "AdultQty", "ChildQty", "ChildShareQty", "InfantQty", "pax_name",
-                    "Booking_Name", "Class", "Comment"
+                    "Booking_Name", "Class", "Comment","Guide", "Vehicle", "Driver",
                   ].includes(k)
                 )
                 .map(([k, v]) => {
