@@ -424,7 +424,7 @@ export default function JobsList() {
             {/* ปรับ UI ช่วงเลือกวันที่ */}
             <div className="mb-6 flex flex-col items-center w-full px-4">
               <div
-                className="w-full rounded-xl shadow-md px-4 py-4 flex flex-row items-end justify-between gap-2"
+                className="w-full rounded-xl shadow-md px-4 py-4 flex flex-row items-center justify-between gap-2"
                 style={{
                   backgroundColor: '#E6F0FA',
                   border: '1px solid #2D3E92',
@@ -440,7 +440,11 @@ export default function JobsList() {
                     type="date"
                     value={startDate}
                     max={endDate}
-                    onChange={e => setStartDate(e.target.value)}
+                    onChange={(e) => {
+                      const newStartDate = e.target.value;
+                      setStartDate(newStartDate);
+                      fetchJobs(localStorage.getItem("token") || "", newStartDate, endDate);
+                    }}
                     className="input input-bordered w-full"
                     placeholder="Start date"
                   />
@@ -456,13 +460,16 @@ export default function JobsList() {
                     type="date"
                     value={endDate}
                     min={startDate}
-                    onChange={e => setEndDate(e.target.value)}
+                    onChange={(e) => {
+                      const newEndDate = e.target.value;
+                      setEndDate(newEndDate);
+                      fetchJobs(localStorage.getItem("token") || "", startDate, newEndDate);
+                    }}
                     className="input input-bordered w-full"
                     placeholder="End date"
                   />
                 </div>
               </div>
-
 
               <span className="mt-2 text-xs text-gray-400 text-center px-2">
                 Please select a date range to filter the desired tasks.
@@ -500,7 +507,7 @@ export default function JobsList() {
                     return (
                       <div
                         key={job.PNR}
-                        className="relative bg-white border border-[#9EE4F6] border-[1px] rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col"
+                        className="relative bg-white border border-[#9EE4F6] rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col"
                       >
 
                         {/* Show number of jobs in this PNR at top-left */}
@@ -567,7 +574,7 @@ export default function JobsList() {
                             <div className="text-sm text-gray-600 space-y-1 mb-4">
                               {renderPlaceDate(job.Pickup, job.PickupDate, 'Pickup')}
                               {renderPlaceDate(job.Dropoff, job.DropoffDate, 'Dropoff')}
-                              {renderField('Pax', job.AdultQty + job.ChildQty + job.ChildShareQty + job.InfantQty)}
+                              {renderField('Pax', job.Pax)}
                               {renderField('Source', job.Source)}
                             </div>
 
