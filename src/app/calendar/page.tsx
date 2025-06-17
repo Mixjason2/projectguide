@@ -16,8 +16,16 @@ type Job = {
   PNR: string;
   PickupDate: string;
   Pickup: string;
-  Pax: number;
+  AdultQty: number;
+  ChildQty: number;
+  ChildShareQty: number;
+  InfantQty: number;
 };
+
+function getTotalPax(job: Job): number {
+  return job.AdultQty + job.ChildQty + job.ChildShareQty + job.InfantQty;
+}
+
 
 const Loading = () => {
   const dotStyle = (delay: number) => ({
@@ -116,8 +124,10 @@ export default function CalendarExcel() {
 
       const details = jobsOnDate.map((job, i) => {
         const pickupTime = new Date(job.PickupDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-        return `${i + 1}. 🕒 ${pickupTime} 📍 ${job.Pickup} | 👤 ${job.Pax} Pax | 🎫 PNR: ${job.PNR}`;
+        const totalPax = getTotalPax(job);
+        return `${i + 1}. 🕒 ${pickupTime} 📍 ${job.Pickup} | 👤 ${totalPax} Pax | 🎫 PNR: ${job.PNR}`;
       }).join('\n');
+
 
       alert(`📅 Date: ${clickedDate}\n📌 Jobs:\n${details}`);
     } else {
@@ -126,11 +136,11 @@ export default function CalendarExcel() {
         dateStyle: 'short',
         timeStyle: 'short',
       });
-
+      const totalPax = getTotalPax(job);
       alert(`🎫 PNR: ${job.PNR}
 🕒 Pickup: ${pickupTime}
 📍 Location: ${job.Pickup}
-👤 Pax: ${job.Pax}`);
+👤 Pax: ${totalPax} (Adult: ${job.AdultQty}, Child: ${job.ChildQty}, Share: ${job.ChildShareQty}, Infant: ${job.InfantQty})`);
     }
   };
 

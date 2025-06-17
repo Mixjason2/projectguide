@@ -573,7 +573,7 @@ export default function JobsList() {
                             <div className="text-sm text-gray-600 space-y-1 mb-4">
                               {renderPlaceDate(job.Pickup, job.PickupDate, 'Pickup')}
                               {renderPlaceDate(job.Dropoff, job.DropoffDate, 'Dropoff')}
-                              {renderField('Pax', job.Pax)}
+                              {renderField('Pax', job.AdultQty + job.ChildQty + job.ChildShareQty + job.InfantQty)}
                               {renderField('Source', job.Source)}
                             </div>
 
