@@ -6,6 +6,7 @@ import axios from 'axios';
 import { Ripple } from 'react-spinners-css';
 import { formatDate } from '@fullcalendar/core/index.js';
 
+// 
 type Job = {
   Driver: any;
   Vehicle: any;
@@ -426,84 +427,138 @@ export default function JobsList() {
                               {renderField('Source', relatedJob.Source)}
                             </div>
                           ))}
-                          {!acceptedPNRs.includes(job.PNR) && !rejectPNRs.includes(job.PNR) && (
-                            <div className="flex gap-3 mt-auto flex-wrap">
-                              <button className="btn btn-success flex-1 text-base font-Arial py-2 rounded-full shadow text-white bg-[#95c941] hover:opacity-90" onClick={async () => {
-                                try {
-                                  const token = localStorage.getItem("token") || "";
-                                  const response = await axios.post(
-                                    `https://operation.dth.travel:7082/api/guide/job/${job.keys}/update`,
-                                    {
-                                      token,
-                                      data: { isConfirmed: true, isCancel: false },
+                          <div className="relative border rounded-xl p-4 shadow bg-white">
+                            {/* ปุ่ม Accept/Reject */}
+                            {!acceptedPNRs.includes(job.PNR) && !rejectPNRs.includes(job.PNR) && (
+                              <div className="flex gap-3">
+                                <button
+                                  className="btn flex-1 py-2 rounded-full shadow text-white bg-[#95c941] hover:opacity-90"
+                                  onClick={async () => {
+                                    try {
+                                      const token = localStorage.getItem("token") || "";
+                                      const response = await axios.post(
+                                        `https://operation.dth.travel:7082/api/guide/job/${job.keys}/update`,
+                                        {
+                                          token,
+                                          data: { isConfirmed: true, isCancel: false },
+                                        }
+                                      );
+                                      const result = response.data;
+                                      if (result.success) {
+                                        alert("Accept งานสำเร็จ");
+
+                                        setAcceptedPNRs(prev =>
+                                          !prev.includes(job.PNR) ? [...prev, job.PNR] : prev
+                                        );
+                                        setRejectPNRs(prev => prev.filter(pnr => pnr !== job.PNR));
+                                        setJobs(prevJobs =>
+                                          prevJobs.map(j =>
+                                            job.keys.includes(j.key)
+                                              ? { ...j, isConfirmed: true, isCancel: false }
+                                              : j
+                                          )
+                                        );
+                                      } else {
+                                        alert("Accept งานไม่สำเร็จ: " + (result?.error || "Unknown error"));
+                                      }
+                                    } catch (e: any) {
+                                      alert("เกิดข้อผิดพลาด: " + e.message);
                                     }
-                                  );
-                                  const result = response.data;
-                                  if (result.success) {
-                                    alert("Accept งานสำเร็จ");
+                                  }}
+                                >
+                                  Accept
+                                </button>
 
-                                    setAcceptedPNRs(prev => {
-                                      if (!prev.includes(job.PNR)) return [...prev, job.PNR];
-                                      return prev;
-                                    });
+                                <button
+                                  className="btn flex-1 py-2 rounded-full shadow text-white bg-[#ef4444] hover:opacity-90"
+                                  onClick={async () => {
+                                    try {
+                                      const token = localStorage.getItem("token") || "";
+                                      const response = await axios.post(
+                                        `https://operation.dth.travel:7082/api/guide/job/${job.keys}/update`,
+                                        {
+                                          token,
+                                          data: { isCancel: true, isConfirmed: false },
+                                        }
+                                      );
+                                      const result = response.data;
+                                      if (result.success) {
+                                        alert("Cancel งานสำเร็จ");
 
-                                    setRejectPNRs(prev => prev.filter(pnr => pnr !== job.PNR));
-
-                                    setJobs(prevJobs =>
-                                      prevJobs.map(j =>
-                                        job.keys.includes(j.key)
-                                          ? { ...j, isConfirmed: true, isCancel: false }
-                                          : j
-                                      )
-                                    );
-                                  } else {
-                                    alert("Accept งานไม่สำเร็จ: " + (result?.error || "Unknown error"));
-                                  }
-                                } catch (e: any) {
-                                  alert("เกิดข้อผิดพลาด: " + e.message);
-                                }
-                              }}>
-                                Accept
-                              </button>
-                              <button className="btn btn-danger flex-1 text-base font-Arial py-2 rounded-full shadow text-white bg-[#ef4444] hover:opacity-90" onClick={async () => {
-                                try {
-                                  const token = localStorage.getItem("token") || "";
-                                  const response = await axios.post(
-                                    `https://operation.dth.travel:7082/api/guide/job/${job.keys}/update`,
-                                    {
-                                      token,
-                                      data: { isCancel: true, isConfirmed: false },
+                                        setRejectPNRs(prev =>
+                                          !prev.includes(job.PNR) ? [...prev, job.PNR] : prev
+                                        );
+                                        setAcceptedPNRs(prev => prev.filter(pnr => pnr !== job.PNR));
+                                        setJobs(prevJobs =>
+                                          prevJobs.map(j =>
+                                            job.keys.includes(j.key)
+                                              ? { ...j, isCancel: true, isConfirmed: false }
+                                              : j
+                                          )
+                                        );
+                                      } else {
+                                        alert("Cancel งานไม่สำเร็จ: " + (result?.error || "Unknown error"));
+                                      }
+                                    } catch (e: any) {
+                                      alert("เกิดข้อผิดพลาด: " + e.message);
                                     }
-                                  );
-                                  const result = response.data;
-                                  if (result.success) {
-                                    alert("Cancel งานสำเร็จ");
+                                  }}
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            )}
 
-                                    setRejectPNRs(prev => {
-                                      if (!prev.includes(job.PNR)) return [...prev, job.PNR];
-                                      return prev;
-                                    });
+                            {/* ปุ่ม Upload หลัง Accept แล้ว */}
+                            {acceptedPNRs.includes(job.PNR) && (
+                              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[80%]">
+                                <input
+                                  type="file"
+                                  multiple
+                                  onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      const reader = new FileReader();
+                                      reader.onloadend = async () => {
+                                        const base64 = reader.result as string;
+                                        console.log("📁 Base64 ของ", job.PNR, base64);
 
-                                    setAcceptedPNRs(prev => prev.filter(pnr => pnr !== job.PNR));
+                                        try {
+                                          const token = localStorage.getItem("token") || ""; // หรือ token ที่ถูกต้อง
+                                          const response = await axios.post(
+                                            'https://operation.dth.travel:7082/api/upload',
+                                            {
+                                              token,
+                                              data: {
+                                                key: 2588,
+                                                Remark: "Test Remark",
+                                                Images: [{ ImageBase64: base64 }],
+                                              },
+                                            },
+                                            {
+                                              headers: { 'Content-Type': 'application/json' },
+                                            }
+                                          );
 
-                                    setJobs(prevJobs =>
-                                      prevJobs.map(j =>
-                                        job.keys.includes(j.key)
-                                          ? { ...j, isCancel: true, isConfirmed: false }
-                                          : j
-                                      )
-                                    );
-                                  } else {
-                                    alert("Cancel งานไม่สำเร็จ: " + (result?.error || "Unknown error"));
-                                  }
-                                } catch (e: any) {
-                                  alert("เกิดข้อผิดพลาด: " + e.message);
-                                }
-                              }}>
-                                Reject
-                              </button>
-                            </div>
-                          )}
+                                          if (response.data.success) {
+                                            alert("อัพโหลดสำเร็จ: " + response.data.message);
+                                          } else {
+                                            alert("Error: " + (response.data.error || "Unknown error"));
+                                          }
+                                        } catch (error: any) {
+                                          alert("Error uploading: " + error.message);
+                                        }
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }
+                                  }}
+                                  accept="image/*,application/pdf"
+                                  className="block w-full text-sm text-gray-500 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+                                />
+                              </div>
+                            )}
+                          </div>
+
                         </div>
                       )}
                     </div>
