@@ -158,6 +158,7 @@ export default function CalendarExcel() {
             borderRadius: '50%',
             display: 'inline-block',
             marginRight: 8,
+            borderWidth: 1, // Ensure borderWidth is a valid number
           }}
         />
         <span>{arg.event.title}</span>
@@ -172,7 +173,7 @@ export default function CalendarExcel() {
     <CssgGuide>
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
-        initialView="dayGridMonth"
+        initialView="timeGridWeek"
         events={events}
         datesSet={(arg: DatesSetArg) => setCurrentView(arg.view.type)}
         height="100%"
@@ -188,6 +189,36 @@ export default function CalendarExcel() {
         expandRows={true}
         eventClick={handleEventClick}
         eventContent={renderEventContent}
+        slotLabelFormat={{
+          hour: '2-digit',
+          minute: '2-digit',
+          meridiem: false,
+        }}
+        dayHeaderFormat={{
+          weekday: 'short',
+          day: 'numeric',
+        }}
+        views={{
+          timeGridWeek: {
+            slotLabelFormat: {
+              hour: '2-digit',
+              minute: '2-digit',
+              meridiem: false,
+            },
+            dayHeaderFormat: {
+              weekday: 'short',
+              day: 'numeric',
+            },
+          },
+        }}
+        customButtons={{
+          swapAxes: {
+            text: 'Swap Axes',
+            click: () => {
+              alert('Custom axis swapping is not natively supported.');
+            },
+          },
+        }}
       />
     </CssgGuide>
   );

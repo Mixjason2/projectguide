@@ -187,4 +187,39 @@
   margin-right: 8px;
 }
 
+/* Swap axes for timeGridWeek view */
+.fc-timegrid {
+  display: flex;
+  flex-direction: column-reverse; /* Reverse the layout */
+}
+
+.fc-timegrid-slots {
+  display: flex;
+  flex-direction: row; /* Make time slots horizontal */
+}
+
+.fc-timegrid-axis {
+  writing-mode: vertical-lr; /* Rotate the day labels */
+  transform: rotate(90deg);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.fc-timegrid-axis .fc-timegrid-axis-label {
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: #2D3E92; /* Blue color for day labels */
+}
+
+.fc-timegrid-day-header {
+  display: flex;
+  flex-direction: column; /* Stack day headers vertically */
+}
+
+.fc-timegrid-day-header .fc-day-header {
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: #2D3E92; /* Blue color for time labels */
+}
+
 

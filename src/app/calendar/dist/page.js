@@ -39,6 +39,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 exports.__esModule = true;
 var react_1 = require("react");
 require("./calendar.css");
+function getTotalPax(job) {
+    return job.AdultQty + job.ChildQty + job.ChildShareQty + job.InfantQty;
+}
 var Loading = function () {
     var dotStyle = function (delay) { return ({
         width: 12,
@@ -136,7 +139,8 @@ var handleEventClick = function (info) {
         var clickedDate = info.event.startStr.split('T')[0];
         var details = jobsOnDate.map(function (job, i) {
             var pickupTime = new Date(job.PickupDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-            return i + 1 + ". \uD83D\uDD52 " + pickupTime + " \uD83D\uDCCD " + job.Pickup + " | \uD83D\uDC64 " + job.Pax + " Pax | \uD83C\uDFAB PNR: " + job.PNR;
+            var totalPax = getTotalPax(job);
+            return i + 1 + ". \uD83D\uDD52 " + pickupTime + " \uD83D\uDCCD " + job.Pickup + " | \uD83D\uDC64 " + totalPax + " Pax | \uD83C\uDFAB PNR: " + job.PNR;
         }).join('\n');
         alert("\uD83D\uDCC5 Date: " + clickedDate + "\n\uD83D\uDCCC Jobs:\n" + details);
     }
@@ -146,7 +150,8 @@ var handleEventClick = function (info) {
             dateStyle: 'short',
             timeStyle: 'short'
         });
-        alert("\uD83C\uDFAB PNR: " + job.PNR + "\n\uD83D\uDD52 Pickup: " + pickupTime + "\n\uD83D\uDCCD Location: " + job.Pickup + "\n\uD83D\uDC64 Pax: " + job.Pax);
+        var totalPax = getTotalPax(job);
+        alert("\uD83C\uDFAB PNR: " + job.PNR + "\n\uD83D\uDD52 Pickup: " + pickupTime + "\n\uD83D\uDCCD Location: " + job.Pickup + "\n\uD83D\uDC64 Pax: " + totalPax + " (Adult: " + job.AdultQty + ", Child: " + job.ChildQty + ", Share: " + job.ChildShareQty + ", Infant: " + job.InfantQty + ")");
     }
 };
 var renderEventContent = function (arg) {
@@ -160,7 +165,8 @@ var renderEventContent = function (arg) {
                 height: 10,
                 borderRadius: '50%',
                 display: 'inline-block',
-                marginRight: 8
+                marginRight: 8,
+                borderWidth: 1
             } }),
         react_1["default"].createElement("span", null, arg.event.title)));
 };
@@ -169,8 +175,34 @@ if (loading)
 if (error)
     return react_1["default"].createElement(ErrorMessage, { error: error });
 return (react_1["default"].createElement(cssguide_1["default"], null,
-    react_1["default"].createElement(react_2["default"], { plugins: [daygrid_1["default"], timegrid_1["default"], list_1["default"], interaction_1["default"]], initialView: "dayGridMonth", events: events, datesSet: function (arg) { return setCurrentView(arg.view.type); }, height: "100%", contentHeight: "auto", aspectRatio: 1.7, headerToolbar: {
+    react_1["default"].createElement(react_2["default"], { plugins: [daygrid_1["default"], timegrid_1["default"], list_1["default"], interaction_1["default"]], initialView: "timeGridWeek", events: events, datesSet: function (arg) { return setCurrentView(arg.view.type); }, height: "100%", contentHeight: "auto", aspectRatio: 1.7, headerToolbar: {
             start: 'title',
             center: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth',
             end: 'today prev,next'
-        }, editable: false, selectable: true, expandRows: true, eventClick: handleEventClick, eventContent: renderEventContent })));
+        }, editable: false, selectable: true, expandRows: true, eventClick: handleEventClick, eventContent: renderEventContent, slotLabelFormat: {
+            hour: '2-digit',
+            minute: '2-digit',
+            meridiem: false
+        }, dayHeaderFormat: {
+            weekday: 'short',
+            day: 'numeric'
+        }, views: {
+            timeGridWeek: {
+                slotLabelFormat: {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    meridiem: false
+                },
+                dayHeaderFormat: {
+                    weekday: 'short',
+                    day: 'numeric'
+                }
+            }
+        }, customButtons: {
+            swapAxes: {
+                text: 'Swap Axes',
+                click: function () {
+                    alert('Custom axis swapping is not natively supported.');
+                }
+            }
+        } })));
