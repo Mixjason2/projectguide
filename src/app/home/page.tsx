@@ -235,7 +235,10 @@ export default function JobsList() {
         {Object.values(groupedJobs).map(({ job, typeNames }, idx) => (
           <div
             key={job.key + "-" + idx}
-            className="mb-3 border-b border-gray-200 pb-3 last:border-b-0"
+            className="mb-3 border-b border-gray-200 pb-3 last:border-b-0"style={{
+            borderBottom: "5px solid #000000", // Increased border width and changed color
+             boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Add shadow effect
+          }}
           >
             {/* PNR Header */}
             <div className="font-Arial text-[#2D3E92] mb-1 text-sm">
