@@ -4,6 +4,7 @@ import { ReactNode, useEffect, useState } from 'react'
 import CssgGuide from '../cssguide'
 import axios from "axios";
 import { Ripple } from 'react-spinners-css';
+import React from 'react';
 type Job = {
   Driver: any;
   Vehicle: any;
@@ -91,9 +92,8 @@ export default function JobsList() {
   const [uploadJob, setUploadJob] = useState<Job | null>(null)
   const [expandedPNRs, setExpandedPNRs] = useState<{ [pnr: string]: boolean }>({});
   const [acceptedPNRs, setAcceptedPNRs] = useState<string[]>([]);
-  const [rejectPNRs, setrejectPNRs] = useState<string[]>([]);
+  const [rejectPNRs, setRejectPNRs] = React.useState<string[]>([]);
   const [isLoadingJobs, setIsLoadingJobs] = useState(true);
-
   const pageSize = 6
 
   useEffect(() => {
@@ -149,7 +149,6 @@ export default function JobsList() {
     endDate.setDate(today.getDate() + 30); // วันที่ 30 วันข้างหน้า
     return endDate.toISOString().split('T')[0];
   }
-
 
   // Helper to format date and time, keep only วัน/เดือน/ปี (YYYY-MM-DD)
   function formatDate(dateStr: any) {
@@ -235,10 +234,7 @@ export default function JobsList() {
         {Object.values(groupedJobs).map(({ job, typeNames }, idx) => (
           <div
             key={job.key + "-" + idx}
-            className="mb-3 border-b border-gray-200 pb-3 last:border-b-0"style={{
-            borderBottom: "5px solid #000000", // Increased border width and changed color
-             boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Add shadow effect
-          }}
+            className="mb-3 border-b border-gray-200 pb-3 last:border-b-0"
           >
             {/* PNR Header */}
             <div className="font-Arial text-[#2D3E92] mb-1 text-sm">
@@ -331,7 +327,7 @@ export default function JobsList() {
               <div className="flex items-start">
                 <span className="font-bold text-gray-600 w-24 shrink-0">Guide:</span>
                 <span className="text-gray-800 break-words">
-                  {[job.Guide,job.Vehicle,job.Driver].filter(Boolean).join(", ")}
+                  {[job.Guide, job.Vehicle, job.Driver].filter(Boolean).join(", ")}
                 </span>
               </div>
 
@@ -347,7 +343,7 @@ export default function JobsList() {
                     "serviceSupplierCode_TP", "serviceProductName", "serviceSupplierName",
                     "ServiceLocationName_TP", "Source", "Phone", "Booking_Consultant",
                     "AdultQty", "ChildQty", "ChildShareQty", "InfantQty", "pax_name",
-                    "Booking_Name", "Class", "Comment","Guide", "Vehicle", "Driver",
+                    "Booking_Name", "Class", "Comment", "Guide", "Vehicle", "Driver"
                   ].includes(k)
                 )
                 .map(([k, v]) => {
@@ -525,15 +521,18 @@ export default function JobsList() {
                         className="relative bg-white border border-[#9EE4F6] rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col"
                       >
 
-                        {/* Show number of jobs in this PNR at top-left */}
                         <div
                           className="absolute top-2 left-1 text-[#ffffff] font-Arial rounded-full px-3 py-1 text-sm shadow z-10"
                           style={{
-                            backgroundColor: job.isNew
-                              ? '#0891b2'
-                              : job.isChange
-                                ? '#fb923c'
-                                : '#E0E7FF',
+                            backgroundColor: job.isCancel
+                              ? '#ef4444' // สีแดงถ้า cancel
+                              : job.isConfirmed
+                                ? '#22c55e' // สีเขียวถ้า accept แล้ว
+                                : job.isNew
+                                  ? '#0891b2'
+                                  : job.isChange
+                                    ? '#fb923c'
+                                    : '#E0E7FF',
                           }}
                         >
                           {job.all
@@ -543,9 +542,10 @@ export default function JobsList() {
                               j.Dropoff !== job.Dropoff ||
                               j.DropoffDate !== job.DropoffDate ||
                               j.PNRDate !== job.PNRDate
-                            ).length + 1 // รวม job หลักด้วย
+                            ).length + 1
                             : 1}
                         </div>
+
                         {/* Logo button */}
                         <button
                           className="absolute top-3.5 right-2 w-8 h-8 rounded-full bg-white border-2 border-[#2D3E92] shadow-[0_4px_10px_rgba(45,62,146,0.3)] hover:shadow-[0_6px_14px_rgba(45,62,146,0.4)] transition-all duration-200 flex items-center justify-center"
@@ -631,22 +631,28 @@ export default function JobsList() {
                                       const response = await axios.post(
                                         `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
                                         {
-                                          token:
-                                            "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
-                                          data: { isConfirmed: true },
+                                          token,
+                                          data: { isConfirmed: true, isCancel: false },
                                         }
                                       );
                                       const result = response.data;
                                       if (result.success) {
                                         alert("Accept งานสำเร็จ");
 
-                                        setAcceptedPNRs(prev => [...prev, job.PNR]);
-
-                                        setJobs(prevJobs => {
-                                          const remaining = prevJobs.filter(j => j.key !== job.key);
-                                          return [job, ...remaining];
+                                        setAcceptedPNRs(prev => {
+                                          if (!prev.includes(job.PNR)) return [...prev, job.PNR];
+                                          return prev;
                                         });
 
+                                        setRejectPNRs(prev => prev.filter(pnr => pnr !== job.PNR));
+
+                                        setJobs(prevJobs =>
+                                          prevJobs.map(j =>
+                                            j.key === job.key
+                                              ? { ...j, isConfirmed: true, isCancel: false }
+                                              : j
+                                          )
+                                        );
                                       } else {
                                         alert("Accept งานไม่สำเร็จ: " + (result?.error || "Unknown error"));
                                       }
@@ -658,39 +664,46 @@ export default function JobsList() {
                                   Accept
                                 </button>
 
-
                                 {/* Reject Button */}
                                 <button
-                                  className="btn flex-1 text-base font-Arial py-2 rounded-full shadow text-white bg-[#E44949] hover:opacity-90"
+                                  className="btn btn-danger flex-1 text-base font-Arial py-2 rounded-full shadow text-white bg-[#ef4444] hover:opacity-90"
                                   onClick={async () => {
                                     try {
                                       const token = localStorage.getItem("token") || "";
                                       const response = await axios.post(
                                         `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
                                         {
-                                          token: "AVM4UmVVMJuXWXzdOvGgaTqNm/Ysfkw0DnscAzbE+J4+Kr7AYjIs7Eu+7ZXBGs+MohOuqTTZkdIiJ5Iw8pQVJ0tWaz/R1sbE8ksM2sKYSTDKrKtQCYfZuq8IArzwBRQ3E1LIlS9Wb7X2G3mKkJ+8jCdb1fFy/76lXpHHWrI9tqt2/IXD20ZFYZ41PTB0tEsgp9VXZP8I5j+363SEnn5erg==",
-                                          data: { isCancel: true }
+                                          token,
+                                          data: { isCancel: true, isConfirmed: false },
                                         }
                                       );
                                       const result = response.data;
                                       if (result.success) {
-                                        alert("แจ้งยกเลิกงานสำเร็จ กรุณารอหลังบ้านส่งอีเมลยืนยันสักครู่");
-                                        // เพิ่มตรงนี้เพื่อให้ปุ่มหายเหมือน Accept
-                                        setrejectPNRs(prev => [...prev, job.PNR]);
-                                        setJobs(prevJobs => {
-                                          const remaining = prevJobs.filter(j => j.key !== job.key);
-                                          return [job, ...remaining];
+                                        alert("Cancel งานสำเร็จ");
+
+                                        setRejectPNRs(prev => {
+                                          if (!prev.includes(job.PNR)) return [...prev, job.PNR];
+                                          return prev;
                                         });
 
+                                        setAcceptedPNRs(prev => prev.filter(pnr => pnr !== job.PNR));
+
+                                        setJobs(prevJobs =>
+                                          prevJobs.map(j =>
+                                            j.key === job.key
+                                              ? { ...j, isCancel: true, isConfirmed: false }
+                                              : j
+                                          )
+                                        );
                                       } else {
-                                        alert("แจ้งยกเลิกงานไม่สำเร็จ: " + (result?.error || "Unknown error"));
+                                        alert("Cancel งานไม่สำเร็จ: " + (result?.error || "Unknown error"));
                                       }
                                     } catch (e: any) {
                                       alert("เกิดข้อผิดพลาด: " + e.message);
                                     }
                                   }}
                                 >
-                                  Reject Job
+                                  Reject
                                 </button>
 
                               </div>
