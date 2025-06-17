@@ -5,6 +5,7 @@ import CssgGuide from '../cssguide'
 import axios from "axios";
 import { Ripple } from 'react-spinners-css';
 type Job = {
+  Guide: any;
   serviceSupplierName: string;
   Comment: any;
   pax_name: ReactNode;
@@ -210,6 +211,7 @@ export default function JobsList() {
         Dropoff: job.Dropoff,
         DropoffDate: job.DropoffDate,
         PNRDate: job.PNRDate,
+        GuideName: job.Guide,
         // add other fields that should be merged
       });
 
