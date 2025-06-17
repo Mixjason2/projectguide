@@ -4,9 +4,6 @@ import { ReactNode, useEffect, useState } from 'react'
 import CssgGuide from '../cssguide'
 import axios from "axios";
 import { Ripple } from 'react-spinners-css';
-import dayjs from 'dayjs';
-import { DatePicker } from 'antd';
-
 type Job = {
   AdultQty: number;
   ChildQty: number;
@@ -432,40 +429,58 @@ export default function JobsList() {
           <div className="p-4 w-full /* min-h-screen */ overflow-auto bg-[#F9FAFB]">
             <h1 className="text-2xl font-Arial mb-4">Jobs List</h1>
             {/* ปรับ UI ช่วงเลือกวันที่ */}
-            {/* Date Range Picker */}
-<div className="mb-6 flex flex-col items-center w-full px-4">
-  <div
-    className="w-full rounded-xl shadow-md px-4 py-4 flex flex-row items-center justify-between gap-2"
-    style={{
-      backgroundColor: '#E6F0FA',
-      border: '1px solid #2D3E92',
-    }}
-  >
-    <div className="flex flex-col w-full">
-      <label htmlFor="date-range" className="mb-1 text-xs text-gray-500 font-Arial">
-        Select Date Range
-      </label>
-      <DatePicker.RangePicker
-        id="date-range"
-        defaultValue={[dayjs(startDate, 'YYYY-MM-DD'), dayjs(endDate, 'YYYY-MM-DD')]}
-        format="YYYY/MM/DD"
-        onChange={(dates) => {
-          if (dates) {
-            setStartDate(dates[0]?.format('YYYY-MM-DD') || '');
-            setEndDate(dates[1]?.format('YYYY-MM-DD') || '');
-          } else {
-            setStartDate('');
-            setEndDate('');
-          }
-        }}
-        className="w-full"
-      />
-    </div>
-  </div>
-  <span className="mt-2 text-xs text-gray-400 text-center px-2">
-    Please select a date range to filter the desired tasks.
-  </span>
-</div>
+            <div className="mb-6 flex flex-col items-center w-full px-4">
+              <div
+                className="w-full rounded-xl shadow-md px-4 py-4 flex flex-row items-center justify-between gap-2"
+                style={{
+                  backgroundColor: '#E6F0FA',
+                  border: '1px solid #2D3E92',
+                }}
+              >
+                {/* Start Date */}
+                <div className="flex flex-col w-[48%]">
+                  <label htmlFor="start-date" className="mb-1 text-xs text-gray-500 font-Arial">
+                    Start date
+                  </label>
+                  <input
+                    id="start-date"
+                    type="date"
+                    value={startDate}
+                    max={endDate}
+                    onChange={(e) => {
+                      const newStartDate = e.target.value;
+                      setStartDate(newStartDate);
+                      fetchJobs(localStorage.getItem("token") || "", newStartDate, endDate);
+                    }}
+                    className="input input-bordered w-full"
+                    placeholder="Start date"
+                  />
+                </div>
+
+                {/* End Date */}
+                <div className="flex flex-col w-[48%]">
+                  <label htmlFor="end-date" className="mb-1 text-xs text-gray-500 font-Arial">
+                    End date
+                  </label>
+                  <input
+                    id="end-date"
+                    type="date"
+                    value={endDate}
+                    min={startDate}
+                    onChange={(e) => {
+                      const newEndDate = e.target.value;
+                      setEndDate(newEndDate);
+                      fetchJobs(localStorage.getItem("token") || "", startDate, newEndDate);
+                    }}
+                    className="input input-bordered w-full"
+                    placeholder="End date"
+                  />
+                </div>
+              </div>
+              <span className="mt-2 text-xs text-gray-400 text-center px-2">
+                Please select a date range to filter the desired tasks.
+              </span>
+            </div>
             {loading ? (
               <div className="w-full py-10 flex flex-col items-center justify-center text-gray-600">
                 <Ripple color="#32cd32" size="medium" text="" textColor="" />
