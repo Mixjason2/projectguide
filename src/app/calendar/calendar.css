@@ -131,6 +131,11 @@
   font-weight: 600;
 }
 
+/* ซ่อน fc-list-event-dot ใน list view */
+.fc-list-event .fc-list-event-dot {
+  display: none !important;
+}
+
 /* -------------------- Responsive -------------------- */
 @media (max-width: 640px) {
   .fc .fc-toolbar-title {
@@ -187,39 +192,35 @@
   margin-right: 8px;
 }
 
-/* Swap axes for timeGridWeek view */
-.fc-timegrid {
+/* ปรับขนาดของอีเวนต์ใน timeGrid view */
+.fc-timegrid-event {
   display: flex;
-  flex-direction: column-reverse; /* Reverse the layout */
+  align-items: center;
+  justify-content: flex-start;
+  height: 100%; /* ให้ขยายตามความสูงของ td */
+  padding: 4px 8px; /* ระยะห่างภายใน */
+  background-color: #95c941 !important; /* สีพื้นหลัง */
+  color: white !important; /* สีข้อความ */
+  border-radius: 4px; /* มุมโค้งมน */
+  box-sizing: border-box; /* รวม padding ในขนาด */
 }
 
-.fc-timegrid-slots {
-  display: flex;
-  flex-direction: row; /* Make time slots horizontal */
+/* ปรับขนาดของจุดสถานะ */
+.fc-event-dot-custom {
+  width: 10px; /* ขนาดจุด */
+  height: 10px; /* ขนาดจุด */
+  border-radius: 50%; /* ทำให้จุดเป็นวงกลม */
+  margin-right: 8px; /* ระยะห่างระหว่างจุดและข้อความ */
+  display: inline-block; /* แสดงจุดในรูปแบบ inline-block */
+  vertical-align: middle; /* จัดจุดให้อยู่ตรงกลางกับข้อความ */
+  background-color: inherit; /* ใช้สีเดียวกับ backgroundColor ของ event */
 }
 
-.fc-timegrid-axis {
-  writing-mode: vertical-lr; /* Rotate the day labels */
-  transform: rotate(90deg);
-  text-align: center;
-  white-space: nowrap;
+/* ปรับ td ให้ขยายตามอีเวนต์ */
+.fc-timegrid-slot {
+  height: auto; /* ให้ td ขยายตามเนื้อหา */
+  min-height: 40px; /* กำหนดความสูงขั้นต่ำ */
 }
 
-.fc-timegrid-axis .fc-timegrid-axis-label {
-  font-size: 0.85rem;
-  font-weight: bold;
-  color: #2D3E92; /* Blue color for day labels */
-}
-
-.fc-timegrid-day-header {
-  display: flex;
-  flex-direction: column; /* Stack day headers vertically */
-}
-
-.fc-timegrid-day-header .fc-day-header {
-  font-size: 0.85rem;
-  font-weight: bold;
-  color: #2D3E92; /* Blue color for time labels */
-}
 
 
