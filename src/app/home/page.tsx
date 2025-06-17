@@ -1,10 +1,11 @@
-'use client'
+'use client';
 
-import { ReactNode, useEffect, useState } from 'react'
-import CssgGuide from '../cssguide'
-import axios from "axios";
+import { ReactNode, useEffect, useState } from 'react';
+import CssgGuide from '../cssguide';
+import axios from 'axios';
 import { Ripple } from 'react-spinners-css';
-import React from 'react';
+import { formatDate } from '@fullcalendar/core/index.js';
+
 type Job = {
   Driver: any;
   Vehicle: any;
@@ -70,428 +71,307 @@ function mergeJobsByPNR(jobs: Job[]) {
   return Object.entries(map).map(([pnr, data]) => ({ ...data.merged, PNR: pnr, all: data.all }))
 }
 
-function getToday() {
-  const d = new Date();
-  return d.toISOString().slice(0, 10);
-}
+const getToday = () => new Date().toISOString().slice(0, 10);
+const getEndOfMonth = () => new Date(new Date().setMonth(new Date().getMonth() + 1, 0)).toISOString().slice(0, 10);
 
-function getEndOfMonth() {
-  const d = new Date();
-  d.setMonth(d.getMonth() + 1, 0); // set to last day of this month
-  return d.toISOString().slice(0, 10);
-}
+const renderPlaceDate = (place: string, date: string, label: string) => (
+  place || date ? (
+    <div>
+      <span className="font-Arial">{label}:</span> {place}{place && date ? ' - ' : ''}{date}
+    </div>
+  ) : null
+);
+
+const renderField = (label: string, value: any) => (
+  Array.isArray(value) ? (
+    <div>
+      <span className="font-Arial">{label}:</span>
+      <ul className="list-disc ml-6">{value.map((v, i) => <li key={i}>{String(v)}</li>)}</ul>
+    </div>
+  ) : (
+    <div>
+      <span className="font-Arial">{label}:</span> {String(value)}
+    </div>
+  )
+);
+
+const renderAllDetails = (jobs: Job[]) => {
+  // Step 1: Group jobs by their common properties (excluding TypeName)
+  const groupedJobs: Record<string, { job: Job; typeNames: string[] }> = {};
+
+  jobs.forEach((job) => {
+    const groupKey = JSON.stringify({
+      PNR: job.PNR,
+      Pickup: job.Pickup,
+      PickupDate: job.PickupDate,
+      Dropoff: job.Dropoff,
+      DropoffDate: job.DropoffDate,
+      PNRDate: job.PNRDate,
+      GuideName: job.Guide,
+      Vehicle: job.Vehicle,
+      // add other fields that should be merged
+    });
+
+    const typeName = job.serviceTypeName || job.TypeName || "Unknown";
+
+    if (!groupedJobs[groupKey]) {
+      groupedJobs[groupKey] = {
+        job: { ...job },
+        typeNames: [typeName],
+      };
+    } else {
+      groupedJobs[groupKey].typeNames.push(typeName);
+    }
+  });
+
+  return (
+    <div className="max-h-[60vh] overflow-auto text-xs"> {/* ลดขนาดตัวอักษรรวม */}
+      {Object.values(groupedJobs).map(({ job, typeNames }, idx) => (
+        <div
+          key={job.key + "-" + idx}
+          className="mb-3 border-b border-gray-200 pb-3 last:border-b-0" style={{
+            borderBottom: "5px solid #000000", // Increased border width and changed color
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Add shadow effect
+          }}
+        >
+          {/* PNR Header */}
+          <div className="font-Arial text-sm bg-gray-100 p-3 shadow text-black mb-3 flex items-center gap-2">
+            <span>PNR: {job.PNR}</span>
+            {job.PNR && job.serviceSupplierName && (
+              <span>/ SupplierName: {job.serviceSupplierName}</span>
+            )}
+          </div>
+          {/* Details Section */}
+          <div className="grid grid-cols-1 gap-y-2 text-xs"> {/* ลด gap */}
+            <div className="flex items-start">
+              <span className="font-bold text-gray-600 w-24 shrink-0">Comment:</span>
+              <span className="text-gray-800 break-words">
+                {job.Comment}
+              </span>
+            </div>
+
+            {/* Pickup */}
+            <div className="flex items-start">
+              <span className="font-bold text-gray-600 w-24 shrink-0">Pickup:</span>
+              <span className="text-gray-800 break-words">
+                <span className="font-Arial">
+                  {job.Pickup}
+                  {job.Pickup && job.PickupDate ? " / " : ""}
+                </span>
+                <span className="font-Arial font-bold">
+                  {job.PickupDate ? formatDate(job.PickupDate) : ""}
+                </span>
+              </span>
+            </div>
+
+            {/* Dropoff */}
+            <div className="flex items-start">
+              <span className="font-bold text-gray-600 w-24 shrink-0">Dropoff:</span>
+              <span className="text-gray-800 break-words">
+                {job.Dropoff}
+                {job.Dropoff && job.DropoffDate ? " / " : ""}
+                <span className="font-Arial font-bold">
+                  {job.DropoffDate ? formatDate(job.DropoffDate) : ""}
+                </span>
+              </span>
+            </div>
+
+            {/* Booking Consultant */}
+            <div className="flex items-start">
+              <span className="font-bold text-gray-600 w-24 shrink-0">Consultant:</span>
+              <span className="text-gray-800 break-words">
+                {job.Booking_Consultant}
+                {job.Booking_Consultant && job.Phone ? "," : ""}
+                {job.Phone}
+              </span>
+            </div>
+
+            {/* Booking Name */}
+            <div className="flex items-start">
+              <span className="font-bold text-gray-600 w-24 shrink-0">Booking Name:</span>
+              <span className="text-gray-800 break-words">
+                {[job.Booking_Name].filter(Boolean).join(", ")}
+              </span>
+            </div>
+
+            {/* Client Name */}
+            <div className="flex items-start">
+              <span className="font-bold text-gray-600 w-24 shrink-0">Client Name:</span>
+              <span className="text-gray-800 break-words">{job.pax_name}</span>
+            </div>
+
+            {/* Table Section */}
+            <div className="overflow-x-auto mt-2">
+              <table className="table-auto border text-xs w-full">
+                <thead className="bg-[#2D3E92] text-white">
+                  <tr>
+                    <th className="px-1 py-1 text-left">Adult</th>
+                    <th className="px-1 py-1 text-left">Child</th>
+                    <th className="px-1 py-1 text-left">Share</th>
+                    <th className="px-1 py-1 text-left">Infant</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="px-1 py-1 text-left">{job.AdultQty || 0}</td>
+                    <td className="px-1 py-1 text-left">{job.ChildQty || 0}</td>
+                    <td className="px-1 py-1 text-left">{job.ChildShareQty || 0}</td>
+                    <td className="px-1 py-1 text-left">{job.InfantQty || 0}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex items-start">
+              <span className="font-bold text-gray-600 w-24 shrink-0">Guide:</span>
+              <span className="text-gray-800 break-words">
+                {[job.Guide, job.Vehicle, job.Driver].filter(Boolean).join(", ")}
+              </span>
+            </div>
+
+            {/* Render Other Fields */}
+            {Object.entries(job)
+              .filter(([k]) =>
+                ![
+                  "IsConfirmed", "IsCancel", "key", "BSL_ID",
+                  "Pickup", "PickupDate", "Dropoff", "DropoffDate", "PNRDate", "all",
+                  "keys", "isNew", "isChange", "isDelete", "PNR", "NotAvailable",
+                  "agentCode", "agentLogo", "serviceTypeName", "TypeName",
+                  "SupplierCode_TP", "SupplierName_TP", "ProductName_TP", "ServiceLocationName",
+                  "serviceSupplierCode_TP", "serviceProductName", "serviceSupplierName",
+                  "ServiceLocationName_TP", "Source", "Phone", "Booking_Consultant",
+                  "AdultQty", "ChildQty", "ChildShareQty", "InfantQty", "pax_name",
+                  "Booking_Name", "Class", "Comment", "Guide", "Vehicle", "Driver"
+                ].includes(k)
+              )
+              .map(([k, v]) => {
+                let label = k;
+                if (k === "serviceSupplierCode_TP") label = "SupplierCode_TP";
+                if (k === "serviceProductName") label = "ProductName";
+                if (k === "serviceSupplierName") label = "Supplier";
+                if (k === "ServiceLocationName") label = "Location";
+                if (k === "pax_name") label = "Client Name";
+                return (
+                  <div key={k} className="flex items-start">
+                    <span className="font-bold text-gray-600 w-24 shrink-0">{label}:</span>
+                    <span className="text-gray-800 break-words">
+                      {typeof v === "object" ? JSON.stringify(v) : String(v)}
+                    </span>
+                  </div>
+                );
+              })}
+          </div>
+
+          {/* TypeName */}
+          <div className="flex items-center mt-3">
+            <span className="font-bold text-gray-600 w-24 shrink-0">TypeName:</span>
+            <span className="text-gray-800 break-words">
+              {[...new Set(typeNames)].join(", ")}
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
+
+  );
+};
 
 export default function JobsList() {
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [detailJobs, setDetailJobs] = useState<Job[] | null>(null)
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [detailJobs, setDetailJobs] = useState<Job[] | null>(null);
   const [startDate, setStartDate] = useState<string>(getToday());
   const [endDate, setEndDate] = useState<string>(getEndOfMonth());
-  const [page, setPage] = useState(1)
-  const [uploadJob, setUploadJob] = useState<Job | null>(null)
+  const [page, setPage] = useState(1);
   const [expandedPNRs, setExpandedPNRs] = useState<{ [pnr: string]: boolean }>({});
   const [acceptedPNRs, setAcceptedPNRs] = useState<string[]>([]);
-  const [rejectPNRs, setRejectPNRs] = React.useState<string[]>([]);
-  const [isLoadingJobs, setIsLoadingJobs] = useState(true);
-  const pageSize = 6
+  const [rejectPNRs, setRejectPNRs] = useState<string[]>([]);
+  const pageSize = 6;
 
   useEffect(() => {
-    const token = localStorage.getItem("token") || "";
-    setLoading(true); // ตั้งค่า loading เป็น true ก่อนเริ่ม fetch
+    const token = localStorage.getItem('token') || '';
+    setLoading(true);
     fetch('https://operation.dth.travel:7082/api/guide/job', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        token: "yMaEinVpfboebobeC8x5fsVRXjKf4Gw2xrpnVaNpIyv8YaCuVFaqsyjnDdWt66IpXm8LNYpPcWnTNf0uF0VbfcKMfY7HdatLCHNLw3f8kQtk/qTyUEcIkQTzUG45tLh+lVMJc++IZ9eoCi/NFpd4iTyhYWUaB1RC+Ef7nwNJ6zY=",
-        startdate: "2025-04-27",
-        enddate: "2025-05-27",
-      }),
+      body: JSON.stringify({ token, startdate: startDate, enddate: endDate }),
     })
-      .then(async res => {
-        if (!res.ok) throw new Error(await res.text());
-        return res.json();
-      })
-      .then((data: Job[]) => {
-        console.log("API jobs:", data);
-        setJobs(data);
-      })
+      .then(res => res.ok ? res.json() : Promise.reject(res.text()))
+      .then(setJobs)
       .catch(err => setError(err.message))
-      .finally(() => setLoading(false)); // ตั้งค่า loading เป็น false หลังจาก fetch เสร็จ
-  }, []);
+      .finally(() => setLoading(false));
+  }, [startDate, endDate]);
 
   const filteredJobs = jobs.filter(job => {
-    const pickup = job.PickupDate
-    const dropoff = job.DropoffDate
-    if (!startDate && !endDate) return true
-    if (startDate && !endDate)
-      return (pickup >= startDate || dropoff >= startDate)
-    if (!startDate && endDate)
-      return (pickup <= endDate || dropoff <= endDate)
-    return (
-      (pickup >= startDate && pickup <= endDate) ||
-      (dropoff >= startDate && dropoff <= endDate)
-    )
-  })
+    const pickup = job.PickupDate, dropoff = job.DropoffDate;
+    return (!startDate && !endDate) || (startDate && pickup >= startDate) || (endDate && dropoff <= endDate);
+  });
 
-  const mergedJobs = mergeJobsByPNR(filteredJobs)
-  const totalPages = Math.ceil(mergedJobs.length / pageSize)
-  const pagedJobs = mergedJobs.slice((page - 1) * pageSize, page * pageSize)
+  const mergedJobs = mergeJobsByPNR(filteredJobs);
+  const totalPages = Math.ceil(mergedJobs.length / pageSize);
+  const pagedJobs = mergedJobs.slice((page - 1) * pageSize, page * pageSize);
 
-  function getToday(): string {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  }
-
-  function getEndOfMonth(): string {
-    const today = new Date();
-    const endDate = new Date(today.getTime());
-    endDate.setDate(today.getDate() + 30); // วันที่ 30 วันข้างหน้า
-    return endDate.toISOString().split('T')[0];
-  }
-
-  // Helper to format date and time, keep only วัน/เดือน/ปี (YYYY-MM-DD)
-  function formatDate(dateStr: any) {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return '';
-
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    const h = String(date.getHours()).padStart(2, '0');
-    const min = String(date.getMinutes()).padStart(2, '0');
-
-    return `${y}-${m}-${d} ${h}:${min}`;
-  }
-
-
-  // Helper to combine Pickup + PickupDate, Dropoff + DropoffDate
-  function renderPlaceDate(place: string, date: string, label: string) {
-    if (!place && !date) return null
-    return (
-      <div>
-        <span className="font-Arial">{label}:</span>{' '}
-        {place ? place : ''}{place && date ? ' - ' : ''}{date ? formatDate(date) : ''}
-      </div>
-    )
-  }
-
-  // Helper to render value or array of values
-  const renderField = (label: string, value: any) => {
-    if (label === 'BSL ID' || label === 'Pickup' || label === 'PickupDate' || label === 'Dropoff' || label === 'DropoffDate') return null // Remove BSL ID and handled fields
-    if (Array.isArray(value)) {
-      return (
-        <div>
-          <span className="font-Arial">{label}:</span>
-          <ul className="list-disc ml-6">
-            {value.map((v, i) => (
-              <li key={i}>{String(v)}</li>
-            ))}
-          </ul>
-        </div>
-      )
-    }
-    return (
-      <div>
-        <span className="font-Arial">{label}:</span> {String(value)}
-      </div>
-    )
-  }
-
-  // Render all job details for a PNR
-  const renderAllDetails = (jobs: Job[]) => {
-    // Step 1: Group jobs by their common properties (excluding TypeName)
-    const groupedJobs: Record<string, { job: Job; typeNames: string[] }> = {};
-
-    jobs.forEach((job) => {
-      const groupKey = JSON.stringify({
-        PNR: job.PNR,
-        Pickup: job.Pickup,
-        PickupDate: job.PickupDate,
-        Dropoff: job.Dropoff,
-        DropoffDate: job.DropoffDate,
-        PNRDate: job.PNRDate,
-        GuideName: job.Guide,
-        Vehicle: job.Vehicle,
-        // add other fields that should be merged
-      });
-
-      const typeName = job.serviceTypeName || job.TypeName || "Unknown";
-
-      if (!groupedJobs[groupKey]) {
-        groupedJobs[groupKey] = {
-          job: { ...job },
-          typeNames: [typeName],
-        };
-      } else {
-        groupedJobs[groupKey].typeNames.push(typeName);
-      }
-    });
-
-    return (
-      <div className="max-h-[60vh] overflow-auto text-xs"> {/* ลดขนาดตัวอักษรรวม */}
-        {Object.values(groupedJobs).map(({ job, typeNames }, idx) => (
-          <div
-            key={job.key + "-" + idx}
-            className="mb-3 border-b border-gray-200 pb-3 last:border-b-0" style={{
-              borderBottom: "5px solid #000000", // Increased border width and changed color
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Add shadow effect
-            }}
-          >     
-{/* PNR Header */}
-<div className="font-Arial text-sm bg-gray-100 p-3 shadow text-black mb-3 flex items-center gap-2">
-  <span>PNR: {job.PNR}</span>
-  {job.PNR && job.serviceSupplierName && (
-    <span>/ SupplierName: {job.serviceSupplierName}</span>
-  )}
-</div>
-            {/* Details Section */}
-            <div className="grid grid-cols-1 gap-y-2 text-xs"> {/* ลด gap */}
-              <div className="flex items-start">
-                <span className="font-bold text-gray-600 w-24 shrink-0">Comment:</span>
-                <span className="text-gray-800 break-words">
-                  {job.Comment}
-                </span>
-              </div>
-
-              {/* Pickup */}
-              <div className="flex items-start">
-                <span className="font-bold text-gray-600 w-24 shrink-0">Pickup:</span>
-                <span className="text-gray-800 break-words">
-                  <span className="font-Arial">
-                    {job.Pickup}
-                    {job.Pickup && job.PickupDate ? " / " : ""}
-                  </span>
-                  <span className="font-Arial font-bold">
-                    {job.PickupDate ? formatDate(job.PickupDate) : ""}
-                  </span>
-                </span>
-              </div>
-
-              {/* Dropoff */}
-              <div className="flex items-start">
-                <span className="font-bold text-gray-600 w-24 shrink-0">Dropoff:</span>
-                <span className="text-gray-800 break-words">
-                  {job.Dropoff}
-                  {job.Dropoff && job.DropoffDate ? " / " : ""}
-                  <span className="font-Arial font-bold">
-                    {job.DropoffDate ? formatDate(job.DropoffDate) : ""}
-                  </span>
-                </span>
-              </div>
-
-              {/* Booking Consultant */}
-              <div className="flex items-start">
-                <span className="font-bold text-gray-600 w-24 shrink-0">Consultant:</span>
-                <span className="text-gray-800 break-words">
-                  {job.Booking_Consultant}
-                  {job.Booking_Consultant && job.Phone ? "," : ""}
-                  {job.Phone}
-                </span>
-              </div>
-
-              {/* Booking Name */}
-              <div className="flex items-start">
-                <span className="font-bold text-gray-600 w-24 shrink-0">Booking Name:</span>
-                <span className="text-gray-800 break-words">
-                  {[job.Booking_Name].filter(Boolean).join(", ")}
-                </span>
-              </div>
-
-              {/* Client Name */}
-              <div className="flex items-start">
-                <span className="font-bold text-gray-600 w-24 shrink-0">Client Name:</span>
-                <span className="text-gray-800 break-words">{job.pax_name}</span>
-              </div>
-
-              {/* Table Section */}
-              <div className="overflow-x-auto mt-2">
-                <table className="table-auto border text-xs w-full">
-                  <thead className="bg-[#2D3E92] text-white">
-                    <tr>
-                      <th className="px-1 py-1 text-left">Adult</th>
-                      <th className="px-1 py-1 text-left">Child</th>
-                      <th className="px-1 py-1 text-left">Share</th>
-                      <th className="px-1 py-1 text-left">Infant</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td className="px-1 py-1 text-left">{job.AdultQty || 0}</td>
-                      <td className="px-1 py-1 text-left">{job.ChildQty || 0}</td>
-                      <td className="px-1 py-1 text-left">{job.ChildShareQty || 0}</td>
-                      <td className="px-1 py-1 text-left">{job.InfantQty || 0}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="flex items-start">
-                <span className="font-bold text-gray-600 w-24 shrink-0">Guide:</span>
-                <span className="text-gray-800 break-words">
-                  {[job.Guide, job.Vehicle, job.Driver].filter(Boolean).join(", ")}
-                </span>
-              </div>
-
-              {/* Render Other Fields */}
-              {Object.entries(job)
-                .filter(([k]) =>
-                  ![
-                    "IsConfirmed", "IsCancel", "key", "BSL_ID",
-                    "Pickup", "PickupDate", "Dropoff", "DropoffDate", "PNRDate", "all",
-                    "keys", "isNew", "isChange", "isDelete", "PNR", "NotAvailable",
-                    "agentCode", "agentLogo", "serviceTypeName", "TypeName",
-                    "SupplierCode_TP", "SupplierName_TP", "ProductName_TP", "ServiceLocationName",
-                    "serviceSupplierCode_TP", "serviceProductName", "serviceSupplierName",
-                    "ServiceLocationName_TP", "Source", "Phone", "Booking_Consultant",
-                    "AdultQty", "ChildQty", "ChildShareQty", "InfantQty", "pax_name",
-                    "Booking_Name", "Class", "Comment", "Guide", "Vehicle", "Driver"
-                  ].includes(k)
-                )
-                .map(([k, v]) => {
-                  let label = k;
-                  if (k === "serviceSupplierCode_TP") label = "SupplierCode_TP";
-                  if (k === "serviceProductName") label = "ProductName";
-                  if (k === "serviceSupplierName") label = "Supplier";
-                  if (k === "ServiceLocationName") label = "Location";
-                  if (k === "pax_name") label = "Client Name";
-                  return (
-                    <div key={k} className="flex items-start">
-                      <span className="font-bold text-gray-600 w-24 shrink-0">{label}:</span>
-                      <span className="text-gray-800 break-words">
-                        {typeof v === "object" ? JSON.stringify(v) : String(v)}
-                      </span>
-                    </div>
-                  );
-                })}
-            </div>
-
-            {/* TypeName */}
-            <div className="flex items-center mt-3">
-              <span className="font-bold text-gray-600 w-24 shrink-0">TypeName:</span>
-              <span className="text-gray-800 break-words">
-                {[...new Set(typeNames)].join(", ")}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-    );
-  };
-
-  // ปรับ summary เป็นแถวแนวนอน สวยงาม และวางไว้บนหัว card Jobs List
   const summary = (
     <div className="w-full flex justify-end mb-6">
       <div className="flex flex-row flex-wrap gap-6 bg-white border border-blue-300 rounded-xl shadow-lg px-8 py-4 items-center max-w-3xl">
-        <div className="flex items-center gap-2">
-          <span className="inline-block w-3 h-3 rounded-full bg-gray-400"></span>
-          <span className="text-gray-500">All Jobs:</span>
-          <span className="font-Arial text-[#2D3E92]">{filteredJobs.length}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="inline-block w-3 h-3 rounded-full bg-cyan-600"></span>
-          <span className="text-gray-500">New Jobs:</span>
-          <span className="font-Arial text-[#2D3E92]">
-            {filteredJobs.filter(job => job.isNew === true).length}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="inline-block w-3 h-3 rounded-full bg-orange-400"></span>
-          <span className="text-gray-500">Changed Jobs:</span>
-          <span className="font-Arial text-[#2D3E92]">
-            {filteredJobs.filter(job => job.isChange === true).length}
-          </span>
-        </div>
+        {['All Jobs', 'New Jobs', 'Changed Jobs'].map((label, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <span className={`inline-block w-3 h-3 rounded-full ${['bg-gray-400', 'bg-cyan-600', 'bg-orange-400'][i]}`}></span>
+            <span className="text-gray-500">{label}:</span>
+            <span className="font-Arial text-[#2D3E92]">
+              {i === 0 ? filteredJobs.length : filteredJobs.filter(job => i === 1 ? job.isNew : job.isChange).length}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
-  )
+  );
 
-  async function fetchJobs(token: string, startDate: string, endDate: string) {
+  const fetchJobs = async (token: string, startDate: string, endDate: string) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('https://operation.dth.travel:7082/api/guide/job', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, startdate: startDate, enddate: endDate }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      const data: Job[] = await res.json();
-      setJobs(data);
+      const res = await axios.post('https://operation.dth.travel:7082/api/guide/job', { token, startdate: startDate, enddate: endDate });
+      setJobs(res.data);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <CssgGuide>
       <div className="flex flex-col items-center py-8 min-h-screen bg-base-200 relative bg-[#9EE4F6]">
-        {/* Summary bar */}
         {summary}
         <div className="bg-[#F9FAFB] rounded-3xl shadow-lg border border-gray-300 w-full max-w-7xl p-6">
-          <div className="p-4 w-full /* min-h-screen */ overflow-auto bg-[#F9FAFB]">
+          <div className="p-4 w-full overflow-auto bg-[#F9FAFB]">
             <h1 className="text-2xl font-Arial mb-4">Jobs List</h1>
-            {/* ปรับ UI ช่วงเลือกวันที่ */}
             <div className="mb-6 flex flex-col items-center w-full px-4">
-              <div
-                className="w-full rounded-xl shadow-md px-4 py-4 flex flex-row items-center justify-between gap-2"
-                style={{
-                  backgroundColor: '#E6F0FA',
-                  border: '1px solid #2D3E92',
-                }}
-              >
-                {/* Start Date */}
-                <div className="flex flex-col w-[48%]">
-                  <label htmlFor="start-date" className="mb-1 text-xs text-gray-500 font-Arial">
-                    Start date
-                  </label>
-                  <input
-                    id="start-date"
-                    type="date"
-                    value={startDate}
-                    max={endDate}
-                    onChange={(e) => {
-                      const newStartDate = e.target.value;
-                      setStartDate(newStartDate);
-                      fetchJobs(localStorage.getItem("token") || "", newStartDate, endDate);
-                    }}
-                    className="input input-bordered w-full"
-                    placeholder="Start date"
-                  />
-                </div>
-
-                {/* End Date */}
-                <div className="flex flex-col w-[48%]">
-                  <label htmlFor="end-date" className="mb-1 text-xs text-gray-500 font-Arial">
-                    End date
-                  </label>
-                  <input
-                    id="end-date"
-                    type="date"
-                    value={endDate}
-                    min={startDate}
-                    onChange={(e) => {
-                      const newEndDate = e.target.value;
-                      setEndDate(newEndDate);
-                      fetchJobs(localStorage.getItem("token") || "", startDate, newEndDate);
-                    }}
-                    className="input input-bordered w-full"
-                    placeholder="End date"
-                  />
-                </div>
+              <div className="w-full rounded-xl shadow-md px-4 py-4 flex flex-row items-center justify-between gap-2" style={{ backgroundColor: '#E6F0FA', border: '1px solid #2D3E92' }}>
+                {['Start date', 'End date'].map((label, i) => (
+                  <div key={i} className="flex flex-col w-[48%]">
+                    <label htmlFor={`${label.toLowerCase().replace(' ', '-')}`} className="mb-1 text-xs text-gray-500 font-Arial">{label}</label>
+                    <input
+                      id={`${label.toLowerCase().replace(' ', '-')}`}
+                      type="date"
+                      value={i === 0 ? startDate : endDate}
+                      onChange={(e) => {
+                        const newDate = e.target.value;
+                        i === 0 ? setStartDate(newDate) : setEndDate(newDate);
+                        fetchJobs(localStorage.getItem('token') || '', i === 0 ? newDate : startDate, i === 0 ? endDate : newDate);
+                      }}
+                      className="input input-bordered w-full"
+                    />
+                  </div>
+                ))}
               </div>
-
-              <span className="mt-2 text-xs text-gray-400 text-center px-2">
-                Please select a date range to filter the desired tasks.
-              </span>
+              <span className="mt-2 text-xs text-gray-400 text-center px-2">Please select a date range to filter the desired tasks.</span>
             </div>
             {loading ? (
               <div className="w-full py-10 flex flex-col items-center justify-center text-gray-600">
-                <Ripple color="#32cd32" size="medium" text="" textColor="" />
+                <Ripple color="#32cd32" size="medium" />
                 <p className="mt-4 text-lg font-medium">Loading jobs, please wait...</p>
               </div>
             ) : error ? (
@@ -507,246 +387,139 @@ export default function JobsList() {
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {pagedJobs.map((job: any) => {
-                    const isExpanded = expandedPNRs[job.PNR] ?? false;
-
-                    const toggleExpand = () => {
-                      setExpandedPNRs(prev => ({
-                        ...prev,
-                        [job.PNR]: !isExpanded
-                      }));
-                    };
-
-
-                    return (
-                      <div
-                        key={job.PNR}
-                        className="relative bg-white border border-[#9EE4F6] rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col"
-                      >
-
-                        <div
-                          className="absolute top-2 left-1 text-[#ffffff] font-Arial rounded-full px-3 py-1 text-sm shadow z-10"
-                          style={{
-                            backgroundColor: job.isCancel
-                              ? '#ef4444' // สีแดงถ้า cancel
-                              : job.isConfirmed
-                                ? '#22c55e' // สีเขียวถ้า accept แล้ว
-                                : job.isNew
-                                  ? '#0891b2'
-                                  : job.isChange
-                                    ? '#fb923c'
-                                    : '#E0E7FF',
-                          }}
-                        >
-                          {job.all
-                            ? job.all.filter((j: { Pickup: any; PickupDate: any; Dropoff: any; DropoffDate: any; PNRDate: any; }) =>
-                              j.Pickup !== job.Pickup ||
-                              j.PickupDate !== job.PickupDate ||
-                              j.Dropoff !== job.Dropoff ||
-                              j.DropoffDate !== job.DropoffDate ||
-                              j.PNRDate !== job.PNRDate
-                            ).length + 1
-                            : 1}
-                        </div>
-
-                        {/* Logo button */}
-                        <button
-                          className="absolute top-3.5 right-2 w-8 h-8 rounded-full bg-white border-2 border-[#2D3E92] shadow-[0_4px_10px_rgba(45,62,146,0.3)] hover:shadow-[0_6px_14px_rgba(45,62,146,0.4)] transition-all duration-200 flex items-center justify-center"
-                          title="Show all details"
-                          onClick={() => setDetailJobs(job.all)}
-                          style={{ zIndex: 2 }}
-                        >
-                          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                            <circle cx="12" cy="12" r="10" fill="#F0F8FF" />
-                            <text
-                              x="12"
-                              y="12"
-                              textAnchor="middle"
-                              dominantBaseline="central"
-                              fontSize="18"
-                              fill="#2D3E92"
-                              fontFamily="Arial"
-                              fontWeight="bold"
-                            >
-                              i
-                            </text>
-                          </svg>
-                        </button>
-                        {/* PNR header (click to toggle) */}
-                        <div
-                          className="inline-block p-6 pb-0 cursor-pointer mx-auto items-center gap-3"
-                          onClick={toggleExpand}
-                        >
-                          {/* Status indicator circles */}
-                          <h2
-                            className="font-Arial mt-0 mb-0 underline underline-offset-4"
-                            style={{ color: '#2D3E92', fontSize: '28px' }}
-                          >
-                            {job.PNR}
-                          </h2>
-                        </div>
-
-                        {/* Expanded content */}
-                        {isExpanded && (
-                          <div className="p-6 pt-0 flex-1 flex flex-col">
-                            <div className="text-sm text-gray-600 space-y-1 mb-4">
-                              {renderPlaceDate(job.Pickup, job.PickupDate, 'Pickup')}
-                              {renderPlaceDate(job.Dropoff, job.DropoffDate, 'Dropoff')}
-                              {renderField('Pax', job.Pax)}
-                              {renderField('Source', job.Source)}
-                            </div>
-
-                            {/* รายการอื่นที่มี PNR เดียวกัน */}
-                            {jobs
-                              .filter(j => j.PNR === job.PNR && j.key !== job.key)
-                              .filter(j =>
-                                j.Pickup !== job.Pickup ||
-                                j.PickupDate !== job.PickupDate ||
-                                j.Dropoff !== job.Dropoff ||
-                                j.DropoffDate !== job.DropoffDate ||
-                                j.Pax !== job.Pax ||
-                                j.Source !== job.Source
-                              )
-                              .map(relatedJob => (
-                                <div
-                                  key={relatedJob.key}
-                                  className="bg-gray-100 border border-gray-300 rounded p-3 mb-4 text-sm text-gray-700"
-                                >
-                                  <div className="font-semibold text-gray-800 mb-1">
-                                    Another PNR
-                                  </div>
-                                  {renderPlaceDate(relatedJob.Pickup, relatedJob.PickupDate, 'Pickup')}
-                                  {renderPlaceDate(relatedJob.Dropoff, relatedJob.DropoffDate, 'Dropoff')}
-                                  {renderField('Pax', relatedJob.Pax)}
-                                  {renderField('Source', relatedJob.Source)}
-                                </div>
-                              ))}
-
-
-                            {!acceptedPNRs.includes(job.PNR) && !rejectPNRs.includes(job.PNR) && (
-                              <div className="flex gap-3 mt-auto flex-wrap">
-                                {/* Accept Button */}
-                                <button
-                                  className="btn btn-success flex-1 text-base font-Arial py-2 rounded-full shadow text-white bg-[#95c941] hover:opacity-90"
-                                  onClick={async () => {
-                                    try {
-                                      const token = localStorage.getItem("token") || "";
-                                      const response = await axios.post(
-                                        `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
-                                        {
-                                          token,
-                                          data: { isConfirmed: true, isCancel: false },
-                                        }
-                                      );
-                                      const result = response.data;
-                                      if (result.success) {
-                                        alert("Accept งานสำเร็จ");
-
-                                        setAcceptedPNRs(prev => {
-                                          if (!prev.includes(job.PNR)) return [...prev, job.PNR];
-                                          return prev;
-                                        });
-
-                                        setRejectPNRs(prev => prev.filter(pnr => pnr !== job.PNR));
-
-                                        setJobs(prevJobs =>
-                                          prevJobs.map(j =>
-                                            j.key === job.key
-                                              ? { ...j, isConfirmed: true, isCancel: false }
-                                              : j
-                                          )
-                                        );
-                                      } else {
-                                        alert("Accept งานไม่สำเร็จ: " + (result?.error || "Unknown error"));
-                                      }
-                                    } catch (e: any) {
-                                      alert("เกิดข้อผิดพลาด: " + e.message);
-                                    }
-                                  }}
-                                >
-                                  Accept
-                                </button>
-
-                                {/* Reject Button */}
-                                <button
-                                  className="btn btn-danger flex-1 text-base font-Arial py-2 rounded-full shadow text-white bg-[#ef4444] hover:opacity-90"
-                                  onClick={async () => {
-                                    try {
-                                      const token = localStorage.getItem("token") || "";
-                                      const response = await axios.post(
-                                        `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
-                                        {
-                                          token,
-                                          data: { isCancel: true, isConfirmed: false },
-                                        }
-                                      );
-                                      const result = response.data;
-                                      if (result.success) {
-                                        alert("Cancel งานสำเร็จ");
-
-                                        setRejectPNRs(prev => {
-                                          if (!prev.includes(job.PNR)) return [...prev, job.PNR];
-                                          return prev;
-                                        });
-
-                                        setAcceptedPNRs(prev => prev.filter(pnr => pnr !== job.PNR));
-
-                                        setJobs(prevJobs =>
-                                          prevJobs.map(j =>
-                                            j.key === job.key
-                                              ? { ...j, isCancel: true, isConfirmed: false }
-                                              : j
-                                          )
-                                        );
-                                      } else {
-                                        alert("Cancel งานไม่สำเร็จ: " + (result?.error || "Unknown error"));
-                                      }
-                                    } catch (e: any) {
-                                      alert("เกิดข้อผิดพลาด: " + e.message);
-                                    }
-                                  }}
-                                >
-                                  Reject
-                                </button>
-
-                              </div>
-                            )}
-                          </div>
-                        )}
+                  {pagedJobs.map((job) => (
+                    <div key={job.PNR} className="relative bg-white border border-[#9EE4F6] rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col">
+                      <div className="absolute top-2 left-1 text-[#ffffff] font-Arial rounded-full px-3 py-1 text-sm shadow z-10" style={{ backgroundColor: job.isCancel ? '#ef4444' : job.isConfirmed ? '#22c55e' : job.isNew ? '#0891b2' : job.isChange ? '#fb923c' : '#E0E7FF' }}>
+                        {job.all?.filter(j => j.Pickup !== job.Pickup || j.PickupDate !== job.PickupDate || j.Dropoff !== job.Dropoff || j.DropoffDate !== job.DropoffDate || j.PNRDate !== job.PNRDate).length + 1 || 1}
                       </div>
-                    );
-                  })}
+                      <button className="absolute top-3.5 right-2 w-8 h-8 rounded-full bg-white border-2 border-[#2D3E92] shadow-[0_4px_10px_rgba(45,62,146,0.3)] hover:shadow-[0_6px_14px_rgba(45,62,146,0.4)] transition-all duration-200 flex items-center justify-center" title="Show all details" onClick={() => setDetailJobs(job.all)} style={{ zIndex: 2 }}>
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                          <circle cx="12" cy="12" r="10" fill="#F0F8FF" />
+                          <text x="12" y="12" textAnchor="middle" dominantBaseline="central" fontSize="18" fill="#2D3E92" fontFamily="Arial" fontWeight="bold">i</text>
+                        </svg>
+                      </button>
+                      <div className="inline-block p-6 pb-0 cursor-pointer mx-auto items-center gap-3" onClick={() => setExpandedPNRs(prev => ({ ...prev, [job.PNR]: !expandedPNRs[job.PNR] }))}>
+                        <h2 className="font-Arial mt-0 mb-0 underline underline-offset-4" style={{ color: '#2D3E92', fontSize: '28px' }}>{job.PNR}</h2>
+                      </div>
+                      {expandedPNRs[job.PNR] && (
+                        <div className="p-6 pt-0 flex-1 flex flex-col">
+                          <div className="text-sm text-gray-600 space-y-1 mb-4">
+                            {renderPlaceDate(
+                              Array.isArray(job.Pickup) ? job.Pickup.join(', ') : job.Pickup,
+                              Array.isArray(job.PickupDate) ? job.PickupDate.join(', ') : job.PickupDate,
+                              'Pickup'
+                            )}
+                            {renderPlaceDate(
+                              Array.isArray(job.Dropoff) ? job.Dropoff.join(', ') : job.Dropoff,
+                              Array.isArray(job.DropoffDate) ? job.DropoffDate.join(', ') : job.DropoffDate,
+                              'Dropoff'
+                            )}
+                            {renderField('Pax', job.Pax)}
+                            {renderField('Source', job.Source)}
+                          </div>
+                          {jobs.filter(j => j.PNR === job.PNR && !job.keys.includes(j.key)).map(relatedJob => (
+                            <div key={relatedJob.key} className="bg-gray-100 border border-gray-300 rounded p-3 mb-4 text-sm text-gray-700">
+                              <div className="font-semibold text-gray-800 mb-1">Another PNR</div>
+                              {renderPlaceDate(relatedJob.Pickup, relatedJob.PickupDate, 'Pickup')}
+                              {renderPlaceDate(relatedJob.Dropoff, relatedJob.DropoffDate, 'Dropoff')}
+                              {renderField('Pax', relatedJob.Pax)}
+                              {renderField('Source', relatedJob.Source)}
+                            </div>
+                          ))}
+                          {!acceptedPNRs.includes(job.PNR) && !rejectPNRs.includes(job.PNR) && (
+                            <div className="flex gap-3 mt-auto flex-wrap">
+                              <button className="btn btn-success flex-1 text-base font-Arial py-2 rounded-full shadow text-white bg-[#95c941] hover:opacity-90" onClick={async () => {
+                                try {
+                                  const token = localStorage.getItem("token") || "";
+                                  const response = await axios.post(
+                                    `https://operation.dth.travel:7082/api/guide/job/${job.keys}/update`,
+                                    {
+                                      token,
+                                      data: { isConfirmed: true, isCancel: false },
+                                    }
+                                  );
+                                  const result = response.data;
+                                  if (result.success) {
+                                    alert("Accept งานสำเร็จ");
+
+                                    setAcceptedPNRs(prev => {
+                                      if (!prev.includes(job.PNR)) return [...prev, job.PNR];
+                                      return prev;
+                                    });
+
+                                    setRejectPNRs(prev => prev.filter(pnr => pnr !== job.PNR));
+
+                                    setJobs(prevJobs =>
+                                      prevJobs.map(j =>
+                                        job.keys.includes(j.key)
+                                          ? { ...j, isConfirmed: true, isCancel: false }
+                                          : j
+                                      )
+                                    );
+                                  } else {
+                                    alert("Accept งานไม่สำเร็จ: " + (result?.error || "Unknown error"));
+                                  }
+                                } catch (e: any) {
+                                  alert("เกิดข้อผิดพลาด: " + e.message);
+                                }
+                              }}>
+                                Accept
+                              </button>
+                              <button className="btn btn-danger flex-1 text-base font-Arial py-2 rounded-full shadow text-white bg-[#ef4444] hover:opacity-90" onClick={async () => {
+                                try {
+                                  const token = localStorage.getItem("token") || "";
+                                  const response = await axios.post(
+                                    `https://operation.dth.travel:7082/api/guide/job/${job.keys}/update`,
+                                    {
+                                      token,
+                                      data: { isCancel: true, isConfirmed: false },
+                                    }
+                                  );
+                                  const result = response.data;
+                                  if (result.success) {
+                                    alert("Cancel งานสำเร็จ");
+
+                                    setRejectPNRs(prev => {
+                                      if (!prev.includes(job.PNR)) return [...prev, job.PNR];
+                                      return prev;
+                                    });
+
+                                    setAcceptedPNRs(prev => prev.filter(pnr => pnr !== job.PNR));
+
+                                    setJobs(prevJobs =>
+                                      prevJobs.map(j =>
+                                        job.keys.includes(j.key)
+                                          ? { ...j, isCancel: true, isConfirmed: false }
+                                          : j
+                                      )
+                                    );
+                                  } else {
+                                    alert("Cancel งานไม่สำเร็จ: " + (result?.error || "Unknown error"));
+                                  }
+                                } catch (e: any) {
+                                  alert("เกิดข้อผิดพลาด: " + e.message);
+                                }
+                              }}>
+                                Reject
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
-                {/* Pagination */}
                 <div className="w-full flex justify-center mt-6">
                   <div className="inline-flex items-center gap-2 bg-base-100 border border-base-300 rounded-full shadow px-4 py-2">
-                    <button
-                      className="btn btn-outline btn-sm rounded-full min-w-[64px]"
-                      disabled={page === 1}
-                      onClick={() => setPage(page - 1)}
-                    >
-                      Prev
-                    </button>
+                    <button className="btn btn-outline btn-sm rounded-full min-w-[64px]" disabled={page === 1} onClick={() => setPage(page - 1)}>Prev</button>
                     <span className="px-2 py-1 font-Arial text-base-content">{page} <span className="text-gray-400">/</span> {totalPages}</span>
-                    <button
-                      className="btn btn-outline btn-sm rounded-full min-w-[64px]"
-                      disabled={page === totalPages}
-                      onClick={() => setPage(page + 1)}
-                    >
-                      Next
-                    </button>
+                    <button className="btn btn-outline btn-sm rounded-full min-w-[64px]" disabled={page === totalPages} onClick={() => setPage(page + 1)}>Next</button>
                   </div>
                 </div>
-                {/* All Details Modal */}
                 {detailJobs && (
                   <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl shadow-2xl border-4 border-blue-400 p-8 max-w-2xl w-full relative animate-fade-in">
-                      <button
-                        className="absolute top-2 right-2 btn btn-sm btn-error"
-                        onClick={() => setDetailJobs(null)}
-                      >
-                        ✕
-                      </button>
+                      <button className="absolute top-2 right-2 btn btn-sm btn-error" onClick={() => setDetailJobs(null)}>✕</button>
                       <h2 className="text-xl font-Arial mb-4">All Job Details</h2>
                       {renderAllDetails(detailJobs)}
                     </div>
@@ -758,5 +531,5 @@ export default function JobsList() {
         </div>
       </div>
     </CssgGuide>
-  )
+  );
 }
