@@ -5,6 +5,12 @@ import CssgGuide from '../cssguide'
 import axios from "axios";
 import { Ripple } from 'react-spinners-css';
 type Job = {
+  Guide: any;
+  serviceSupplierName: string;
+  Comment: any;
+  pax_name: ReactNode;
+  Class: any;
+  Booking_Name: ReactNode;
   AdultQty: number;
   ChildQty: number;
   ChildShareQty: number;
@@ -96,8 +102,8 @@ export default function JobsList() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         token: "yMaEinVpfboebobeC8x5fsVRXjKf4Gw2xrpnVaNpIyv8YaCuVFaqsyjnDdWt66IpXm8LNYpPcWnTNf0uF0VbfcKMfY7HdatLCHNLw3f8kQtk/qTyUEcIkQTzUG45tLh+lVMJc++IZ9eoCi/NFpd4iTyhYWUaB1RC+Ef7nwNJ6zY=",
-        startdate: "2025-05-01",
-        enddate: "2025-05-31",
+        startdate: "2025-04-27",
+        enddate: "2025-05-27",
       }),
     })
       .then(async res => {
@@ -130,16 +136,34 @@ export default function JobsList() {
   const totalPages = Math.ceil(mergedJobs.length / pageSize)
   const pagedJobs = mergedJobs.slice((page - 1) * pageSize, page * pageSize)
 
+  function getToday(): string {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  }
+
+  function getEndOfMonth(): string {
+    const today = new Date();
+    const endDate = new Date(today.getTime());
+    endDate.setDate(today.getDate() + 30); // วันที่ 30 วันข้างหน้า
+    return endDate.toISOString().split('T')[0];
+  }
+
+
   // Helper to format date and time, keep only วัน/เดือน/ปี (YYYY-MM-DD)
   function formatDate(dateStr: any) {
-  if (!dateStr) return '';
-  if (typeof dateStr !== 'string') {
-    // ถ้าไม่ใช่ string แปลงเป็น string ก่อน
-    dateStr = String(dateStr);
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
+
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const h = String(date.getHours()).padStart(2, '0');
+    const min = String(date.getMinutes()).padStart(2, '0');
+
+    return `${y}-${m}-${d} ${h}:${min}`;
   }
-  const match = dateStr.match(/^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2})?/);
-  return match ? match[0].replace('T', ' ') : dateStr; // แปลง 'T' เป็น ' ' เพื่อแสดงเวลา
-}
+
 
   // Helper to combine Pickup + PickupDate, Dropoff + DropoffDate
   function renderPlaceDate(place: string, date: string, label: string) {
@@ -187,6 +211,7 @@ export default function JobsList() {
         Dropoff: job.Dropoff,
         DropoffDate: job.DropoffDate,
         PNRDate: job.PNRDate,
+        GuideName: job.Guide,
         // add other fields that should be merged
       });
 
@@ -203,109 +228,116 @@ export default function JobsList() {
     });
 
     return (
-      <div className="max-h-[60vh] overflow-auto">
+      <div className="max-h-[60vh] overflow-auto text-xs"> {/* ลดขนาดตัวอักษรรวม */}
         {Object.values(groupedJobs).map(({ job, typeNames }, idx) => (
           <div
             key={job.key + "-" + idx}
-            className="mb-4 border-b border-gray-200 pb-4 last:border-b-0"
+            className="mb-3 border-b border-gray-200 pb-3 last:border-b-0"style={{
+            borderBottom: "5px solid #000000", // Increased border width and changed color
+             boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Add shadow effect
+          }}
           >
             {/* PNR Header */}
-            <div className="font-Arial text-[#2D3E92] mb-2 underline underline-offset-4">
-              PNR: {job.PNR}
+            <div className="font-Arial text-[#2D3E92] mb-1 text-sm">
+              <span className="underline-offset-4">PNR: {job.PNR}</span>
+              {job.PNR && job.serviceSupplierName ? " / SupplierName: " : ""}
+              <span className="font-Arial italic">{job.serviceSupplierName}</span>
             </div>
 
             {/* Details Section */}
-            <div className="grid grid-cols-1 gap-y-4 text-sm">
-              {/* Pickup + PickupDate */}
+            <div className="grid grid-cols-1 gap-y-2 text-xs"> {/* ลด gap */}
               <div className="flex items-start">
-                <span className="font-bold text-gray-600 w-28 shrink-0">Pickup:</span>
-                <span
-                  className="text-gray-800 break-words"
-                  style={{
-                    wordBreak: "break-word",
-                    whiteSpace: "normal",
-                    overflowWrap: "break-word",
-                  }}
-                >
-                  {job.Pickup}
-                  {job.Pickup && job.PickupDate ? " - " : ""}
-                  {job.PickupDate ? formatDate(job.PickupDate) : ""}
+                <span className="font-bold text-gray-600 w-24 shrink-0">Comment:</span>
+                <span className="text-gray-800 break-words">
+                  {job.Comment}
                 </span>
               </div>
 
-              {/* Dropoff + DropoffDate */}
+              {/* Pickup */}
               <div className="flex items-start">
-                <span className="font-bold text-gray-600 w-28 shrink-0">Dropoff:</span>
-                <span
-                  className="text-gray-800 break-words"
-                  style={{
-                    wordBreak: "break-word",
-                    whiteSpace: "normal",
-                    overflowWrap: "break-word",
-                  }}
-                >
+                <span className="font-bold text-gray-600 w-24 shrink-0">Pickup:</span>
+                <span className="text-gray-800 break-words">
+                  <span className="font-Arial">
+                    {job.Pickup}
+                    {job.Pickup && job.PickupDate ? " / " : ""}
+                  </span>
+                  <span className="font-Arial font-bold">
+                    {job.PickupDate ? formatDate(job.PickupDate) : ""}
+                  </span>
+                </span>
+              </div>
+
+              {/* Dropoff */}
+              <div className="flex items-start">
+                <span className="font-bold text-gray-600 w-24 shrink-0">Dropoff:</span>
+                <span className="text-gray-800 break-words">
                   {job.Dropoff}
-                  {job.Dropoff && job.DropoffDate ? " - " : ""}
-                  {job.DropoffDate ? formatDate(job.DropoffDate) : ""}
+                  {job.Dropoff && job.DropoffDate ? " / " : ""}
+                  <span className="font-Arial font-bold">
+                    {job.DropoffDate ? formatDate(job.DropoffDate) : ""}
+                  </span>
                 </span>
               </div>
 
               {/* Booking Consultant */}
               <div className="flex items-start">
-                <span className="font-bold text-gray-600 w-28 shrink-0">Booking Consultant:</span>
-                <span
-                  className="text-gray-800 break-words"
-                  style={{
-                    wordBreak: "break-word",
-                    whiteSpace: "normal",
-                    overflowWrap: "break-word",
-                  }}
-                >
+                <span className="font-bold text-gray-600 w-24 shrink-0">Consultant:</span>
+                <span className="text-gray-800 break-words">
                   {job.Booking_Consultant}
-                  {job.Booking_Consultant && job.Phone ? ", " : ""}
+                  {job.Booking_Consultant && job.Phone ? "," : ""}
                   {job.Phone}
                 </span>
+              </div>
+
+              {/* Booking Name */}
+              <div className="flex items-start">
+                <span className="font-bold text-gray-600 w-24 shrink-0">Booking Name:</span>
+                <span className="text-gray-800 break-words">
+                  {[job.Booking_Name].filter(Boolean).join(", ")}
+                </span>
+              </div>
+
+              {/* Client Name */}
+              <div className="flex items-start">
+                <span className="font-bold text-gray-600 w-24 shrink-0">Client Name:</span>
+                <span className="text-gray-800 break-words">{job.pax_name}</span>
+              </div>
+
+              {/* Table Section */}
+              <div className="overflow-x-auto mt-2">
+                <table className="table-auto border text-xs w-full">
+                  <thead className="bg-[#2D3E92] text-white">
+                    <tr>
+                      <th className="px-1 py-1 text-left">Adult</th>
+                      <th className="px-1 py-1 text-left">Child</th>
+                      <th className="px-1 py-1 text-left">Share</th>
+                      <th className="px-1 py-1 text-left">Infant</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="px-1 py-1 text-left">{job.AdultQty || 0}</td>
+                      <td className="px-1 py-1 text-left">{job.ChildQty || 0}</td>
+                      <td className="px-1 py-1 text-left">{job.ChildShareQty || 0}</td>
+                      <td className="px-1 py-1 text-left">{job.InfantQty || 0}</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
 
               {/* Render Other Fields */}
               {Object.entries(job)
                 .filter(([k]) =>
                   ![
-                    "IsConfirmed",
-                    "IsCancel",
-                    "key",
-                    "BSL_ID",
-                    "Pickup",
-                    "PickupDate",
-                    "Dropoff",
-                    "DropoffDate",
-                    "PNRDate",
-                    "all",
-                    "keys",
-                    "isNew",
-                    "isChange",
-                    "isDelete",
-                    "PNR",
-                    "NotAvailable",
-                    "agentCode",
-                    "agentLogo",
-                    "serviceTypeName",
-                    "TypeName",
-                    "SupplierCode_TP",
-                    "SupplierName_TP",
-                    "ProductName_TP",
-                    "ServiceLocationName",
-                    "serviceSupplierCode_TP",
-                    "serviceProductName",
-                    "serviceSupplierName",
-                    "ServiceLocationName_TP",
-                    "Source",
-                    "Phone",
-                    "Booking_Consultant",
-                    "AdultQty",
-                    "ChildQty",
-                    "ChildShareQty",
-                    "InfantQty",
+                    "IsConfirmed", "IsCancel", "key", "BSL_ID",
+                    "Pickup", "PickupDate", "Dropoff", "DropoffDate", "PNRDate", "all",
+                    "keys", "isNew", "isChange", "isDelete", "PNR", "NotAvailable",
+                    "agentCode", "agentLogo", "serviceTypeName", "TypeName",
+                    "SupplierCode_TP", "SupplierName_TP", "ProductName_TP", "ServiceLocationName",
+                    "serviceSupplierCode_TP", "serviceProductName", "serviceSupplierName",
+                    "ServiceLocationName_TP", "Source", "Phone", "Booking_Consultant",
+                    "AdultQty", "ChildQty", "ChildShareQty", "InfantQty", "pax_name",
+                    "Booking_Name", "Class", "Comment"
                   ].includes(k)
                 )
                 .map(([k, v]) => {
@@ -314,17 +346,11 @@ export default function JobsList() {
                   if (k === "serviceProductName") label = "ProductName";
                   if (k === "serviceSupplierName") label = "Supplier";
                   if (k === "ServiceLocationName") label = "Location";
+                  if (k === "pax_name") label = "Client Name";
                   return (
                     <div key={k} className="flex items-start">
-                      <span className="font-bold text-gray-600 w-28 shrink-0">{label}:</span>
-                      <span
-                        className="text-gray-800 break-words"
-                        style={{
-                          wordBreak: "break-word",
-                          whiteSpace: "normal",
-                          overflowWrap: "break-word",
-                        }}
-                      >
+                      <span className="font-bold text-gray-600 w-24 shrink-0">{label}:</span>
+                      <span className="text-gray-800 break-words">
                         {typeof v === "object" ? JSON.stringify(v) : String(v)}
                       </span>
                     </div>
@@ -332,45 +358,17 @@ export default function JobsList() {
                 })}
             </div>
 
-            {/* Show Merged TypeNames */}
-            <div className="flex items-center mt-4">
-              <span className="font-bold text-gray-600 w-28 shrink-0">TypeName:</span>
-              <span
-                className="text-gray-800 break-words"
-                style={{
-                  wordBreak: "break-word",
-                  whiteSpace: "normal",
-                  overflowWrap: "break-word",
-                }}
-              >
+            {/* TypeName */}
+            <div className="flex items-center mt-3">
+              <span className="font-bold text-gray-600 w-24 shrink-0">TypeName:</span>
+              <span className="text-gray-800 break-words">
                 {[...new Set(typeNames)].join(", ")}
               </span>
-            </div>
-
-            {/* Table Section */}
-            <div className="overflow-x-auto mt-4">
-              <table className="table-auto border text-sm w-full">
-                <thead className="bg-[#2D3E92] text-white">
-                  <tr>
-                    <th className="px-2 py-1 text-left">AdultQty</th>
-                    <th className="px-2 py-1 text-left">ChildQty</th>
-                    <th className="px-2 py-1 text-left">ChildShareQty</th>
-                    <th className="px-2 py-1 text-left">InfantQty</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td className="px-2 py-1 text-left">{job.AdultQty || 0}</td>
-                    <td className="px-2 py-1 text-left">{job.ChildQty || 0}</td>
-                    <td className="px-2 py-1 text-left">{job.ChildShareQty || 0}</td>
-                    <td className="px-2 py-1 text-left">{job.InfantQty || 0}</td>
-                  </tr>
-                </tbody>
-              </table>
             </div>
           </div>
         ))}
       </div>
+
     );
   };
 
@@ -477,6 +475,7 @@ export default function JobsList() {
                   />
                 </div>
               </div>
+
               <span className="mt-2 text-xs text-gray-400 text-center px-2">
                 Please select a date range to filter the desired tasks.
               </span>
@@ -508,7 +507,7 @@ export default function JobsList() {
                         [job.PNR]: !isExpanded
                       }));
                     };
-                    
+
 
                     return (
                       <div

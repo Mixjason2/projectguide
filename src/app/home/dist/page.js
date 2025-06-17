@@ -123,8 +123,8 @@ function JobsList() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 token: "yMaEinVpfboebobeC8x5fsVRXjKf4Gw2xrpnVaNpIyv8YaCuVFaqsyjnDdWt66IpXm8LNYpPcWnTNf0uF0VbfcKMfY7HdatLCHNLw3f8kQtk/qTyUEcIkQTzUG45tLh+lVMJc++IZ9eoCi/NFpd4iTyhYWUaB1RC+Ef7nwNJ6zY=",
-                startdate: "2025-05-01",
-                enddate: "2025-05-31"
+                startdate: "2025-04-27",
+                enddate: "2025-05-27"
             })
         })
             .then(function (res) { return __awaiter(_this, void 0, void 0, function () {
@@ -160,16 +160,29 @@ function JobsList() {
     var mergedJobs = mergeJobsByPNR(filteredJobs);
     var totalPages = Math.ceil(mergedJobs.length / pageSize);
     var pagedJobs = mergedJobs.slice((page - 1) * pageSize, page * pageSize);
+    function getToday() {
+        var today = new Date();
+        return today.toISOString().split('T')[0];
+    }
+    function getEndOfMonth() {
+        var today = new Date();
+        var endDate = new Date(today.getTime());
+        endDate.setDate(today.getDate() + 30); // วันที่ 30 วันข้างหน้า
+        return endDate.toISOString().split('T')[0];
+    }
     // Helper to format date and time, keep only วัน/เดือน/ปี (YYYY-MM-DD)
     function formatDate(dateStr) {
         if (!dateStr)
             return '';
-        if (typeof dateStr !== 'string') {
-            // ถ้าไม่ใช่ string แปลงเป็น string ก่อน
-            dateStr = String(dateStr);
-        }
-        var match = dateStr.match(/^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2})?/);
-        return match ? match[0].replace('T', ' ') : dateStr; // แปลง 'T' เป็น ' ' เพื่อแสดงเวลา
+        var date = new Date(dateStr);
+        if (isNaN(date.getTime()))
+            return '';
+        var y = date.getFullYear();
+        var m = String(date.getMonth() + 1).padStart(2, '0');
+        var d = String(date.getDate()).padStart(2, '0');
+        var h = String(date.getHours()).padStart(2, '0');
+        var min = String(date.getMinutes()).padStart(2, '0');
+        return y + "-" + m + "-" + d + " " + h + ":" + min;
     }
     // Helper to combine Pickup + PickupDate, Dropoff + DropoffDate
     function renderPlaceDate(place, date, label) {
@@ -213,7 +226,8 @@ function JobsList() {
                 PickupDate: job.PickupDate,
                 Dropoff: job.Dropoff,
                 DropoffDate: job.DropoffDate,
-                PNRDate: job.PNRDate
+                PNRDate: job.PNRDate,
+                GuideName: job.Guide
             });
             var typeName = job.serviceTypeName || job.TypeName || "Unknown";
             if (!groupedJobs[groupKey]) {
@@ -226,127 +240,102 @@ function JobsList() {
                 groupedJobs[groupKey].typeNames.push(typeName);
             }
         });
-        return (React.createElement("div", { className: "max-h-[60vh] overflow-auto" }, Object.values(groupedJobs).map(function (_a, idx) {
-            var job = _a.job, typeNames = _a.typeNames;
-            return (React.createElement("div", { key: job.key + "-" + idx, className: "mb-4 border-b border-gray-200 pb-4 last:border-b-0" },
-                React.createElement("div", { className: "font-Arial text-[#2D3E92] mb-2 underline underline-offset-4" },
-                    "PNR: ",
-                    job.PNR),
-                React.createElement("div", { className: "grid grid-cols-1 gap-y-4 text-sm" },
-                    React.createElement("div", { className: "flex items-start" },
-                        React.createElement("span", { className: "font-bold text-gray-600 w-28 shrink-0" }, "Pickup:"),
-                        React.createElement("span", { className: "text-gray-800 break-words", style: {
-                                wordBreak: "break-word",
-                                whiteSpace: "normal",
-                                overflowWrap: "break-word"
-                            } },
-                            job.Pickup,
-                            job.Pickup && job.PickupDate ? " - " : "",
-                            job.PickupDate ? formatDate(job.PickupDate) : "")),
-                    React.createElement("div", { className: "flex items-start" },
-                        React.createElement("span", { className: "font-bold text-gray-600 w-28 shrink-0" }, "Dropoff:"),
-                        React.createElement("span", { className: "text-gray-800 break-words", style: {
-                                wordBreak: "break-word",
-                                whiteSpace: "normal",
-                                overflowWrap: "break-word"
-                            } },
-                            job.Dropoff,
-                            job.Dropoff && job.DropoffDate ? " - " : "",
-                            job.DropoffDate ? formatDate(job.DropoffDate) : "")),
-                    React.createElement("div", { className: "flex items-start" },
-                        React.createElement("span", { className: "font-bold text-gray-600 w-28 shrink-0" }, "Booking Consultant:"),
-                        React.createElement("span", { className: "text-gray-800 break-words", style: {
-                                wordBreak: "break-word",
-                                whiteSpace: "normal",
-                                overflowWrap: "break-word"
-                            } },
-                            job.Booking_Consultant,
-                            job.Booking_Consultant && job.Phone ? ", " : "",
-                            job.Phone)),
-                    Object.entries(job)
-                        .filter(function (_a) {
-                        var k = _a[0];
-                        return ![
-                            "IsConfirmed",
-                            "IsCancel",
-                            "key",
-                            "BSL_ID",
-                            "Pickup",
-                            "PickupDate",
-                            "Dropoff",
-                            "DropoffDate",
-                            "PNRDate",
-                            "all",
-                            "keys",
-                            "isNew",
-                            "isChange",
-                            "isDelete",
-                            "PNR",
-                            "NotAvailable",
-                            "agentCode",
-                            "agentLogo",
-                            "serviceTypeName",
-                            "TypeName",
-                            "SupplierCode_TP",
-                            "SupplierName_TP",
-                            "ProductName_TP",
-                            "ServiceLocationName",
-                            "serviceSupplierCode_TP",
-                            "serviceProductName",
-                            "serviceSupplierName",
-                            "ServiceLocationName_TP",
-                            "Source",
-                            "Phone",
-                            "Booking_Consultant",
-                            "AdultQty",
-                            "ChildQty",
-                            "ChildShareQty",
-                            "InfantQty",
-                        ].includes(k);
-                    })
-                        .map(function (_a) {
-                        var k = _a[0], v = _a[1];
-                        var label = k;
-                        if (k === "serviceSupplierCode_TP")
-                            label = "SupplierCode_TP";
-                        if (k === "serviceProductName")
-                            label = "ProductName";
-                        if (k === "serviceSupplierName")
-                            label = "Supplier";
-                        if (k === "ServiceLocationName")
-                            label = "Location";
-                        return (React.createElement("div", { key: k, className: "flex items-start" },
-                            React.createElement("span", { className: "font-bold text-gray-600 w-28 shrink-0" },
-                                label,
-                                ":"),
-                            React.createElement("span", { className: "text-gray-800 break-words", style: {
-                                    wordBreak: "break-word",
-                                    whiteSpace: "normal",
-                                    overflowWrap: "break-word"
-                                } }, typeof v === "object" ? JSON.stringify(v) : String(v))));
-                    })),
-                React.createElement("div", { className: "flex items-center mt-4" },
-                    React.createElement("span", { className: "font-bold text-gray-600 w-28 shrink-0" }, "TypeName:"),
-                    React.createElement("span", { className: "text-gray-800 break-words", style: {
-                            wordBreak: "break-word",
-                            whiteSpace: "normal",
-                            overflowWrap: "break-word"
-                        } }, __spreadArrays(new Set(typeNames)).join(", "))),
-                React.createElement("div", { className: "overflow-x-auto mt-4" },
-                    React.createElement("table", { className: "table-auto border text-sm w-full" },
-                        React.createElement("thead", { className: "bg-[#2D3E92] text-white" },
-                            React.createElement("tr", null,
-                                React.createElement("th", { className: "px-2 py-1 text-left" }, "AdultQty"),
-                                React.createElement("th", { className: "px-2 py-1 text-left" }, "ChildQty"),
-                                React.createElement("th", { className: "px-2 py-1 text-left" }, "ChildShareQty"),
-                                React.createElement("th", { className: "px-2 py-1 text-left" }, "InfantQty"))),
-                        React.createElement("tbody", null,
-                            React.createElement("tr", null,
-                                React.createElement("td", { className: "px-2 py-1 text-left" }, job.AdultQty || 0),
-                                React.createElement("td", { className: "px-2 py-1 text-left" }, job.ChildQty || 0),
-                                React.createElement("td", { className: "px-2 py-1 text-left" }, job.ChildShareQty || 0),
-                                React.createElement("td", { className: "px-2 py-1 text-left" }, job.InfantQty || 0)))))));
-        })));
+        return (React.createElement("div", { className: "max-h-[60vh] overflow-auto text-xs" },
+            " ",
+            Object.values(groupedJobs).map(function (_a, idx) {
+                var job = _a.job, typeNames = _a.typeNames;
+                return (React.createElement("div", { key: job.key + "-" + idx, className: "mb-3 border-b border-gray-200 pb-3 last:border-b-0", style: {
+                        borderBottom: "5px solid #000000",
+                        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)"
+                    } },
+                    React.createElement("div", { className: "font-Arial text-[#2D3E92] mb-1 text-sm" },
+                        React.createElement("span", { className: "underline-offset-4" },
+                            "PNR: ",
+                            job.PNR),
+                        job.PNR && job.serviceSupplierName ? " / SupplierName: " : "",
+                        React.createElement("span", { className: "font-Arial italic" }, job.serviceSupplierName)),
+                    React.createElement("div", { className: "grid grid-cols-1 gap-y-2 text-xs" },
+                        " ",
+                        React.createElement("div", { className: "flex items-start" },
+                            React.createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" }, "Comment:"),
+                            React.createElement("span", { className: "text-gray-800 break-words" }, job.Comment)),
+                        React.createElement("div", { className: "flex items-start" },
+                            React.createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" }, "Pickup:"),
+                            React.createElement("span", { className: "text-gray-800 break-words" },
+                                React.createElement("span", { className: "font-Arial" },
+                                    job.Pickup,
+                                    job.Pickup && job.PickupDate ? " / " : ""),
+                                React.createElement("span", { className: "font-Arial font-bold" }, job.PickupDate ? formatDate(job.PickupDate) : ""))),
+                        React.createElement("div", { className: "flex items-start" },
+                            React.createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" }, "Dropoff:"),
+                            React.createElement("span", { className: "text-gray-800 break-words" },
+                                job.Dropoff,
+                                job.Dropoff && job.DropoffDate ? " / " : "",
+                                React.createElement("span", { className: "font-Arial font-bold" }, job.DropoffDate ? formatDate(job.DropoffDate) : ""))),
+                        React.createElement("div", { className: "flex items-start" },
+                            React.createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" }, "Consultant:"),
+                            React.createElement("span", { className: "text-gray-800 break-words" },
+                                job.Booking_Consultant,
+                                job.Booking_Consultant && job.Phone ? "," : "",
+                                job.Phone)),
+                        React.createElement("div", { className: "flex items-start" },
+                            React.createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" }, "Booking Name:"),
+                            React.createElement("span", { className: "text-gray-800 break-words" }, [job.Booking_Name].filter(Boolean).join(", "))),
+                        React.createElement("div", { className: "flex items-start" },
+                            React.createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" }, "Client Name:"),
+                            React.createElement("span", { className: "text-gray-800 break-words" }, job.pax_name)),
+                        React.createElement("div", { className: "overflow-x-auto mt-2" },
+                            React.createElement("table", { className: "table-auto border text-xs w-full" },
+                                React.createElement("thead", { className: "bg-[#2D3E92] text-white" },
+                                    React.createElement("tr", null,
+                                        React.createElement("th", { className: "px-1 py-1 text-left" }, "Adult"),
+                                        React.createElement("th", { className: "px-1 py-1 text-left" }, "Child"),
+                                        React.createElement("th", { className: "px-1 py-1 text-left" }, "Share"),
+                                        React.createElement("th", { className: "px-1 py-1 text-left" }, "Infant"))),
+                                React.createElement("tbody", null,
+                                    React.createElement("tr", null,
+                                        React.createElement("td", { className: "px-1 py-1 text-left" }, job.AdultQty || 0),
+                                        React.createElement("td", { className: "px-1 py-1 text-left" }, job.ChildQty || 0),
+                                        React.createElement("td", { className: "px-1 py-1 text-left" }, job.ChildShareQty || 0),
+                                        React.createElement("td", { className: "px-1 py-1 text-left" }, job.InfantQty || 0))))),
+                        Object.entries(job)
+                            .filter(function (_a) {
+                            var k = _a[0];
+                            return ![
+                                "IsConfirmed", "IsCancel", "key", "BSL_ID",
+                                "Pickup", "PickupDate", "Dropoff", "DropoffDate", "PNRDate", "all",
+                                "keys", "isNew", "isChange", "isDelete", "PNR", "NotAvailable",
+                                "agentCode", "agentLogo", "serviceTypeName", "TypeName",
+                                "SupplierCode_TP", "SupplierName_TP", "ProductName_TP", "ServiceLocationName",
+                                "serviceSupplierCode_TP", "serviceProductName", "serviceSupplierName",
+                                "ServiceLocationName_TP", "Source", "Phone", "Booking_Consultant",
+                                "AdultQty", "ChildQty", "ChildShareQty", "InfantQty", "pax_name",
+                                "Booking_Name", "Class", "Comment"
+                            ].includes(k);
+                        })
+                            .map(function (_a) {
+                            var k = _a[0], v = _a[1];
+                            var label = k;
+                            if (k === "serviceSupplierCode_TP")
+                                label = "SupplierCode_TP";
+                            if (k === "serviceProductName")
+                                label = "ProductName";
+                            if (k === "serviceSupplierName")
+                                label = "Supplier";
+                            if (k === "ServiceLocationName")
+                                label = "Location";
+                            if (k === "pax_name")
+                                label = "Client Name";
+                            return (React.createElement("div", { key: k, className: "flex items-start" },
+                                React.createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" },
+                                    label,
+                                    ":"),
+                                React.createElement("span", { className: "text-gray-800 break-words" }, typeof v === "object" ? JSON.stringify(v) : String(v))));
+                        })),
+                    React.createElement("div", { className: "flex items-center mt-3" },
+                        React.createElement("span", { className: "font-bold text-gray-600 w-24 shrink-0" }, "TypeName:"),
+                        React.createElement("span", { className: "text-gray-800 break-words" }, __spreadArrays(new Set(typeNames)).join(", ")))));
+            })));
     };
     // ปรับ summary เป็นแถวแนวนอน สวยงาม และวางไว้บนหัว card Jobs List
     var summary = (React.createElement("div", { className: "w-full flex justify-end mb-6" },
