@@ -292,25 +292,39 @@ export default function JobsList() {
   const [rejectPNRs, setRejectPNRs] = useState<string[]>([]);
   const pageSize = 6;
 
-  useEffect(() => {
-    const token = localStorage.getItem('token') || '';
-    setLoading(true);
-    fetch('https://operation.dth.travel:7082/api/guide/job', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        token: "yMaEinVpfboebobeC8x5fsVRXjKf4Gw2xrpnVaNpIyv8YaCuVFaqsyjnDdWt66IpXm8LNYpPcWnTNf0uF0VbfcKMfY7HdatLCHNLw3f8kQtk/qTyUEcIkQTzUG45tLh+lVMJc++IZ9eoCi/NFpd4iTyhYWUaB1RC+Ef7nwNJ6zY=" ,startdate: startDate, enddate: endDate }),
-    })
-      .then(res => {
-        console.log("API jobs:", res);
-        res.ok ? res.json() : Promise.reject(res.text())
+useEffect(() => {
+  const token = localStorage.getItem('token') || '';
+  setLoading(true);
+
+  fetch('https://operation.dth.travel:7082/api/guide/job', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ 
+      token: token, // ✅ ใช้ token จาก localStorage
+      startdate: startDate,
+      enddate: endDate
+    }),
   })
-      
-      // .then(setJobs)
-     
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [startDate, endDate]);
+    .then(async (res) => {
+      if (!res.ok) {
+        const text = await res.text(); // แปลง error เป็นข้อความ
+        throw new Error(text);
+      }
+      return res.json(); // ✅ แปลงเป็น JSON
+    })
+    .then((data) => {
+      console.log("Job data:", data);
+      setJobs(data); // ✅ เซ็ตข้อมูลให้ state
+    })
+    .catch((err) => {
+      console.error("Fetch error:", err);
+      setError(err.message);
+    })
+    .finally(() => {
+      setLoading(false);
+    });
+}, [startDate, endDate]);
+
 
   const filteredJobs = jobs.filter(job => {
     const pickup = job.PickupDate, dropoff = job.DropoffDate;

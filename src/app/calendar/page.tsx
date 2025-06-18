@@ -66,21 +66,36 @@ export default function CalendarExcel() {
   const [error, setError] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<string>('dayGridMonth');
 
-  useEffect(() => {
-    const token = localStorage.getItem("token") || "";
-    fetch('https://operation.dth.travel:7082/api/guide/job', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, startdate: "2025-01-01", enddate: "2025-05-31" }),
+useEffect(() => {
+  const token = localStorage.getItem("token") || "";
+
+  if (!token) {
+    setError("Token not found. Please log in.");
+    setLoading(false);
+    return;
+  }
+
+  setLoading(true);
+  fetch('https://operation.dth.travel:7082/api/guide/job', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, startdate: "2025-01-01", enddate: "2025-05-31" }),
+  })
+    .then(async res => {
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
     })
-      .then(async res => {
-        if (!res.ok) throw new Error(await res.text());
-        return res.json();
-      })
-      .then(setJobs)
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
+    .then(data => {
+      console.log("Fetched jobs:", data);
+      setJobs(data);
+    })
+    .catch(err => {
+      console.error("Fetch error:", err);
+      setError(err.message);
+    })
+    .finally(() => setLoading(false));
+}, []);
+
 
   const events = useMemo(() => {
     if (currentView === 'dayGridMonth') {
