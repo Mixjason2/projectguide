@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, ReactNode } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -20,6 +20,9 @@ type Job = {
   ChildQty: number;
   ChildShareQty: number;
   InfantQty: number;
+  pax_name: ReactNode;
+   Booking_Name: ReactNode;
+   serviceProductName: ReactNode;
 };
 
 function getTotalPax(job: Job): number {
@@ -91,7 +94,7 @@ export default function CalendarExcel() {
       });
 
       return Object.entries(grouped).map(([date, jobsOnDate]) => ({
-        title: `job : (${jobsOnDate.length}) `,
+        title: `(${jobsOnDate.length}): job`,
         start: date,
         allDay: true,
         backgroundColor: '#95c941',
@@ -105,7 +108,7 @@ export default function CalendarExcel() {
     } else {
       return jobs.map(job => ({
         id: job.key.toString(),
-        title: ` ${job.PNR} `,
+        title: ` ${job.serviceProductName} `,
         start: job.PickupDate,
         backgroundColor: job.isChange ? '#fb923c' : '#95c941',
         borderColor: '#0369a1',
@@ -117,11 +120,24 @@ export default function CalendarExcel() {
     }
   }, [jobs, currentView]);
 
+  const findDuplicateNames = (jobs: Job[]) => {
+    const nameCount = jobs.reduce((acc, job) => {
+      const name = job.pax_name?.toString();
+      if (name) acc[name] = (acc[name] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(nameCount)
+      .filter(([_, count]) => count > 1)
+      .map(([name]) => name);
+  };
+
   const handleEventClick = (info: any) => {
     if (currentView === 'dayGridMonth') {
       const jobsOnDate: Job[] = info.event.extendedProps.jobs || [];
       const clickedDate = info.event.startStr.split('T')[0];
 
+      const duplicateNames = findDuplicateNames(jobsOnDate);
       const details = jobsOnDate.map((job, i) => {
         const pickupTime = new Date(job.PickupDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
         const totalPax = getTotalPax(job);
@@ -129,7 +145,9 @@ export default function CalendarExcel() {
       }).join('\n');
 
 
-      alert(`📅 Date: ${clickedDate}\n📌 Jobs:\n${details}`);
+      alert(`📅 Date: ${clickedDate}
+👤 Duplicate Names: ${duplicateNames.length > 0 ? duplicateNames.join(', ') : 'None'}
+📌 Jobs:\n${details}`);
     } else {
       const job: Job = info.event.extendedProps.job;
       const pickupTime = new Date(job.PickupDate).toLocaleString('en-GB', {
@@ -140,7 +158,8 @@ export default function CalendarExcel() {
       alert(`🎫 PNR: ${job.PNR}
 🕒 Pickup: ${pickupTime}
 📍 Location: ${job.Pickup}
-👤 Pax: ${totalPax} (Adult: ${job.AdultQty}, Child: ${job.ChildQty}, Share: ${job.ChildShareQty}, Infant: ${job.InfantQty})`);
+👤 Pax: ${totalPax} (Adult: ${job.AdultQty}, Child: ${job.ChildQty}, Share: ${job.ChildShareQty}, Infant: ${job.InfantQty})
+👤 Name: ${job.pax_name}`);
     }
   };
 
@@ -152,18 +171,18 @@ export default function CalendarExcel() {
       <div
         className="fc-event-main flex items-center"
         style={{
-          backgroundColor: '#95c941', // สีพื้นหลังที่เหมือนกันสำหรับทุกอีเวนต์
-          color: 'white', // สีข้อความ
-          borderColor: '#0369a1', // สีกรอบ
-          borderRadius: '4px', // มุมโค้งมน
-          padding: '4px 8px', // ระยะห่างภายใน
+          backgroundColor: '#95c941',
+          color: 'white',
+          borderColor: '#0369a1',
+          borderRadius: '4px',
+          padding: '4px 8px',
           display: 'flex',
           alignItems: 'center',
         }}
       >
         <span
           style={{
-            backgroundColor: isChanged ? '#fb923c' : (job?.isChange ? '#fb923c' : '#0891b2'), // สีของจุดสถานะ
+            backgroundColor: isChanged ? '#fb923c' : (job?.isChange ? '#fb923c' : '#0891b2'),
             width: 10,
             height: 10,
             borderRadius: '50%',
@@ -187,8 +206,8 @@ export default function CalendarExcel() {
         initialView="timeGridWeek"
         events={events}
         datesSet={(arg: DatesSetArg) => setCurrentView(arg.view.type)}
-        height="100%"
-        contentHeight="auto"
+        height="auto"             // ไม่ fix ความสูง
+        contentHeight="auto"      // ให้ขยายตามเนื้อหา       
         aspectRatio={1.7}
         headerToolbar={{
           start: 'title',

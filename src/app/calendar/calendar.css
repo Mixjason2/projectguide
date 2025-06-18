@@ -194,6 +194,10 @@
 
 /* ปรับขนาดของอีเวนต์ใน timeGrid view */
 .fc-timegrid-event {
+    height: auto !important;         /* ให้ขนาดปรับตามเนื้อหา */
+  white-space: normal !important;  /* ให้ข้อความขึ้นบรรทัดใหม่ได้ */
+  padding: 4px 8px !important;
+  align-items: center;
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -218,8 +222,9 @@
 
 /* ปรับ td ให้ขยายตามอีเวนต์ */
 .fc-timegrid-slot {
-  height: auto; /* ให้ td ขยายตามเนื้อหา */
-  min-height: 40px; /* กำหนดความสูงขั้นต่ำ */
+  height: auto !important;         /* ให้แถวขยายตามอีเวนต์ */
+  min-height: auto !important;     /* ความสูงขั้นต่ำ */
+  overflow: visible !important;    /* ป้องกัน scroll หรือ clipping */
 }
 
 

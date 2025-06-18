@@ -344,10 +344,12 @@ export default function JobsList() {
   return (
     <CssgGuide>
       <div className="flex flex-col items-center py-8 min-h-screen bg-base-200 relative bg-[#9EE4F6]">
+        {/* Summary bar */}
         {summary}
         <div className="bg-[#F9FAFB] rounded-3xl shadow-lg border border-gray-300 w-full max-w-7xl p-6">
           <div className="p-4 w-full overflow-auto bg-[#F9FAFB]">
             <h1 className="text-2xl font-Arial mb-4">Jobs List</h1>
+            {/* ปรับ UI ช่วงเลือกวันที่ */}
             <div className="mb-6 flex flex-col items-center w-full px-4">
               <div className="w-full rounded-xl shadow-md px-4 py-4 flex flex-row items-center justify-between gap-2" style={{ backgroundColor: '#E6F0FA', border: '1px solid #2D3E92' }}>
                 {['Start date', 'End date'].map((label, i) => (
@@ -509,6 +511,7 @@ export default function JobsList() {
                     </div>
                   ))}
                 </div>
+                {/* Pagination */}
                 <div className="w-full flex justify-center mt-6">
                   <div className="inline-flex items-center gap-2 bg-base-100 border border-base-300 rounded-full shadow px-4 py-2">
                     <button className="btn btn-outline btn-sm rounded-full min-w-[64px]" disabled={page === 1} onClick={() => setPage(page - 1)}>Prev</button>
@@ -516,6 +519,7 @@ export default function JobsList() {
                     <button className="btn btn-outline btn-sm rounded-full min-w-[64px]" disabled={page === totalPages} onClick={() => setPage(page + 1)}>Next</button>
                   </div>
                 </div>
+                {/* All Details Modal */}
                 {detailJobs && (
                   <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl shadow-2xl border-4 border-blue-400 p-8 max-w-2xl w-full relative animate-fade-in">

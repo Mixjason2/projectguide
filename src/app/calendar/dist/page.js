@@ -104,7 +104,7 @@ function CalendarExcel() {
     return Object.entries(grouped).map(function (_a) {
         var date = _a[0], jobsOnDate = _a[1];
         return ({
-            title: "job : (" + jobsOnDate.length + ") ",
+            title: "(" + jobsOnDate.length + "): job",
             start: date,
             allDay: true,
             backgroundColor: '#95c941',
@@ -121,7 +121,7 @@ exports["default"] = CalendarExcel;
 {
     return jobs.map(function (job) { return ({
         id: job.key.toString(),
-        title: " " + job.PNR + " ",
+        title: " " + job.serviceProductName + " ",
         start: job.PickupDate,
         backgroundColor: job.isChange ? '#fb923c' : '#95c941',
         borderColor: '#0369a1',
@@ -133,16 +133,35 @@ exports["default"] = CalendarExcel;
 }
 [jobs, currentView];
 ;
+var findDuplicateNames = function (jobs) {
+    var nameCount = jobs.reduce(function (acc, job) {
+        var _a;
+        var name = (_a = job.pax_name) === null || _a === void 0 ? void 0 : _a.toString();
+        if (name)
+            acc[name] = (acc[name] || 0) + 1;
+        return acc;
+    }, {});
+    return Object.entries(nameCount)
+        .filter(function (_a) {
+        var _ = _a[0], count = _a[1];
+        return count > 1;
+    })
+        .map(function (_a) {
+        var name = _a[0];
+        return name;
+    });
+};
 var handleEventClick = function (info) {
     if (currentView === 'dayGridMonth') {
         var jobsOnDate = info.event.extendedProps.jobs || [];
         var clickedDate = info.event.startStr.split('T')[0];
+        var duplicateNames = findDuplicateNames(jobsOnDate);
         var details = jobsOnDate.map(function (job, i) {
             var pickupTime = new Date(job.PickupDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
             var totalPax = getTotalPax(job);
             return i + 1 + ". \uD83D\uDD52 " + pickupTime + " \uD83D\uDCCD " + job.Pickup + " | \uD83D\uDC64 " + totalPax + " Pax | \uD83C\uDFAB PNR: " + job.PNR;
         }).join('\n');
-        alert("\uD83D\uDCC5 Date: " + clickedDate + "\n\uD83D\uDCCC Jobs:\n" + details);
+        alert("\uD83D\uDCC5 Date: " + clickedDate + "\n\uD83D\uDC64 Duplicate Names: " + (duplicateNames.length > 0 ? duplicateNames.join(', ') : 'None') + "\n\uD83D\uDCCC Jobs:\n" + details);
     }
     else {
         var job = info.event.extendedProps.job;
@@ -151,7 +170,7 @@ var handleEventClick = function (info) {
             timeStyle: 'short'
         });
         var totalPax = getTotalPax(job);
-        alert("\uD83C\uDFAB PNR: " + job.PNR + "\n\uD83D\uDD52 Pickup: " + pickupTime + "\n\uD83D\uDCCD Location: " + job.Pickup + "\n\uD83D\uDC64 Pax: " + totalPax + " (Adult: " + job.AdultQty + ", Child: " + job.ChildQty + ", Share: " + job.ChildShareQty + ", Infant: " + job.InfantQty + ")");
+        alert("\uD83C\uDFAB PNR: " + job.PNR + "\n\uD83D\uDD52 Pickup: " + pickupTime + "\n\uD83D\uDCCD Location: " + job.Pickup + "\n\uD83D\uDC64 Pax: " + totalPax + " (Adult: " + job.AdultQty + ", Child: " + job.ChildQty + ", Share: " + job.ChildShareQty + ", Infant: " + job.InfantQty + ")\n\uD83D\uDC64 Name: " + job.pax_name);
     }
 };
 var renderEventContent = function (arg) {
@@ -183,7 +202,9 @@ if (loading)
 if (error)
     return react_1["default"].createElement(ErrorMessage, { error: error });
 return (react_1["default"].createElement(cssguide_1["default"], null,
-    react_1["default"].createElement(react_2["default"], { plugins: [daygrid_1["default"], timegrid_1["default"], list_1["default"], interaction_1["default"]], initialView: "timeGridWeek", events: events, datesSet: function (arg) { return setCurrentView(arg.view.type); }, height: "100%", contentHeight: "auto", aspectRatio: 1.7, headerToolbar: {
+    react_1["default"].createElement(react_2["default"], { plugins: [daygrid_1["default"], timegrid_1["default"], list_1["default"], interaction_1["default"]], initialView: "timeGridWeek", events: events, datesSet: function (arg) { return setCurrentView(arg.view.type); }, height: "auto" // ไม่ fix ความสูง
+        , contentHeight: "auto" // ให้ขยายตามเนื้อหา       
+        , aspectRatio: 1.7, headerToolbar: {
             start: 'title',
             center: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth',
             end: 'today prev,next'
