@@ -56,6 +56,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
 };
 exports.__esModule = true;
 var react_1 = require("react");
+var page_1 = require("../upload/page"); // Adjusted the path to the correct location
 var cssguide_1 = require("../cssguide");
 var axios_1 = require("axios");
 var react_spinners_css_1 = require("react-spinners-css");
@@ -257,10 +258,30 @@ function JobsList() {
         fetch('https://operation.dth.travel:7082/api/guide/job', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: token, startdate: startDate, enddate: endDate })
+            body: JSON.stringify({
+                token: token,
+                startdate: startDate, enddate: endDate
+            })
         })
-            .then(function (res) { return res.ok ? res.json() : Promise.reject(res.text()); })
-            .then(setJobs)["catch"](function (err) { return setError(err.message); })["finally"](function () { return setLoading(false); });
+            .then(function (res) { return __awaiter(_this, void 0, void 0, function () {
+            var errorMessage;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        console.log("API jobs:", res);
+                        if (!!res.ok) return [3 /*break*/, 2];
+                        return [4 /*yield*/, res.text()];
+                    case 1:
+                        errorMessage = _a.sent();
+                        throw new Error(errorMessage);
+                    case 2: return [2 /*return*/, res.json()];
+                }
+            });
+        }); })
+            .then(function (data) {
+            console.log("Jobs data:", data);
+            setJobs(data);
+        })["catch"](function (err) { return setError(err.message); })["finally"](function () { return setLoading(false); });
     }, [startDate, endDate]);
     var filteredJobs = jobs.filter(function (job) {
         var pickup = job.PickupDate, dropoff = job.DropoffDate;
@@ -349,8 +370,47 @@ function JobsList() {
                                         renderPlaceDate(relatedJob.Dropoff, relatedJob.DropoffDate, 'Dropoff'),
                                         renderField('Pax', relatedJob.Pax),
                                         renderField('Source', relatedJob.Source))); }),
-                                    !acceptedPNRs.includes(job.PNR) && !rejectPNRs.includes(job.PNR) && (React.createElement("div", { className: "flex gap-3 mt-auto flex-wrap" },
-                                        React.createElement("button", { className: "btn btn-success flex-1 text-base font-Arial py-2 rounded-full shadow text-white bg-[#95c941] hover:opacity-90", onClick: function () { return __awaiter(_this, void 0, void 0, function () {
+                                    React.createElement("div", { className: "relative border rounded-xl p-4 shadow bg-white" }, job.isConfirmed ? (
+                                    // แสดงปุ่ม Upload หาก isConfirmed หรือ isCancel เป็น true
+                                    React.createElement(page_1["default"], { onBase64ListReady: function (base64List) { return __awaiter(_this, void 0, void 0, function () {
+                                            var token, response, error_1;
+                                            return __generator(this, function (_a) {
+                                                switch (_a.label) {
+                                                    case 0:
+                                                        token = localStorage.getItem("token") || "";
+                                                        _a.label = 1;
+                                                    case 1:
+                                                        _a.trys.push([1, 3, , 4]);
+                                                        return [4 /*yield*/, axios_1["default"].post("https://operation.dth.travel:7082/api/upload", {
+                                                                token: token,
+                                                                data: {
+                                                                    key: 2588,
+                                                                    Remark: "Test Remark",
+                                                                    Images: base64List.map(function (b64) { return ({ ImageBase64: b64 }); })
+                                                                }
+                                                            }, {
+                                                                headers: { "Content-Type": "application/json" }
+                                                            })];
+                                                    case 2:
+                                                        response = _a.sent();
+                                                        if (response.data.success) {
+                                                            alert("อัปโหลดสำเร็จ ID: " + response.data.id);
+                                                        }
+                                                        else {
+                                                            alert("Error: " + (response.data.error || "Unknown error"));
+                                                        }
+                                                        return [3 /*break*/, 4];
+                                                    case 3:
+                                                        error_1 = _a.sent();
+                                                        alert("เกิดข้อผิดพลาด: " + error_1.message);
+                                                        return [3 /*break*/, 4];
+                                                    case 4: return [2 /*return*/];
+                                                }
+                                            });
+                                        }); } })) : (
+                                    // แสดงปุ่ม Accept และ Reject หาก isConfirmed และ isCancel เป็น false
+                                    React.createElement("div", { className: "flex gap-3" },
+                                        React.createElement("button", { className: "btn flex-1 py-2 rounded-full shadow text-white bg-[#95c941] hover:opacity-90", onClick: function () { return __awaiter(_this, void 0, void 0, function () {
                                                 var token, response, result, e_1;
                                                 return __generator(this, function (_a) {
                                                     switch (_a.label) {
@@ -366,17 +426,12 @@ function JobsList() {
                                                             result = response.data;
                                                             if (result.success) {
                                                                 alert("Accept งานสำเร็จ");
-                                                                setAcceptedPNRs(function (prev) {
-                                                                    if (!prev.includes(job.PNR))
-                                                                        return __spreadArrays(prev, [job.PNR]);
-                                                                    return prev;
-                                                                });
-                                                                setRejectPNRs(function (prev) { return prev.filter(function (pnr) { return pnr !== job.PNR; }); });
                                                                 setJobs(function (prevJobs) {
-                                                                    return prevJobs.map(function (j) {
+                                                                    var updatedJobs = prevJobs.map(function (j) {
                                                                         return job.keys.includes(j.key)
                                                                             ? __assign(__assign({}, j), { isConfirmed: true, isCancel: false }) : j;
                                                                     });
+                                                                    return __spreadArrays(updatedJobs); // สร้าง array ใหม่เพื่อให้ React ตรวจจับการเปลี่ยนแปลง
                                                                 });
                                                             }
                                                             else {
@@ -391,7 +446,7 @@ function JobsList() {
                                                     }
                                                 });
                                             }); } }, "Accept"),
-                                        React.createElement("button", { className: "btn btn-danger flex-1 text-base font-Arial py-2 rounded-full shadow text-white bg-[#ef4444] hover:opacity-90", onClick: function () { return __awaiter(_this, void 0, void 0, function () {
+                                        React.createElement("button", { className: "btn flex-1 py-2 rounded-full shadow text-white bg-[#ef4444] hover:opacity-90", onClick: function () { return __awaiter(_this, void 0, void 0, function () {
                                                 var token, response, result, e_2;
                                                 return __generator(this, function (_a) {
                                                     switch (_a.label) {
@@ -407,18 +462,6 @@ function JobsList() {
                                                             result = response.data;
                                                             if (result.success) {
                                                                 alert("Cancel งานสำเร็จ");
-                                                                setRejectPNRs(function (prev) {
-                                                                    if (!prev.includes(job.PNR))
-                                                                        return __spreadArrays(prev, [job.PNR]);
-                                                                    return prev;
-                                                                });
-                                                                setAcceptedPNRs(function (prev) { return prev.filter(function (pnr) { return pnr !== job.PNR; }); });
-                                                                setJobs(function (prevJobs) {
-                                                                    return prevJobs.map(function (j) {
-                                                                        return job.keys.includes(j.key)
-                                                                            ? __assign(__assign({}, j), { isCancel: true, isConfirmed: false }) : j;
-                                                                    });
-                                                                });
                                                             }
                                                             else {
                                                                 alert("Cancel งานไม่สำเร็จ: " + ((result === null || result === void 0 ? void 0 : result.error) || "Unknown error"));
@@ -431,7 +474,7 @@ function JobsList() {
                                                         case 3: return [2 /*return*/];
                                                     }
                                                 });
-                                            }); } }, "Reject")))))));
+                                            }); } }, "Reject"))))))));
                         })),
                         React.createElement("div", { className: "w-full flex justify-center mt-6" },
                             React.createElement("div", { className: "inline-flex items-center gap-2 bg-base-100 border border-base-300 rounded-full shadow px-4 py-2" },

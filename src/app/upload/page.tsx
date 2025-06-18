@@ -1,4 +1,3 @@
-// components/FileToBase64.tsx
 import React, { useState, ChangeEvent } from "react";
 
 const FileToBase64 = ({
