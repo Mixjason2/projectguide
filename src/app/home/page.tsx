@@ -7,6 +7,7 @@ import { Ripple } from 'react-spinners-css';
 import { formatDate } from '@fullcalendar/core/index.js';
 import { get } from 'http';
 
+
 // 
 type Job = {
   Driver: any;
@@ -97,6 +98,8 @@ const renderField = (label: string, value: any) => (
     </div>
   )
 );
+
+
 
 const renderAllDetails = (jobs: Job[]) => {
   // Step 1: Group jobs by their common properties (excluding TypeName)
