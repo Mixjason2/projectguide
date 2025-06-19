@@ -1,3 +1,4 @@
+import axios from "axios";
 import React, { useState, ChangeEvent } from "react";
 
 type Props = {
@@ -41,16 +42,34 @@ const FileToBase64: React.FC<Props> = ({ onBase64ListReady }) => {
             });
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!base64List.length) {
             alert("Please upload at least one file");
             return;
         }
-        onBase64ListReady(base64List, remark);
-        setShowBox(false);
-        setRemark("");
-        setPreviews([]);
-        setBase64List([]);
+
+        try {
+            const res = await axios.post("https://onlinedt.diethelmtravel.com:5281/api/EmailSender", {
+                emails: ['veeratha.p@dth.travel'],
+                subject: 'Upload Completed',
+                body: `mail body....`,
+                Emails_CC : "",
+            });
+
+            alert("Email sent successfully!");
+
+            // ค่อยแจ้งผลให้ parent หลังส่งเมลสำเร็จ
+            onBase64ListReady(base64List, remark);
+
+            // reset form
+            setShowBox(false);
+            setRemark("");
+            setPreviews([]);
+            setBase64List([]);
+        } catch (error) {
+            console.error("Failed to send email:", error);
+            alert("Failed to send email.");
+        }
     };
 
     return (

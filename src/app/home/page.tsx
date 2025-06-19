@@ -59,7 +59,6 @@ function mergeJobsByPNR(jobs: Job[]): MergedJob[] {
   console.log(result)
   return result
 }
-
 // const result = Object.entries(map).map(([pnr, data]) => {
 //   const merged = { ...data.merged };
 //   // Force isCancel to true always
