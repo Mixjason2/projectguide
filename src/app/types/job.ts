@@ -1,0 +1,62 @@
+import { ReactNode } from "react";
+
+export type Job = {
+  Driver: any;
+  Vehicle: any;
+  Guide: any;
+  serviceSupplierName: string;
+  Comment: any;
+  pax_name: ReactNode;
+  Class: any;
+  Booking_Name: ReactNode;
+  AdultQty: number;
+  ChildQty: number;
+  ChildShareQty: number;
+  InfantQty: number;
+  Phone: any;
+  Booking_Consultant: ReactNode;
+  TypeName: any;
+  serviceTypeName: any;
+  isChange: boolean;
+  isNew: boolean;
+  keys: number[];
+  key: number;
+  PNR: string;
+  PNRDate: string;
+  BSL_ID: string;
+  PickupDate: string;
+  Pickup: string;
+  DropoffDate: string;
+  Dropoff: string;
+  Source: string;
+  Pax: number;
+  isConfirmed: boolean;
+  isCancel: boolean;
+  NotAvailable: any;
+  Photo?: string;
+  Remark?: string;
+};
+
+export type MergedJob = Job & {
+  keys: number[]; // ถูกเซ็ตไว้ในฟังก์ชันแล้ว
+  all: Job[];     // เก็บ job ทุกตัวที่รวมกันด้วย PNR เดียวกัน
+};
+
+export type ExpandedJobDetailProps = {
+  job: Job;
+  jobs: Job[];
+  expandedPNRs: Record<string, boolean>;
+  renderPlaceDate: (place: string, date: string, label: string) => ReactNode;
+  renderField: (label: string, value: any) => ReactNode;
+};
+
+export type Props = {
+  loading: boolean;
+  error: string | null;
+  filteredJobsLength: number;
+};
+
+export type JobDetailsProps = {
+  jobs: Job[];
+  formatDate: (dateStr: string) => string;
+};
