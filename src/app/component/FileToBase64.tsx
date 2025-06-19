@@ -65,7 +65,6 @@ const FileToBase64: React.FC<Props> = ({ onBase64ListReady }) => {
                 📎
             </button>
 
-
             {/* Overlay และ Popup */}
             {showBox && (
                 <>
