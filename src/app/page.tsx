@@ -38,7 +38,6 @@ export default function LoginPage() {
 
     // setLoading(true);
     try {
-      // Send data to API
       const res = await fetch("https://operation.dth.travel:7082/api/guide/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -46,7 +45,7 @@ export default function LoginPage() {
           Username: username,
           Password: password,
           asmdb: "Assignment_TH",
-          connection: "[AS-DTGTHA]" // เพิ่มบรรทัดนี้
+          connection: "[AS-DTGTHA]"
         }),
       });
       const data = await res.json();
@@ -64,8 +63,17 @@ export default function LoginPage() {
           localStorage.removeItem("savedUsername");
           localStorage.removeItem("savedPassword");
         }
-        // เก็บ token ไว้ใน localStorage หรือ sessionStorage ถ้าต้องการ
-        localStorage.setItem("token", data.token);
+
+        // ✅ เพิ่ม logic นี้: reset วันที่เป็นวันปัจจุบันหลัง login
+        localStorage.setItem("startDate", new Date().toISOString().slice(0, 10));
+        const endOfMonth = new Date(new Date().setMonth(new Date().getMonth() + 1, 0)).toISOString().slice(0, 10);
+        localStorage.setItem("endDate", endOfMonth);
+
+        localStorage.setItem("justLoggedIn", "true");
+
+        // ✅ แก้จุดนี้: เพิ่ม delay เล็กน้อย
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
         router.push("/home");
       } else {
         setMessage("Incorrect username or password.");
@@ -195,7 +203,7 @@ export default function LoginPage() {
       </g>
       <g>
         <path
-          d="M111.9,118.2h3.1l7.3,20.1h-3l-2-6h-7.9l-2.2,6h-2.8L111.9,118.2z M116.4,130.1l-3-8.9l-3.2,8.9H116.4z"
+          d="M111.9,118.2h3.1l7.3,20.1h-3m-2-6h-7.9l-2.2,6h-2.8L111.9,118.2z M116.4,130.1l-3-8.9l-3.2,8.9H116.4z"
           fill="#95c941"
           stroke="#95c941"
           strokeWidth="0.8"

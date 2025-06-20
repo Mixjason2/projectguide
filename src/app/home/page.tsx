@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import CssgGuide from '../cssguide';
 import axios from 'axios';
 import { Job } from "@/app/types/job";
@@ -11,10 +11,8 @@ import JobsSummary from '@/app/component/JobsSummary';
 import JobCard from '@/app/component/JobCard';
 import AllJobDetailsModal from "@/app/component/AllJobDetailsModal";
 
-// Merge jobs by PNR, combine fields that are different into arrays
 function mergeJobsByPNR(jobs: Job[]): MergedJob[] {
   const map: Record<string, { merged: MergedJob; all: Job[] }> = {};
-
   for (const job of jobs) {
     if (!map[job.PNR]) {
       map[job.PNR] = {
@@ -31,15 +29,8 @@ function mergeJobsByPNR(jobs: Job[]): MergedJob[] {
         const prev = map[job.PNR].merged[k];
         const curr = job[k];
 
-        if (k === "IsConfirmed") {
-          const mergedVal = Boolean(prev) || Boolean(curr);
-          map[job.PNR].merged[k] = mergedVal;
-          continue;
-        }
-
-        if (k === "IsCancel") {
-          const mergedVal = Boolean(prev) || Boolean(curr);
-          map[job.PNR].merged[k] = mergedVal;
+        if (k === "IsConfirmed" || k === "IsCancel") {
+          map[job.PNR].merged[k] = Boolean(prev) || Boolean(curr);
           continue;
         }
 
@@ -81,42 +72,72 @@ export default function JobsList() {
   const [expandedPNRs, setExpandedPNRs] = useState<{ [pnr: string]: boolean }>({});
   const [showConfirmedOnly, setShowConfirmedOnly] = useState(false);
   const pageSize = 6;
+  const isFetching = useRef(false);
 
-  useEffect(() => { 
-    const token = localStorage.getItem('token') || '';
+  // โหลดวันที่และ jobs cache ตอน mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setStartDate(get30DaysAgo());
+      setEndDate(getEndOfLastMonth());
+      setJobs([]);
+      localStorage.removeItem('startDate');
+      localStorage.removeItem('endDate');
+    } else {
+      const savedStart = localStorage.getItem('startDate');
+      const savedEnd = localStorage.getItem('endDate');
+      const useStart = savedStart || get30DaysAgo();
+      const useEnd = savedEnd || getEndOfLastMonth();
+      setStartDate(useStart);
+      setEndDate(useEnd);
+      // โหลด jobs cache ตามช่วงวัน
+      const cacheKey = `jobs_${useStart}_${useEnd}`;
+      const cachedJobs = localStorage.getItem(cacheKey);
+      if (cachedJobs) setJobs(JSON.parse(cachedJobs));
+    }
+  }, []);
+
+  // เวลาเปลี่ยนวันหรือ login ใหม่
+  useEffect(() => {
+    if (!startDate || !endDate) return;
+    if (typeof window === "undefined") return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    const cacheKey = `jobs_${startDate}_${endDate}`;
+    const cachedJobs = localStorage.getItem(cacheKey);
+    if (cachedJobs) {
+      setJobs(JSON.parse(cachedJobs));
+      return;
+    }
+    // fetch ใหม่ถ้าไม่มีใน cache
+    if (isFetching.current) return;
+    isFetching.current = true;
     setLoading(true);
-    fetch('https://operation.dth.travel:7082/api/guide/job', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        token: token, // ✅ ใช้ token จาก localStorage
-        startdate: startDate,
-        enddate: endDate
-      }),
+    setError(null);
+    axios.post('https://operation.dth.travel:7082/api/guide/job', {
+      token,
+      startdate: startDate,
+      enddate: endDate,
     })
-      .then(async (res) => {
-        if (!res.ok) {
-          const text = await res.text(); // แปลง error เป็นข้อความ
-          throw new Error(text);
-        }
-        return res.json(); // ✅ แปลงเป็น JSON
+      .then(res => {
+        setJobs(res.data);
+        localStorage.setItem(`jobs_${startDate}_${endDate}`, JSON.stringify(res.data));
       })
-      .then((data) => {
-        // console.log("Job data:", data);
-        setJobs(data); // ✅ เซ็ตข้อมูลให้ state
-      })
-      .catch((err) => {
-        // console.error("Fetch error:", err);
-        setError(err.message);
+      .catch(err => {
+        setError(err.message || 'Error fetching jobs');
+        setJobs([]);
       })
       .finally(() => {
         setLoading(false);
+        isFetching.current = false;
       });
   }, [startDate, endDate]);
 
+  // กรองข้อมูลตามวันที่และสถานะยืนยัน
   const filteredByDate = jobs.filter(job => {
     const pickup = job.PickupDate, dropoff = job.DropoffDate;
-    return (!startDate && !endDate) || (startDate && pickup >= startDate) || (endDate && dropoff <= endDate);
+    return (!startDate || pickup >= startDate) && (!endDate || dropoff <= endDate);
   });
 
   const filteredJobs = showConfirmedOnly
@@ -126,7 +147,6 @@ export default function JobsList() {
   const mergedJobs = mergeJobsByPNR(filteredJobs);
 
   const totalPages = Math.ceil(mergedJobs.length / pageSize);
-
   const pagedJobs = mergedJobs.slice((page - 1) * pageSize, page * pageSize);
   // console.log("Merged Jobs:", pagedJobs);
   const fetchJobs = async (token: string, startDate: string, endDate: string) => {
@@ -160,8 +180,13 @@ export default function JobsList() {
                       value={i === 0 ? startDate : endDate}
                       onChange={(e) => {
                         const newDate = e.target.value;
-                        i === 0 ? setStartDate(newDate) : setEndDate(newDate);
-                        fetchJobs(localStorage.getItem('token') || '', i === 0 ? newDate : startDate, i === 0 ? endDate : newDate);
+                        if (i === 0) setStartDate(newDate);
+                        else setEndDate(newDate);
+                        setPage(1);
+                        // โหลด jobs cache ตามช่วงวันใหม่
+                        const cacheKey = `jobs_${i === 0 ? newDate : startDate}_${i === 0 ? endDate : newDate}`;
+                        const cachedJobs = localStorage.getItem(cacheKey);
+                        if (cachedJobs) setJobs(JSON.parse(cachedJobs));
                       }}
                       className="input input-bordered w-full"
                     />
@@ -170,10 +195,11 @@ export default function JobsList() {
               </div>
               <span className="mt-2 text-xs text-gray-400 text-center px-2">Please select a date range to filter the desired tasks.</span>
             </div>
+
             <ConfirmedFilter showConfirmedOnly={showConfirmedOnly} onChange={setShowConfirmedOnly} />
             <StatusMessage loading={loading} error={error} filteredJobsLength={filteredByDate.length} />
+
             {!loading && !error && filteredByDate.length > 0 && (
-              // render list jobs
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {pagedJobs.map((job) => (
@@ -188,6 +214,7 @@ export default function JobsList() {
                     />
                   ))}
                 </div>
+
                 <div className="w-full flex justify-center mt-6">
                   <div className="inline-flex items-center gap-2 bg-base-100 border border-base-300 rounded-full shadow px-4 py-2">
                     <button className="btn btn-outline btn-sm rounded-full min-w-[64px]" disabled={page === 1} onClick={() => setPage(page - 1)}>Prev</button>
@@ -195,6 +222,7 @@ export default function JobsList() {
                     <button className="btn btn-outline btn-sm rounded-full min-w-[64px]" disabled={page === totalPages} onClick={() => setPage(page + 1)}>Next</button>
                   </div>
                 </div>
+
                 <AllJobDetailsModal detailJobs={detailJobs} setDetailJobs={setDetailJobs} />
               </>
             )}
