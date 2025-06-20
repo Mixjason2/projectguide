@@ -72,3 +72,21 @@ export type FilterProps = {
   value: FilterStatus;
   onChange: (status: FilterStatus) => void;
 };
+
+export type ConfirmedFilterProps = {
+  showConfirmedOnly: boolean;
+  onChange: (checked: boolean) => void;
+};
+
+export type JobsSummaryProps = {
+  filteredByDate: Job[];
+};
+
+export type JobCardProps = {
+  job: MergedJob;
+  expandedPNRs: { [pnr: string]: boolean };
+  setExpandedPNRs: React.Dispatch<React.SetStateAction<{ [pnr: string]: boolean }>>;
+  setDetailJobs: React.Dispatch<React.SetStateAction<Job[] | null>>;
+  jobs: Job[];
+  setJobs: React.Dispatch<React.SetStateAction<Job[]>>;
+};
