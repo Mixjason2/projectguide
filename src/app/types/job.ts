@@ -90,3 +90,12 @@ export type JobCardProps = {
   jobs: Job[];
   setJobs: React.Dispatch<React.SetStateAction<Job[]>>;
 };
+
+export type Props = {
+    onBase64ListReady: (b64List: string[], remark: string) => void;
+};
+
+export interface bookingAssignmentProps {
+  onBase64ListReady: (base64List: string[], remark: string) => void;
+  bookingAssignmentId: number;  // เพิ่มตรงนี้
+}

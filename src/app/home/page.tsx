@@ -58,17 +58,25 @@ function mergeJobsByPNR(jobs: Job[]): MergedJob[] {
   return Object.values(map).map((entry) => entry.merged);
 }
 
-const getToday = () => new Date().toISOString().slice(0, 10);
+const get30DaysAgo = () => {
+  const date = new Date();
+  date.setDate(date.getDate() - 30);
+  return date.toISOString().slice(0, 10);
+};
 
-const getEndOfMonth = () => new Date(new Date().setMonth(new Date().getMonth() + 1, 0)).toISOString().slice(0, 10);
+const getEndOfLastMonth = () => {
+  const date = new Date();
+  date.setDate(0); // วันที่ 0 ของเดือนปัจจุบัน = วันสุดท้ายของเดือนก่อนหน้า
+  return date.toISOString().slice(0, 10);
+};
 
 export default function JobsList() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detailJobs, setDetailJobs] = useState<Job[] | null>(null);
-  const [startDate, setStartDate] = useState<string>(getToday());
-  const [endDate, setEndDate] = useState<string>(getEndOfMonth());
+  const [startDate, setStartDate] = useState<string>(get30DaysAgo());
+  const [endDate, setEndDate] = useState<string>(getEndOfLastMonth());
   const [page, setPage] = useState(1);
   const [expandedPNRs, setExpandedPNRs] = useState<{ [pnr: string]: boolean }>({});
   const [showConfirmedOnly, setShowConfirmedOnly] = useState(false);
@@ -116,29 +124,11 @@ export default function JobsList() {
     : filteredByDate;
 
   const mergedJobs = mergeJobsByPNR(filteredJobs);
-  console.log('Merged Jobs with isConfirmed/isCancel:', mergedJobs);
+
   const totalPages = Math.ceil(mergedJobs.length / pageSize);
 
   const pagedJobs = mergedJobs.slice((page - 1) * pageSize, page * pageSize);
   // console.log("Merged Jobs:", pagedJobs);
-<<<<<<< HEAD
-  const summary = (
-    <div className="w-full flex justify-end mb-6">
-      <div className="flex flex-row flex-wrap gap-6 bg-white border border-blue-300 rounded-xl shadow-lg px-8 py-4 items-center max-w-3xl">
-        {['All Jobs', 'New Jobs', 'Changed Jobs'].map((label, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <span className={`inline-block w-3 h-3 rounded-full ${['bg-neutral-700', 'bg-cyan-600', 'bg-orange-400'][i]}`}></span>  
-            <span className="text-gray-500">{label}:</span>
-            <span className="font-Arial text-[#2D3E92]">
-              {i === 0 ? filteredByDate.length : filteredByDate.filter(job => i === 1 ? job.isNew : job.isChange).length}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-=======
->>>>>>> 8beeca7153f907fd9a37802ecd108c1d679bcc06
   const fetchJobs = async (token: string, startDate: string, endDate: string) => {
     setLoading(true);
     setError(null);
