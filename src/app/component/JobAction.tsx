@@ -93,7 +93,7 @@ const JobAction: React.FC<JobActionProps> = ({ job, setJobs }) => {
 
   return (
     <div className="relative border rounded-xl p-4 shadow bg-white">
-      {job.isCancel ? null : ( job.isConfirmed ? (
+      {job.IsCancel ? null : ( job.IsConfirmed ? (
         <FileToBase64 onBase64ListReady={handleUpload} />
       ) : (
         <div className="flex gap-3">
