@@ -44,9 +44,24 @@ function CssgGuide(_a) {
                                     react_1["default"].createElement("path", { stroke: "#ffffff", strokeWidth: "2", strokeLinecap: "round", d: "M8 9h8M8 13h5" }),
                                     react_1["default"].createElement("circle", { cx: "7", cy: "9", r: "1", fill: "#ffffff" }),
                                     react_1["default"].createElement("circle", { cx: "7", cy: "13", r: "1", fill: "#ffffff" })),
-                                react_1["default"].createElement("span", { className: "ms-4" }, "Jobs List")))),
+                                react_1["default"].createElement("span", { className: "ms-4" }, "Jobs List"))),
+                        react_1["default"].createElement("li", null,
+                            react_1["default"].createElement("a", { href: "/booking", className: "flex items-center p-4 text-lg font-semibold text-white rounded-xl hover:bg-[#1f2b68] group" },
+                                react_1["default"].createElement("svg", { className: "w-8 h-8 text-white transition duration-75 group-hover:text-gray-200", "aria-hidden": "true", xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", strokeWidth: 2 },
+                                    react_1["default"].createElement("rect", { x: "4", y: "4", width: "16", height: "16", rx: "3", fill: "#2D3E92" }),
+                                    react_1["default"].createElement("path", { stroke: "#ffffff", strokeWidth: "2", strokeLinecap: "round", d: "M8 9h8M8 13h5" }),
+                                    react_1["default"].createElement("circle", { cx: "7", cy: "9", r: "1", fill: "#ffffff" }),
+                                    react_1["default"].createElement("circle", { cx: "7", cy: "13", r: "1", fill: "#ffffff" })),
+                                react_1["default"].createElement("span", { className: "ms-4" }, "Booking")))),
                     react_1["default"].createElement("div", { className: "ms-1" },
-                        react_1["default"].createElement("a", { href: "/", className: "flex items-center p-2 text-red-600 rounded-lg hover:bg-[#FDECEA] group" },
+                        react_1["default"].createElement("button", { onClick: function () {
+                                // ลบ token, startDate, endDate (แต่ไม่ลบ jobs cache)
+                                localStorage.removeItem("token");
+                                localStorage.removeItem("startDate");
+                                localStorage.removeItem("endDate");
+                                // redirect ไปหน้า login หรือ root
+                                window.location.href = "/";
+                            }, className: "flex items-center p-2 text-red-600 rounded-lg hover:bg-[#FDECEA] group", style: { background: "none", border: "none", cursor: "pointer" } },
                             react_1["default"].createElement("svg", { className: "w-5 h-5 text-red-600 transition duration-75 group-hover:text-red-500", "aria-hidden": "true", xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor" },
                                 react_1["default"].createElement("path", { stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", d: "M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" })),
                             react_1["default"].createElement("span", { className: "ms-3" }, "Log Out"))))))),

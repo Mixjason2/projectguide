@@ -162,7 +162,7 @@ function LoginPage() {
                             React.createElement("g", null,
                                 React.createElement("path", { d: "M86.7,118.2h9.1c1.5,0,2.7,0.2,3.7,0.7c1.9,0.9,2.8,2.4,2.8,4.7c0,1.2-0.2,2.2-0.7,3c-0.5,0.8-1.2,1.4-2.1,1.8c0.8,0.3,1.4,0.7,1.8,1.3s0.6,1.4,0.7,2.5l0.1,2.7c0,0.8,0.1,1.3,0.2,1.7c0.2,0.6,0.5,1,0.9,1.2v0.5h-3.3c-0.1-0.2-0.2-0.4-0.2-0.7s-0.1-0.8-0.1-1.6l-0.2-3.3c-0.1-1.3-0.5-2.2-1.4-2.6c-0.5-0.2-1.3-0.4-2.4-0.4h-6v8.6h-2.7V118.2z M95.5,127.4c1.2,0,2.2-0.3,2.9-0.8c0.7-0.5,1.1-1.4,1.1-2.8c0-1.4-0.5-2.4-1.5-2.9c-0.5-0.3-1.3-0.4-2.2-0.4h-6.5v6.9H95.5z", fill: "#95c941", stroke: "#95c941", strokeWidth: "0.8" })),
                             React.createElement("g", null,
-                                React.createElement("path", { d: "M111.9,118.2h3.1l7.3,20.1h-3l-2-6h-7.9l-2.2,6h-2.8L111.9,118.2z M116.4,130.1l-3-8.9l-3.2,8.9H116.4z", fill: "#95c941", stroke: "#95c941", strokeWidth: "0.8" })),
+                                React.createElement("path", { d: "M111.9,118.2h3.1l7.3,20.1h-3m-2-6h-7.9l-2.2,6h-2.8L111.9,118.2z M116.4,130.1l-3-8.9l-3.2,8.9H116.4z", fill: "#95c941", stroke: "#95c941", strokeWidth: "0.8" })),
                             React.createElement("g", null,
                                 React.createElement("path", { d: "M123.5,118.2l5.8,17.1l5.7-17.1h3l-7.3,20.1h-2.9l-7.3-20.1H123.5z", fill: "#95c941", stroke: "#95c941", strokeWidth: "0.8" })),
                             React.createElement("g", null,

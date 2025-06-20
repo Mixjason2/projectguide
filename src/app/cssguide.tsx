@@ -106,14 +106,25 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
                                 </li>
                             </ul>
                             <div className="ms-1">
-                                <a href="/" className="flex items-center p-2 text-red-600 rounded-lg hover:bg-[#FDECEA] group">
+                                <button
+                                    onClick={() => {
+                                        // ลบ token, startDate, endDate (แต่ไม่ลบ jobs cache)
+                                        localStorage.removeItem("token");
+                                        localStorage.removeItem("startDate");
+                                        localStorage.removeItem("endDate");
+                                        // redirect ไปหน้า login หรือ root
+                                        window.location.href = "/";
+                                    }}
+                                    className="flex items-center p-2 text-red-600 rounded-lg hover:bg-[#FDECEA] group"
+                                    style={{ background: "none", border: "none", cursor: "pointer" }}
+                                >
                                     <svg className="w-5 h-5 text-red-600 transition duration-75 group-hover:text-red-500"
                                         aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
                                             d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" />
                                     </svg>
                                     <span className="ms-3">Log Out</span>
-                                </a>
+                                </button>
                             </div>
                         </div>
                     </div>

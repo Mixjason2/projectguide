@@ -80,9 +80,9 @@ function JobsList() {
         if (!token) {
             setStartDate(getToday());
             setEndDate(getEndOfMonth());
+            setJobs([]);
             localStorage.removeItem('startDate');
             localStorage.removeItem('endDate');
-            setJobs([]);
         }
         else {
             var savedStart = localStorage.getItem('startDate');
@@ -126,7 +126,7 @@ function JobsList() {
         })
             .then(function (res) {
             setJobs(res.data);
-            localStorage.setItem(cacheKey, JSON.stringify(res.data));
+            localStorage.setItem("jobs_" + startDate + "_" + endDate, JSON.stringify(res.data));
         })["catch"](function (err) {
             setError(err.message || 'Error fetching jobs');
             setJobs([]);

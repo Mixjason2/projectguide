@@ -73,9 +73,9 @@ export default function JobsList() {
     if (!token) {
       setStartDate(getToday());
       setEndDate(getEndOfMonth());
+      setJobs([]);
       localStorage.removeItem('startDate');
       localStorage.removeItem('endDate');
-      setJobs([]);
     } else {
       const savedStart = localStorage.getItem('startDate');
       const savedEnd = localStorage.getItem('endDate');
@@ -114,7 +114,7 @@ export default function JobsList() {
     })
       .then(res => {
         setJobs(res.data);
-        localStorage.setItem(cacheKey, JSON.stringify(res.data));
+        localStorage.setItem(`jobs_${startDate}_${endDate}`, JSON.stringify(res.data));
       })
       .catch(err => {
         setError(err.message || 'Error fetching jobs');
