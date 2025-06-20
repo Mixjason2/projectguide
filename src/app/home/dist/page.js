@@ -230,7 +230,7 @@ function JobsList() {
     // console.log("Merged Jobs:", pagedJobs);
     var summary = (React.createElement("div", { className: "w-full flex justify-end mb-6" },
         React.createElement("div", { className: "flex flex-row flex-wrap gap-6 bg-white border border-blue-300 rounded-xl shadow-lg px-8 py-4 items-center max-w-3xl" }, ['All Jobs', 'New Jobs', 'Changed Jobs'].map(function (label, i) { return (React.createElement("div", { key: i, className: "flex items-center gap-2" },
-            React.createElement("span", { className: "inline-block w-3 h-3 rounded-full " + ['bg-slate-400', 'bg-cyan-600', 'bg-orange-400'][i] }),
+            React.createElement("span", { className: "inline-block w-3 h-3 rounded-full " + ['bg-neutral-700', 'bg-cyan-600', 'bg-orange-400'][i] }),
             React.createElement("span", { className: "text-gray-500" },
                 label,
                 ":"),
@@ -292,7 +292,7 @@ function JobsList() {
                                                     ? "#0891b2"
                                                     : job.isChange
                                                         ? "#fb923c"
-                                                        : "#E0E7FF"
+                                                        : "#404040"
                                     } }, ((_a = job.all) === null || _a === void 0 ? void 0 : _a.filter(function (j) {
                                     return j.Pickup !== job.Pickup ||
                                         j.PickupDate !== job.PickupDate ||
