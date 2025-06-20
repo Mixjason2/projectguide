@@ -3,13 +3,13 @@
 import { useEffect, useState } from 'react';
 import CssgGuide from '../cssguide';
 import axios from 'axios';
-import { formatDate } from '@fullcalendar/core/index.js';
 import { Job } from "@/app/types/job";
 import { MergedJob } from "@/app/types/job";
-import ExpandedJobDetail from '@/app/component/ExpandedJobDetail';
-import JobAction from "@/app/component/JobAction";
 import StatusMessage from "@/app/component/StatusMessage";
-import AllJobDetails from "@/app/component/AllJobDetails";
+import ConfirmedFilter from '@/app/component/ConfirmedFilter';
+import JobsSummary from '@/app/component/JobsSummary';
+import JobCard from '@/app/component/JobCard';
+import AllJobDetailsModal from "@/app/component/AllJobDetailsModal";
 
 // Merge jobs by PNR, combine fields that are different into arrays
 function mergeJobsByPNR(jobs: Job[]): MergedJob[] {
@@ -58,92 +58,9 @@ function mergeJobsByPNR(jobs: Job[]): MergedJob[] {
   return Object.values(map).map((entry) => entry.merged);
 }
 
-
-// ✅ Only one map block here
-// const result = Object.entries(map).map(([pnr, data]) => {
-//   const merged = { ...data.merged }
-//   // Force isConfirmed to true always
-//   merged.isConfirmed = true
-//   return {
-//     ...merged,
-//     PNR: pnr,
-//     all: data.all,
-//   }
-// })
-// console.log(result)
-// return result
-
-// const result = Object.entries(map).map(([pnr, data]) => {
-//   const merged = { ...data.merged };
-//   // Force isCancel to true always
-//   merged.isCancel = true;
-//   return {
-//     ...merged,
-//     PNR: pnr,
-//     all: data.all,
-//   };
-// });
-// console.log(result);
-// return result;
-// }
-
 const getToday = () => new Date().toISOString().slice(0, 10);
 
 const getEndOfMonth = () => new Date(new Date().setMonth(new Date().getMonth() + 1, 0)).toISOString().slice(0, 10);
-
-const renderPlaceDate = (place: string, date: string, label: string) => (
-  place || date ? (
-    <div>
-      <span className="font-Arial">{label}:</span> {place}{place && date ? ' - ' : ''}{date}
-    </div>
-  ) : null
-);
-
-const renderField = (label: string, value: any) => (
-  Array.isArray(value) ? (
-    <div>
-      <span className="font-Arial">{label}:</span>
-      <ul className="list-disc ml-6">{value.map((v, i) => <li key={i}>{String(v)}</li>)}</ul>
-    </div>
-  ) : (
-    <div>
-      <span className="font-Arial">{label}:</span> {String(value)}
-    </div>
-  )
-);
-
-const renderAllDetails = (jobs: Job[]) => {
-  // Step 1: Group jobs by their common properties (excluding TypeName)
-  const groupedJobs: Record<string, { job: Job; typeNames: string[] }> = {};
-
-  jobs.forEach((job) => {
-    const groupKey = JSON.stringify({
-      PNR: job.PNR,
-      Pickup: job.Pickup,
-      PickupDate: job.PickupDate,
-      Dropoff: job.Dropoff,
-      DropoffDate: job.DropoffDate,
-      PNRDate: job.PNRDate,
-      GuideName: job.Guide,
-      Vehicle: job.Vehicle,
-      // add other fields that should be merged
-    });
-
-    const typeName = job.serviceTypeName || job.TypeName || "Unknown";
-
-    if (!groupedJobs[groupKey]) {
-      groupedJobs[groupKey] = {
-        job: { ...job },
-        typeNames: [typeName],
-      };
-    } else {
-      groupedJobs[groupKey].typeNames.push(typeName);
-    }
-  });
-  return (
-    <AllJobDetails jobs={jobs} formatDate={formatDate} />
-  )
-};
 
 export default function JobsList() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -204,6 +121,7 @@ export default function JobsList() {
 
   const pagedJobs = mergedJobs.slice((page - 1) * pageSize, page * pageSize);
   // console.log("Merged Jobs:", pagedJobs);
+<<<<<<< HEAD
   const summary = (
     <div className="w-full flex justify-end mb-6">
       <div className="flex flex-row flex-wrap gap-6 bg-white border border-blue-300 rounded-xl shadow-lg px-8 py-4 items-center max-w-3xl">
@@ -219,6 +137,8 @@ export default function JobsList() {
       </div>
     </div>
   );
+=======
+>>>>>>> 8beeca7153f907fd9a37802ecd108c1d679bcc06
   const fetchJobs = async (token: string, startDate: string, endDate: string) => {
     setLoading(true);
     setError(null);
@@ -235,7 +155,7 @@ export default function JobsList() {
   return (
     <CssgGuide>
       <div className="flex flex-col items-center py-8 min-h-screen bg-base-200 relative bg-[#9EE4F6]">
-        {summary}
+        <JobsSummary filteredByDate={filteredByDate} />
         <div className="bg-[#F9FAFB] rounded-3xl shadow-lg border border-gray-300 w-full max-w-7xl p-6">
           <div className="p-4 w-full overflow-auto bg-[#F9FAFB]">
             <h1 className="text-2xl font-Arial mb-4">Jobs List</h1>
@@ -260,98 +180,22 @@ export default function JobsList() {
               </div>
               <span className="mt-2 text-xs text-gray-400 text-center px-2">Please select a date range to filter the desired tasks.</span>
             </div>
-            <input
-                type="checkbox"
-                id="showConfirmedOnly"
-                checked={showConfirmedOnly}
-                onChange={e => setShowConfirmedOnly(e.target.checked)}
-                className="checkbox checkbox-primary"
-              />
-              <label htmlFor="showConfirmedOnly" className="font-Arial text-sm text-gray-700 cursor-pointer">
-                Show Confirmed Only
-              </label>
+            <ConfirmedFilter showConfirmedOnly={showConfirmedOnly} onChange={setShowConfirmedOnly} />
             <StatusMessage loading={loading} error={error} filteredJobsLength={filteredByDate.length} />
             {!loading && !error && filteredByDate.length > 0 && (
               // render list jobs
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {pagedJobs.map((job) => (
-                    <div
+                    <JobCard
                       key={job.PNR}
-                      className="relative bg-white border border-[#9EE4F6] rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col"
-                    >
-                      <div
-                        className="absolute top-2 left-1 text-[#ffffff] font-Arial rounded-full px-3 py-1 text-sm shadow z-10"
-                        style={{
-
-                          backgroundColor: job.IsCancel
-                            ? "#ef4444"
-                            : job.IsConfirmed
-                              ? "#22c55e"
-                              : job.isNew
-                                ? "#0891b2"
-                                : job.isChange
-                                  ? "#fb923c"
-                                  : "#404040",
-                        }}
-                      >
-                        {job.all?.filter(
-                          (j) =>
-                            j.Pickup !== job.Pickup ||
-                            j.PickupDate !== job.PickupDate ||
-                            j.Dropoff !== job.Dropoff ||
-                            j.DropoffDate !== job.DropoffDate ||
-                            j.PNRDate !== job.PNRDate
-                        ).length + 1 || 1}
-                      </div>
-
-
-                      <button
-                        className="absolute top-3.5 right-2 w-8 h-8 rounded-full bg-white border-2 border-[#2D3E92] shadow-[0_4px_10px_rgba(45,62,146,0.3)] hover:shadow-[0_6px_14px_rgba(45,62,146,0.4)] transition-all duration-200 flex items-center justify-center"
-                        title="Show all details"
-                        onClick={() => setDetailJobs(job.all)}
-                        style={{ zIndex: 2 }}
-                      >
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                          <circle cx="12" cy="12" r="10" fill="#F0F8FF" />
-                          <text
-                            x="12"
-                            y="12"
-                            textAnchor="middle"
-                            dominantBaseline="central"
-                            fontSize="18"
-                            fill="#2D3E92"
-                            fontFamily="Arial"
-                            fontWeight="bold"
-                          >
-                            i
-                          </text>
-                        </svg>
-                      </button>
-
-                      <div
-                        className="inline-block p-6 pb-0 cursor-pointer mx-auto items-center gap-3"
-                        onClick={() =>
-                          setExpandedPNRs((prev) => ({ ...prev, [job.PNR]: !expandedPNRs[job.PNR] }))
-                        }
-                      >
-                        <h2
-                          className="font-Arial mt-0 mb-0 underline underline-offset-4"
-                          style={{ color: "#2D3E92", fontSize: "28px" }}
-                        >
-                          {job.PNR}
-                        </h2>
-                      </div>
-                      <ExpandedJobDetail
-                        job={job}
-                        jobs={jobs}
-                        expandedPNRs={expandedPNRs}
-                        renderPlaceDate={renderPlaceDate}
-                        renderField={renderField}
-                      />
-                      {/* ✅ ตรงนี้เรียกใช้ JobAction */}
-                      <JobAction job={job} setJobs={setJobs} />
-                    </div>
+                      job={job}
+                      expandedPNRs={expandedPNRs}
+                      setExpandedPNRs={setExpandedPNRs}
+                      setDetailJobs={setDetailJobs}
+                      jobs={jobs}
+                      setJobs={setJobs}
+                    />
                   ))}
                 </div>
                 <div className="w-full flex justify-center mt-6">
@@ -361,15 +205,7 @@ export default function JobsList() {
                     <button className="btn btn-outline btn-sm rounded-full min-w-[64px]" disabled={page === totalPages} onClick={() => setPage(page + 1)}>Next</button>
                   </div>
                 </div>
-                {detailJobs && (
-                  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl shadow-2xl border-4 border-blue-400 p-8 max-w-2xl w-full relative animate-fade-in">
-                      <button className="absolute top-2 right-2 btn btn-sm btn-error" onClick={() => setDetailJobs(null)}>✕</button>
-                      <h2 className="text-xl font-Arial mb-4">All Job Details</h2>
-                      {renderAllDetails(detailJobs)}
-                    </div>
-                  </div>
-                )}
+                <AllJobDetailsModal detailJobs={detailJobs} setDetailJobs={setDetailJobs} />
               </>
             )}
           </div>

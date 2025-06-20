@@ -51,11 +51,11 @@ exports.__esModule = true;
 var react_1 = require("react");
 var cssguide_1 = require("../cssguide");
 var axios_1 = require("axios");
-var index_js_1 = require("@fullcalendar/core/index.js");
-var ExpandedJobDetail_1 = require("@/app/component/ExpandedJobDetail");
-var JobAction_1 = require("@/app/component/JobAction");
 var StatusMessage_1 = require("@/app/component/StatusMessage");
-var AllJobDetails_1 = require("@/app/component/AllJobDetails");
+var ConfirmedFilter_1 = require("@/app/component/ConfirmedFilter");
+var JobsSummary_1 = require("@/app/component/JobsSummary");
+var JobCard_1 = require("@/app/component/JobCard");
+var AllJobDetailsModal_1 = require("@/app/component/AllJobDetailsModal");
 // Merge jobs by PNR, combine fields that are different into arrays
 function mergeJobsByPNR(jobs) {
     var map = {};
@@ -99,79 +99,8 @@ function mergeJobsByPNR(jobs) {
     }
     return Object.values(map).map(function (entry) { return entry.merged; });
 }
-// ✅ Only one map block here
-// const result = Object.entries(map).map(([pnr, data]) => {
-//   const merged = { ...data.merged }
-//   // Force isConfirmed to true always
-//   merged.isConfirmed = true
-//   return {
-//     ...merged,
-//     PNR: pnr,
-//     all: data.all,
-//   }
-// })
-// console.log(result)
-// return result
-// const result = Object.entries(map).map(([pnr, data]) => {
-//   const merged = { ...data.merged };
-//   // Force isCancel to true always
-//   merged.isCancel = true;
-//   return {
-//     ...merged,
-//     PNR: pnr,
-//     all: data.all,
-//   };
-// });
-// console.log(result);
-// return result;
-// }
 var getToday = function () { return new Date().toISOString().slice(0, 10); };
 var getEndOfMonth = function () { return new Date(new Date().setMonth(new Date().getMonth() + 1, 0)).toISOString().slice(0, 10); };
-var renderPlaceDate = function (place, date, label) { return (place || date ? (React.createElement("div", null,
-    React.createElement("span", { className: "font-Arial" },
-        label,
-        ":"),
-    " ",
-    place,
-    place && date ? ' - ' : '',
-    date)) : null); };
-var renderField = function (label, value) { return (Array.isArray(value) ? (React.createElement("div", null,
-    React.createElement("span", { className: "font-Arial" },
-        label,
-        ":"),
-    React.createElement("ul", { className: "list-disc ml-6" }, value.map(function (v, i) { return React.createElement("li", { key: i }, String(v)); })))) : (React.createElement("div", null,
-    React.createElement("span", { className: "font-Arial" },
-        label,
-        ":"),
-    " ",
-    String(value)))); };
-var renderAllDetails = function (jobs) {
-    // Step 1: Group jobs by their common properties (excluding TypeName)
-    var groupedJobs = {};
-    jobs.forEach(function (job) {
-        var groupKey = JSON.stringify({
-            PNR: job.PNR,
-            Pickup: job.Pickup,
-            PickupDate: job.PickupDate,
-            Dropoff: job.Dropoff,
-            DropoffDate: job.DropoffDate,
-            PNRDate: job.PNRDate,
-            GuideName: job.Guide,
-            Vehicle: job.Vehicle
-        });
-        var typeName = job.serviceTypeName || job.TypeName || "Unknown";
-        if (!groupedJobs[groupKey]) {
-            groupedJobs[groupKey] = {
-                job: __assign({}, job),
-                typeNames: [typeName]
-            };
-        }
-        else {
-            groupedJobs[groupKey].typeNames.push(typeName);
-        }
-    });
-    return (React.createElement(AllJobDetails_1["default"], { jobs: jobs, formatDate: index_js_1.formatDate }));
-};
 function JobsList() {
     var _this = this;
     var _a = react_1.useState([]), jobs = _a[0], setJobs = _a[1];
@@ -267,7 +196,7 @@ function JobsList() {
     }); };
     return (React.createElement(cssguide_1["default"], null,
         React.createElement("div", { className: "flex flex-col items-center py-8 min-h-screen bg-base-200 relative bg-[#9EE4F6]" },
-            summary,
+            React.createElement(JobsSummary_1["default"], { filteredByDate: filteredByDate }),
             React.createElement("div", { className: "bg-[#F9FAFB] rounded-3xl shadow-lg border border-gray-300 w-full max-w-7xl p-6" },
                 React.createElement("div", { className: "p-4 w-full overflow-auto bg-[#F9FAFB]" },
                     React.createElement("h1", { className: "text-2xl font-Arial mb-4" }, "Jobs List"),
@@ -280,46 +209,12 @@ function JobsList() {
                                     fetchJobs(localStorage.getItem('token') || '', i === 0 ? newDate : startDate, i === 0 ? endDate : newDate);
                                 }, className: "input input-bordered w-full" }))); })),
                         React.createElement("span", { className: "mt-2 text-xs text-gray-400 text-center px-2" }, "Please select a date range to filter the desired tasks.")),
-                    React.createElement("input", { type: "checkbox", id: "showConfirmedOnly", checked: showConfirmedOnly, onChange: function (e) { return setShowConfirmedOnly(e.target.checked); }, className: "checkbox checkbox-primary" }),
-                    React.createElement("label", { htmlFor: "showConfirmedOnly", className: "font-Arial text-sm text-gray-700 cursor-pointer" }, "Show Confirmed Only"),
+                    React.createElement(ConfirmedFilter_1["default"], { showConfirmedOnly: showConfirmedOnly, onChange: setShowConfirmedOnly }),
                     React.createElement(StatusMessage_1["default"], { loading: loading, error: error, filteredJobsLength: filteredByDate.length }),
                     !loading && !error && filteredByDate.length > 0 && (
                     // render list jobs
                     React.createElement(React.Fragment, null,
-                        React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" }, pagedJobs.map(function (job) {
-                            var _a;
-                            return (React.createElement("div", { key: job.PNR, className: "relative bg-white border border-[#9EE4F6] rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col" },
-                                React.createElement("div", { className: "absolute top-2 left-1 text-[#ffffff] font-Arial rounded-full px-3 py-1 text-sm shadow z-10", style: {
-                                        backgroundColor: job.IsCancel
-                                            ? "#ef4444"
-                                            : job.IsConfirmed
-                                                ? "#22c55e"
-                                                : job.isNew
-                                                    ? "#0891b2"
-                                                    : job.isChange
-                                                        ? "#fb923c"
-                                                        : "#404040"
-                                    } }, ((_a = job.all) === null || _a === void 0 ? void 0 : _a.filter(function (j) {
-                                    return j.Pickup !== job.Pickup ||
-                                        j.PickupDate !== job.PickupDate ||
-                                        j.Dropoff !== job.Dropoff ||
-                                        j.DropoffDate !== job.DropoffDate ||
-                                        j.PNRDate !== job.PNRDate;
-                                }).length) + 1 || 1),
-                                React.createElement("button", { className: "absolute top-3.5 right-2 w-8 h-8 rounded-full bg-white border-2 border-[#2D3E92] shadow-[0_4px_10px_rgba(45,62,146,0.3)] hover:shadow-[0_6px_14px_rgba(45,62,146,0.4)] transition-all duration-200 flex items-center justify-center", title: "Show all details", onClick: function () { return setDetailJobs(job.all); }, style: { zIndex: 2 } },
-                                    React.createElement("svg", { width: "28", height: "28", viewBox: "0 0 24 24", fill: "none" },
-                                        React.createElement("circle", { cx: "12", cy: "12", r: "10", fill: "#F0F8FF" }),
-                                        React.createElement("text", { x: "12", y: "12", textAnchor: "middle", dominantBaseline: "central", fontSize: "18", fill: "#2D3E92", fontFamily: "Arial", fontWeight: "bold" }, "i"))),
-                                React.createElement("div", { className: "inline-block p-6 pb-0 cursor-pointer mx-auto items-center gap-3", onClick: function () {
-                                        return setExpandedPNRs(function (prev) {
-                                            var _a;
-                                            return (__assign(__assign({}, prev), (_a = {}, _a[job.PNR] = !expandedPNRs[job.PNR], _a)));
-                                        });
-                                    } },
-                                    React.createElement("h2", { className: "font-Arial mt-0 mb-0 underline underline-offset-4", style: { color: "#2D3E92", fontSize: "28px" } }, job.PNR)),
-                                React.createElement(ExpandedJobDetail_1["default"], { job: job, jobs: jobs, expandedPNRs: expandedPNRs, renderPlaceDate: renderPlaceDate, renderField: renderField }),
-                                React.createElement(JobAction_1["default"], { job: job, setJobs: setJobs })));
-                        })),
+                        React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" }, pagedJobs.map(function (job) { return (React.createElement(JobCard_1["default"], { key: job.PNR, job: job, expandedPNRs: expandedPNRs, setExpandedPNRs: setExpandedPNRs, setDetailJobs: setDetailJobs, jobs: jobs, setJobs: setJobs })); })),
                         React.createElement("div", { className: "w-full flex justify-center mt-6" },
                             React.createElement("div", { className: "inline-flex items-center gap-2 bg-base-100 border border-base-300 rounded-full shadow px-4 py-2" },
                                 React.createElement("button", { className: "btn btn-outline btn-sm rounded-full min-w-[64px]", disabled: page === 1, onClick: function () { return setPage(page - 1); } }, "Prev"),
@@ -330,10 +225,6 @@ function JobsList() {
                                     " ",
                                     totalPages),
                                 React.createElement("button", { className: "btn btn-outline btn-sm rounded-full min-w-[64px]", disabled: page === totalPages, onClick: function () { return setPage(page + 1); } }, "Next"))),
-                        detailJobs && (React.createElement("div", { className: "fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50" },
-                            React.createElement("div", { className: "bg-white rounded-xl shadow-2xl border-4 border-blue-400 p-8 max-w-2xl w-full relative animate-fade-in" },
-                                React.createElement("button", { className: "absolute top-2 right-2 btn btn-sm btn-error", onClick: function () { return setDetailJobs(null); } }, "\u2715"),
-                                React.createElement("h2", { className: "text-xl font-Arial mb-4" }, "All Job Details"),
-                                renderAllDetails(detailJobs)))))))))));
+                        React.createElement(AllJobDetailsModal_1["default"], { detailJobs: detailJobs, setDetailJobs: setDetailJobs }))))))));
 }
 exports["default"] = JobsList;
