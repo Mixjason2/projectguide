@@ -13,52 +13,66 @@ import AllJobDetails from "@/app/component/AllJobDetails";
 
 // Merge jobs by PNR, combine fields that are different into arrays
 function mergeJobsByPNR(jobs: Job[]): MergedJob[] {
-  const map: Record<string, { merged: MergedJob; all: Job[] }> = {}
+  const map: Record<string, { merged: MergedJob; all: Job[] }> = {};
 
   for (const job of jobs) {
     if (!map[job.PNR]) {
-      map[job.PNR] = { merged: { ...job, keys: [job.key], all: [job] }, all: [job] }
+      map[job.PNR] = {
+        merged: { ...job, keys: [job.key], all: [job] },
+        all: [job],
+      };
     } else {
-      map[job.PNR].merged.keys.push(job.key)
-      map[job.PNR].all.push(job)
+      map[job.PNR].merged.keys.push(job.key);
+      map[job.PNR].all.push(job);
 
       for (const k of Object.keys(job) as (keyof Job)[]) {
-        if (k === 'key' || k === 'Photo' || k === 'Remark') continue
+        if (k === "key" || k === "Photo" || k === "Remark") continue;
 
-        const prev = map[job.PNR].merged[k]
-        const curr = job[k]
+        const prev = map[job.PNR].merged[k];
+        const curr = job[k];
 
-        if (k === 'isConfirmed') {
-          const mergedVal = Boolean(prev) || Boolean(curr)
-          map[job.PNR].merged[k] = mergedVal
-          continue
+        if (k === "IsConfirmed") {
+          const mergedVal = Boolean(prev) || Boolean(curr);
+          map[job.PNR].merged[k] = mergedVal;
+          continue;
+        }
+
+        if (k === "IsCancel") {
+          const mergedVal = Boolean(prev) || Boolean(curr);
+          map[job.PNR].merged[k] = mergedVal;
+          continue;
         }
 
         if (Array.isArray(prev)) {
           if (!prev.includes(curr)) {
-            (prev as any[]).push(curr)
+            (prev as any[]).push(curr);
           }
         } else if (prev !== curr) {
-          (map[job.PNR].merged as any)[k] = [prev, curr].filter((v, i, arr) => arr.indexOf(v) === i)
+          (map[job.PNR].merged as any)[k] = [prev, curr].filter(
+            (v, i, arr) => arr.indexOf(v) === i
+          );
         }
       }
     }
   }
+  return Object.values(map).map((entry) => entry.merged);
+}
+
 
   // ✅ Only one map block here
-  const result = Object.entries(map).map(([pnr, data]) => {
-    const merged = { ...data.merged }
-    // Force isConfirmed to true always
-    merged.isConfirmed = true
-    return {
-      ...merged,
-      PNR: pnr,
-      all: data.all,
-    }
-  })
-  console.log(result)
-  return result
-}
+  // const result = Object.entries(map).map(([pnr, data]) => {
+  //   const merged = { ...data.merged }
+  //   // Force isConfirmed to true always
+  //   merged.isConfirmed = true
+  //   return {
+  //     ...merged,
+  //     PNR: pnr,
+  //     all: data.all,
+  //   }
+  // })
+  // console.log(result)
+  // return result
+
 // const result = Object.entries(map).map(([pnr, data]) => {
 //   const merged = { ...data.merged };
 //   // Force isCancel to true always
@@ -179,7 +193,7 @@ export default function JobsList() {
   });
 
   const mergedJobs = mergeJobsByPNR(filteredJobs);
-
+  console.log('Merged Jobs with isConfirmed/isCancel:', mergedJobs);
   const totalPages = Math.ceil(mergedJobs.length / pageSize);
 
   const pagedJobs = mergedJobs.slice((page - 1) * pageSize, page * pageSize);
@@ -253,9 +267,9 @@ export default function JobsList() {
                       <div
                         className="absolute top-2 left-1 text-[#ffffff] font-Arial rounded-full px-3 py-1 text-sm shadow z-10"
                         style={{
-                          backgroundColor: job.isCancel
+                          backgroundColor: job.IsCancel
                             ? "#ef4444"
-                            : job.isConfirmed
+                            : job.IsConfirmed
                               ? "#22c55e"
                               : job.isNew
                                 ? "#0891b2"

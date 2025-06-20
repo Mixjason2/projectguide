@@ -19,7 +19,9 @@ const JobAction: React.FC<JobActionProps> = ({ job, setJobs }) => {
         alert("Accept งานสำเร็จ");
         setJobs((prevJobs) =>
           prevJobs.map((j) =>
-            job.keys.includes(j.key) ? { ...j, isConfirmed: true } : j
+            job.all.some((orig: { key: any; }) => orig.key === j.key)
+              ? { ...j, isConfirmed: true }
+              : j
           )
         );
       } else {
@@ -43,6 +45,14 @@ const JobAction: React.FC<JobActionProps> = ({ job, setJobs }) => {
       const result = response.data;
       if (result.success) {
         alert("Cancel งานสำเร็จ");
+        setJobs((prevJobs) =>
+          prevJobs.map((j) =>
+            job.all.some((orig: { key: any; }) => orig.key === j.key)
+              ? { ...j, isCancel: true }
+              : j
+          )
+        );
+
       } else {
         alert("Cancel งานไม่สำเร็จ: " + (result?.error || "Unknown error"));
       }
@@ -78,29 +88,32 @@ const JobAction: React.FC<JobActionProps> = ({ job, setJobs }) => {
       alert("เกิดข้อผิดพลาด: " + String(error));
     }
   };
+  console.log("isConfirmed:", job.isConfirmed, "isCancel:", job.isCancel);
+  console.log("Confirmed jobs:", job.all?.filter((j: { isConfirmed: any; }) => j.isConfirmed).length, "/", job.all?.length);
 
   return (
-  <div className="relative border rounded-xl p-4 shadow bg-white">
-    {job.isCancel ? null : job.isConfirmed ? (
-      <FileToBase64 onBase64ListReady={handleUpload} />
-    ) : (
-      <div className="flex gap-3">
-        <button
-          className="btn flex-1 py-2 rounded-full shadow text-white bg-[#95c941] hover:opacity-90"
-          onClick={handleAccept}
-        >
-          Accept
-        </button>
-        <button
-          className="btn flex-1 py-2 rounded-full shadow text-white bg-[#ef4444] hover:opacity-90"
-          onClick={handleReject}
-        >
-          Reject
-        </button>
-      </div>
-    )}
-  </div>
-);
+    <div className="relative border rounded-xl p-4 shadow bg-white">
+      {job.isCancel ? null : ( job.isConfirmed ? (
+        <FileToBase64 onBase64ListReady={handleUpload} />
+      ) : (
+        <div className="flex gap-3">
+          <button
+            className="btn flex-1 py-2 rounded-full shadow text-white bg-[#95c941] hover:opacity-90"
+            onClick={handleAccept}
+          >
+            Accept
+          </button>
+          <button
+            className="btn flex-1 py-2 rounded-full shadow text-white bg-[#ef4444] hover:opacity-90"
+            onClick={handleReject}
+          >
+            Reject
+          </button>
+        </div>
+      )
+      )}
+    </div>
+  );
 };
 
 export default JobAction;
