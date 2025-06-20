@@ -59,19 +59,19 @@ function mergeJobsByPNR(jobs: Job[]): MergedJob[] {
 }
 
 
-  // ✅ Only one map block here
-  // const result = Object.entries(map).map(([pnr, data]) => {
-  //   const merged = { ...data.merged }
-  //   // Force isConfirmed to true always
-  //   merged.isConfirmed = true
-  //   return {
-  //     ...merged,
-  //     PNR: pnr,
-  //     all: data.all,
-  //   }
-  // })
-  // console.log(result)
-  // return result
+// ✅ Only one map block here
+// const result = Object.entries(map).map(([pnr, data]) => {
+//   const merged = { ...data.merged }
+//   // Force isConfirmed to true always
+//   merged.isConfirmed = true
+//   return {
+//     ...merged,
+//     PNR: pnr,
+//     all: data.all,
+//   }
+// })
+// console.log(result)
+// return result
 
 // const result = Object.entries(map).map(([pnr, data]) => {
 //   const merged = { ...data.merged };
@@ -142,7 +142,8 @@ const renderAllDetails = (jobs: Job[]) => {
   });
   return (
     <AllJobDetails jobs={jobs} formatDate={formatDate} />
-)};
+  )
+};
 
 export default function JobsList() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -153,9 +154,10 @@ export default function JobsList() {
   const [endDate, setEndDate] = useState<string>(getEndOfMonth());
   const [page, setPage] = useState(1);
   const [expandedPNRs, setExpandedPNRs] = useState<{ [pnr: string]: boolean }>({});
+  const [showConfirmedOnly, setShowConfirmedOnly] = useState(false);
   const pageSize = 6;
 
-  useEffect(() => {
+  useEffect(() => { 
     const token = localStorage.getItem('token') || '';
     setLoading(true);
     fetch('https://operation.dth.travel:7082/api/guide/job', {
@@ -187,10 +189,14 @@ export default function JobsList() {
       });
   }, [startDate, endDate]);
 
-  const filteredJobs = jobs.filter(job => {
+  const filteredByDate = jobs.filter(job => {
     const pickup = job.PickupDate, dropoff = job.DropoffDate;
     return (!startDate && !endDate) || (startDate && pickup >= startDate) || (endDate && dropoff <= endDate);
   });
+
+  const filteredJobs = showConfirmedOnly
+    ? filteredByDate.filter(job => job.IsConfirmed === true)
+    : filteredByDate;
 
   const mergedJobs = mergeJobsByPNR(filteredJobs);
   console.log('Merged Jobs with isConfirmed/isCancel:', mergedJobs);
@@ -206,7 +212,7 @@ export default function JobsList() {
             <span className={`inline-block w-3 h-3 rounded-full ${['bg-neutral-700', 'bg-cyan-600', 'bg-orange-400'][i]}`}></span>  
             <span className="text-gray-500">{label}:</span>
             <span className="font-Arial text-[#2D3E92]">
-              {i === 0 ? filteredJobs.length : filteredJobs.filter(job => i === 1 ? job.isNew : job.isChange).length}
+              {i === 0 ? filteredByDate.length : filteredByDate.filter(job => i === 1 ? job.isNew : job.isChange).length}
             </span>
           </div>
         ))}
@@ -254,8 +260,18 @@ export default function JobsList() {
               </div>
               <span className="mt-2 text-xs text-gray-400 text-center px-2">Please select a date range to filter the desired tasks.</span>
             </div>
-            <StatusMessage loading={loading} error={error} filteredJobsLength={filteredJobs.length} />
-            {!loading && !error && filteredJobs.length > 0 && (
+            <input
+                type="checkbox"
+                id="showConfirmedOnly"
+                checked={showConfirmedOnly}
+                onChange={e => setShowConfirmedOnly(e.target.checked)}
+                className="checkbox checkbox-primary"
+              />
+              <label htmlFor="showConfirmedOnly" className="font-Arial text-sm text-gray-700 cursor-pointer">
+                Show Confirmed Only
+              </label>
+            <StatusMessage loading={loading} error={error} filteredJobsLength={filteredByDate.length} />
+            {!loading && !error && filteredByDate.length > 0 && (
               // render list jobs
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -288,6 +304,7 @@ export default function JobsList() {
                             j.PNRDate !== job.PNRDate
                         ).length + 1 || 1}
                       </div>
+
 
                       <button
                         className="absolute top-3.5 right-2 w-8 h-8 rounded-full bg-white border-2 border-[#2D3E92] shadow-[0_4px_10px_rgba(45,62,146,0.3)] hover:shadow-[0_6px_14px_rgba(45,62,146,0.4)] transition-all duration-200 flex items-center justify-center"

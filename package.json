@@ -33,6 +33,7 @@
         "react-date-range": "^2.0.1",
         "react-day-picker": "^9.7.0",
         "react-dom": "^19.1.0",
+        "react-icons": "^5.5.0",
         "react-spinners-css": "^2.0.2",
         "spinner": "^0.3.4"
     },

@@ -182,6 +182,7 @@ function JobsList() {
     var _f = react_1.useState(getEndOfMonth()), endDate = _f[0], setEndDate = _f[1];
     var _g = react_1.useState(1), page = _g[0], setPage = _g[1];
     var _h = react_1.useState({}), expandedPNRs = _h[0], setExpandedPNRs = _h[1];
+    var _j = react_1.useState(false), showConfirmedOnly = _j[0], setShowConfirmedOnly = _j[1];
     var pageSize = 6;
     react_1.useEffect(function () {
         var token = localStorage.getItem('token') || '';
@@ -219,10 +220,13 @@ function JobsList() {
             setLoading(false);
         });
     }, [startDate, endDate]);
-    var filteredJobs = jobs.filter(function (job) {
+    var filteredByDate = jobs.filter(function (job) {
         var pickup = job.PickupDate, dropoff = job.DropoffDate;
         return (!startDate && !endDate) || (startDate && pickup >= startDate) || (endDate && dropoff <= endDate);
     });
+    var filteredJobs = showConfirmedOnly
+        ? filteredByDate.filter(function (job) { return job.IsConfirmed === true; })
+        : filteredByDate;
     var mergedJobs = mergeJobsByPNR(filteredJobs);
     console.log('Merged Jobs with isConfirmed/isCancel:', mergedJobs);
     var totalPages = Math.ceil(mergedJobs.length / pageSize);
@@ -234,7 +238,7 @@ function JobsList() {
             React.createElement("span", { className: "text-gray-500" },
                 label,
                 ":"),
-            React.createElement("span", { className: "font-Arial text-[#2D3E92]" }, i === 0 ? filteredJobs.length : filteredJobs.filter(function (job) { return i === 1 ? job.isNew : job.isChange; }).length))); }))));
+            React.createElement("span", { className: "font-Arial text-[#2D3E92]" }, i === 0 ? filteredByDate.length : filteredByDate.filter(function (job) { return i === 1 ? job.isNew : job.isChange; }).length))); }))));
     var fetchJobs = function (token, startDate, endDate) { return __awaiter(_this, void 0, void 0, function () {
         var res, err_1;
         return __generator(this, function (_a) {
@@ -276,8 +280,10 @@ function JobsList() {
                                     fetchJobs(localStorage.getItem('token') || '', i === 0 ? newDate : startDate, i === 0 ? endDate : newDate);
                                 }, className: "input input-bordered w-full" }))); })),
                         React.createElement("span", { className: "mt-2 text-xs text-gray-400 text-center px-2" }, "Please select a date range to filter the desired tasks.")),
-                    React.createElement(StatusMessage_1["default"], { loading: loading, error: error, filteredJobsLength: filteredJobs.length }),
-                    !loading && !error && filteredJobs.length > 0 && (
+                    React.createElement("input", { type: "checkbox", id: "showConfirmedOnly", checked: showConfirmedOnly, onChange: function (e) { return setShowConfirmedOnly(e.target.checked); }, className: "checkbox checkbox-primary" }),
+                    React.createElement("label", { htmlFor: "showConfirmedOnly", className: "font-Arial text-sm text-gray-700 cursor-pointer" }, "Show Confirmed Only"),
+                    React.createElement(StatusMessage_1["default"], { loading: loading, error: error, filteredJobsLength: filteredByDate.length }),
+                    !loading && !error && filteredByDate.length > 0 && (
                     // render list jobs
                     React.createElement(React.Fragment, null,
                         React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" }, pagedJobs.map(function (job) {

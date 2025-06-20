@@ -38,6 +38,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 exports.__esModule = true;
 var axios_1 = require("axios");
 var react_1 = require("react");
+var hi_1 = require("react-icons/hi");
 var FileToBase64 = function (_a) {
     var onBase64ListReady = _a.onBase64ListReady;
     var _b = react_1.useState(false), showBox = _b[0], setShowBox = _b[1];
@@ -113,27 +114,27 @@ var FileToBase64 = function (_a) {
     return (
     // ตกแต่งตรงนี้เพิ่มเติมให้สวยงาม
     react_1["default"].createElement("div", { className: "relative flex justify-center items-center mt-6" },
-        react_1["default"].createElement("button", { onClick: function () { return setShowBox(true); }, title: "Attach files", className: "text-white hover:text-blue-100 shadow-xl rounded-full p-3 text-4xl select-none transition-all duration-300 border-4 border-blue-700 bg-blue-700", style: { boxShadow: "0 10px 20px rgba(0, 0, 0, 0.3)" } }, "\uD83D\uDCCE"),
+        react_1["default"].createElement("button", { onClick: function () { return setShowBox(true); }, title: "Attach files", className: "w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-700 transition-all duration-300 border-2 border-blue-700 shadow-md hover:shadow-lg text-white flex items-center justify-center gap-3" },
+            react_1["default"].createElement(hi_1.HiUpload, { className: "text-2xl" }),
+            react_1["default"].createElement("span", { className: "text-base font-semibold" }, "Upload")),
         showBox && (react_1["default"].createElement(react_1["default"].Fragment, null,
-            react_1["default"].createElement("div", { onClick: function () { return setShowBox(false); }, className: "fixed inset-0 bg-black bg-opacity-70 z-40" }),
-            react_1["default"].createElement("div", { className: "fixed inset-0 flex justify-center items-center z-50 p-4" },
-                react_1["default"].createElement("div", { className: "bg-white rounded-lg shadow-2xl w-full max-w-3xl max-h-[80vh] overflow-auto p-6 space-y-6 relative" },
-                    react_1["default"].createElement("button", { onClick: function () { return setShowBox(false); }, className: "absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-xl font-bold", "aria-label": "Close" }, "\u00D7"),
+            react_1["default"].createElement("div", { onClick: function () { return setShowBox(false); }, className: "fixed inset-0 bg-black bg-opacity-60 z-40 transition-opacity", "aria-label": "Close popup" }),
+            react_1["default"].createElement("div", { className: "fixed inset-0 flex justify-center items-center z-50 p-2" },
+                react_1["default"].createElement("div", { className: "bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-auto p-6 space-y-5 relative border border-blue-200" },
+                    react_1["default"].createElement("button", { onClick: function () { return setShowBox(false); }, className: "absolute top-3 right-3 text-gray-400 hover:text-red-500 text-2xl font-bold focus:outline-none", "aria-label": "Close" }, "\u00D7"),
                     react_1["default"].createElement("div", null,
-                        react_1["default"].createElement("label", { className: "block text-sm font-medium text-gray-700 mb-1" }, "Remark"),
-                        react_1["default"].createElement("input", { type: "text", value: remark, onChange: function (e) { return setRemark(e.target.value); }, className: "w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500", placeholder: "Enter remark here" })),
+                        react_1["default"].createElement("label", { className: "block text-sm font-semibold text-black-700 mb-1" }, "Remark"),
+                        react_1["default"].createElement("input", { type: "text", value: remark, onChange: function (e) { return setRemark(e.target.value); }, className: "w-full border border-blue-200 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-400 transition", placeholder: "Enter your remark" })),
                     react_1["default"].createElement("div", null,
-                        react_1["default"].createElement("label", { className: "block text-sm font-medium text-gray-700 mb-1" }, "Upload File"),
-                        react_1["default"].createElement("input", { type: "file", multiple: true, onChange: handleFileChange, accept: "image/*,application/pdf", className: "block w-full text-sm text-gray-500" }))
-                // แก้ถึงนี้
-                ,
-                    "// \u0E41\u0E01\u0E49\u0E16\u0E36\u0E07\u0E19\u0E35\u0E49",
-                    react_1["default"].createElement("div", { className: "flex gap-3 flex-wrap max-h-48 overflow-auto" }, previews.map(function (src, idx) {
-                        return src.startsWith("data:image") ? (react_1["default"].createElement("img", { key: idx, src: src, alt: "preview-" + idx, className: "w-24 h-24 object-cover rounded shadow" })) : (react_1["default"].createElement("div", { key: idx, className: "text-sm text-gray-600 flex items-center gap-1 px-3 py-1 border rounded shadow" },
-                            "\uD83D\uDCC4 PDF ",
-                            idx + 1));
-                    })),
-                    react_1["default"].createElement("div", { className: "flex justify-end gap-4" },
-                        react_1["default"].createElement("button", { onClick: handleSubmit, className: "bg-blue-600 text-white text-sm font-semibold px-6 py-2 rounded hover:bg-blue-700" }, "Submit"))))))));
+                        react_1["default"].createElement("label", { className: "block text-sm font-semibold text-black-700 mb-1" }, "Upload File"),
+                        react_1["default"].createElement("input", { type: "file", multiple: true, onChange: handleFileChange, accept: "image/*,application/pdf", className: "block w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-base file:font-semibold file:bg-blue-50 file:text-black-700 hover:file:bg-blue-100" })),
+                    (previews === null || previews === void 0 ? void 0 : previews.length) > 0 && (react_1["default"].createElement("div", { className: "flex flex-wrap gap-2 mt-2" }, previews.map(function (src, idx) {
+                        return src.startsWith("data:image") ? (react_1["default"].createElement("img", { key: idx, src: src, alt: "preview-" + idx, className: "w-20 h-20 object-cover rounded border" })) : (react_1["default"].createElement("div", { key: idx, className: "flex items-center gap-1 text-blue-700" },
+                            react_1["default"].createElement("span", { className: "text-xl" }, "\uD83D\uDCC4"),
+                            " PDF attached"));
+                    }))),
+                    react_1["default"].createElement("div", { className: "flex justify-end gap-3 pt-2" },
+                        react_1["default"].createElement("button", { onClick: function () { return setShowBox(false); }, className: "px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition" }, "Cancel"),
+                        react_1["default"].createElement("button", { onClick: handleSubmit, className: "px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition" }, "Save"))))))));
 };
 exports["default"] = FileToBase64;

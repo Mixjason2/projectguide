@@ -11,9 +11,9 @@ const ExpandedJobDetail: React.FC<ExpandedJobDetailProps> = ({
 }) => {
   if (!expandedPNRs[job.PNR]) return null;
 
-  const confirme = Array.isArray(job.isConfirmed)
-    ? job.isConfirmed.some((c) => c === true)
-    : job.isConfirmed ?? false;
+  const confirme = Array.isArray(job.IsConfirmed)
+    ? job.IsConfirmed.some((c) => c === true)
+    : job.IsConfirmed ?? false;
 
   return (
     <div className="p-6 pt-0 flex-1 flex flex-col">
