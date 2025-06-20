@@ -30,8 +30,8 @@ export type Job = {
   Dropoff: string;
   Source: string;
   Pax: number;
-  isConfirmed: boolean;
-  isCancel: boolean;
+  IsConfirmed: boolean;
+  IsCancel: boolean;
   NotAvailable: any;
   Photo?: string;
   Remark?: string;
@@ -50,7 +50,7 @@ export type ExpandedJobDetailProps = {
   renderField: (label: string, value: any) => ReactNode;
 };
 
-export type Props = {
+export type FetchStatusProps = {
   loading: boolean;
   error: string | null;
   filteredJobsLength: number;
@@ -59,4 +59,16 @@ export type Props = {
 export type JobDetailsProps = {
   jobs: Job[];
   formatDate: (dateStr: string) => string;
+};
+
+export type JobActionProps = {
+  job: any; // หรือ Job ถ้ามี type
+  setJobs: React.Dispatch<React.SetStateAction<any[]>>; // หรือ Job[]
+};
+
+export type FilterStatus = "all" | "confirmed" | "cancelled";
+
+export type FilterProps = {
+  value: FilterStatus;
+  onChange: (status: FilterStatus) => void;
 };

@@ -62,18 +62,26 @@ function mergeJobsByPNR(jobs) {
     for (var _i = 0, jobs_1 = jobs; _i < jobs_1.length; _i++) {
         var job = jobs_1[_i];
         if (!map[job.PNR]) {
-            map[job.PNR] = { merged: __assign(__assign({}, job), { keys: [job.key], all: [job] }), all: [job] };
+            map[job.PNR] = {
+                merged: __assign(__assign({}, job), { keys: [job.key], all: [job] }),
+                all: [job]
+            };
         }
         else {
             map[job.PNR].merged.keys.push(job.key);
             map[job.PNR].all.push(job);
             for (var _a = 0, _b = Object.keys(job); _a < _b.length; _a++) {
                 var k = _b[_a];
-                if (k === 'key' || k === 'Photo' || k === 'Remark')
+                if (k === "key" || k === "Photo" || k === "Remark")
                     continue;
                 var prev = map[job.PNR].merged[k];
                 var curr = job[k];
-                if (k === 'isConfirmed') {
+                if (k === "IsConfirmed") {
+                    var mergedVal = Boolean(prev) || Boolean(curr);
+                    map[job.PNR].merged[k] = mergedVal;
+                    continue;
+                }
+                if (k === "IsCancel") {
                     var mergedVal = Boolean(prev) || Boolean(curr);
                     map[job.PNR].merged[k] = mergedVal;
                     continue;
@@ -89,17 +97,21 @@ function mergeJobsByPNR(jobs) {
             }
         }
     }
-    // ✅ Only one map block here
-    var result = Object.entries(map).map(function (_a) {
-        var pnr = _a[0], data = _a[1];
-        var merged = __assign({}, data.merged);
-        // Force isConfirmed to true always
-        merged.isConfirmed = true;
-        return __assign(__assign({}, merged), { PNR: pnr, all: data.all });
-    });
-    console.log(result);
-    return result;
+    return Object.values(map).map(function (entry) { return entry.merged; });
 }
+// ✅ Only one map block here
+// const result = Object.entries(map).map(([pnr, data]) => {
+//   const merged = { ...data.merged }
+//   // Force isConfirmed to true always
+//   merged.isConfirmed = true
+//   return {
+//     ...merged,
+//     PNR: pnr,
+//     all: data.all,
+//   }
+// })
+// console.log(result)
+// return result
 // const result = Object.entries(map).map(([pnr, data]) => {
 //   const merged = { ...data.merged };
 //   // Force isCancel to true always
@@ -212,6 +224,7 @@ function JobsList() {
         return (!startDate && !endDate) || (startDate && pickup >= startDate) || (endDate && dropoff <= endDate);
     });
     var mergedJobs = mergeJobsByPNR(filteredJobs);
+    console.log('Merged Jobs with isConfirmed/isCancel:', mergedJobs);
     var totalPages = Math.ceil(mergedJobs.length / pageSize);
     var pagedJobs = mergedJobs.slice((page - 1) * pageSize, page * pageSize);
     // console.log("Merged Jobs:", pagedJobs);
@@ -271,9 +284,9 @@ function JobsList() {
                             var _a;
                             return (React.createElement("div", { key: job.PNR, className: "relative bg-white border border-[#9EE4F6] rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col" },
                                 React.createElement("div", { className: "absolute top-2 left-1 text-[#ffffff] font-Arial rounded-full px-3 py-1 text-sm shadow z-10", style: {
-                                        backgroundColor: job.isCancel
-                                            ? "#ef4444" //เปลี่ยนสี
-                                            : job.isConfirmed
+                                        backgroundColor: job.IsCancel
+                                            ? "#ef4444"
+                                            : job.IsConfirmed
                                                 ? "#22c55e"
                                                 : job.isNew
                                                     ? "#0891b2"
