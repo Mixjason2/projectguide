@@ -1,4 +1,4 @@
-import { FilterStatus } from "@/app/types/job"; // ปรับ path ตามโครงสร้างของคุณ
+import { FilterStatus } from "@/app/types/job"; // Ensure 'FilterStatus' is exported from this module or replace with the correct type.
 import { FilterProps } from "@/app/types/job"; // ปรับ path ตามโครงสร้างของคุณ
 
 const JobFilter: React.FC<FilterProps> = ({ value, onChange }) => {

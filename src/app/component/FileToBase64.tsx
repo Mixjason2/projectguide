@@ -73,6 +73,7 @@ const FileToBase64: React.FC<Props> = ({ onBase64ListReady }) => {
     };
 
     return (
+        // ตกแต่งตรงนี้เพิ่มเติมให้สวยงาม
         <div className="relative flex justify-center items-center mt-6">
             {/* ไอคอน 📎 ขนาดเล็กลง มีเงาเด่นขึ้น */}
             <button
@@ -81,7 +82,7 @@ const FileToBase64: React.FC<Props> = ({ onBase64ListReady }) => {
                 className="text-white hover:text-blue-100 shadow-xl rounded-full p-3 text-4xl select-none transition-all duration-300 border-4 border-blue-700 bg-blue-700"
                 style={{ boxShadow: "0 10px 20px rgba(0, 0, 0, 0.3)" }}
             >
-                📎
+                📎 
             </button>
 
             {/* Overlay และ Popup */}
@@ -125,6 +126,7 @@ const FileToBase64: React.FC<Props> = ({ onBase64ListReady }) => {
                                     className="block w-full text-sm text-gray-500"
                                 />
                             </div>
+                            // แก้ถึงนี้
 
                             <div className="flex gap-3 flex-wrap max-h-48 overflow-auto">
                                 {previews.map((src, idx) =>

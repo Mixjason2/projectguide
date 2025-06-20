@@ -189,7 +189,7 @@ export default function JobsList() {
       <div className="flex flex-row flex-wrap gap-6 bg-white border border-blue-300 rounded-xl shadow-lg px-8 py-4 items-center max-w-3xl">
         {['All Jobs', 'New Jobs', 'Changed Jobs'].map((label, i) => (
           <div key={i} className="flex items-center gap-2">
-            <span className={`inline-block w-3 h-3 rounded-full ${['bg-gray-400', 'bg-cyan-600', 'bg-orange-400'][i]}`}></span>
+            <span className={`inline-block w-3 h-3 rounded-full ${['bg-slate-400', 'bg-cyan-600', 'bg-orange-400'][i]}`}></span>  
             <span className="text-gray-500">{label}:</span>
             <span className="font-Arial text-[#2D3E92]">
               {i === 0 ? filteredJobs.length : filteredJobs.filter(job => i === 1 ? job.isNew : job.isChange).length}
@@ -254,7 +254,7 @@ export default function JobsList() {
                         className="absolute top-2 left-1 text-[#ffffff] font-Arial rounded-full px-3 py-1 text-sm shadow z-10"
                         style={{
                           backgroundColor: job.isCancel
-                            ? "#ef4444"
+                            ? "#ef4444" //เปลี่ยนสี
                             : job.isConfirmed
                               ? "#22c55e"
                               : job.isNew
