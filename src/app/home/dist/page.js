@@ -11,6 +11,42 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
 exports.__esModule = true;
 var react_1 = require("react");
 var cssguide_1 = require("../cssguide");
@@ -57,85 +93,82 @@ function mergeJobsByPNR(jobs) {
     return Object.values(map).map(function (entry) { return entry.merged; });
 }
 var getToday = function () { return new Date().toISOString().slice(0, 10); };
-var getEndOfMonth = function () {
-    return new Date(new Date().setMonth(new Date().getMonth() + 1, 0)).toISOString().slice(0, 10);
-};
+var getEndOfMonth = function () { return new Date(new Date().setMonth(new Date().getMonth() + 1, 0)).toISOString().slice(0, 10); };
 function JobsList() {
-    var _a = react_1.useState(''), startDate = _a[0], setStartDate = _a[1];
-    var _b = react_1.useState(''), endDate = _b[0], setEndDate = _b[1];
-    var _c = react_1.useState([]), jobs = _c[0], setJobs = _c[1];
-    var _d = react_1.useState(false), loading = _d[0], setLoading = _d[1];
-    var _e = react_1.useState(null), error = _e[0], setError = _e[1];
-    var _f = react_1.useState(null), detailJobs = _f[0], setDetailJobs = _f[1];
-    var _g = react_1.useState(1), page = _g[0], setPage = _g[1];
-    var _h = react_1.useState({}), expandedPNRs = _h[0], setExpandedPNRs = _h[1];
-    var _j = react_1.useState(false), showConfirmedOnly = _j[0], setShowConfirmedOnly = _j[1];
-    var pageSize = 6;
-    var isFetching = react_1.useRef(false);
-    // โหลดวันที่และ jobs cache ตอน mount
+    var _this = this;
+    // ✅ ตรวจสอบว่ามีการ login ใหม่
+    var _a = react_1.useState(false), justLoggedIn = _a[0], setJustLoggedIn = _a[1];
     react_1.useEffect(function () {
-        if (typeof window === "undefined")
-            return;
-        var token = localStorage.getItem('token');
-        if (!token) {
+        var flag = localStorage.getItem("justLoggedIn") === "true";
+        setJustLoggedIn(flag);
+        if (flag)
+            localStorage.removeItem("justLoggedIn");
+    }, []);
+    var _b = react_1.useState(''), startDate = _b[0], setStartDate = _b[1];
+    var _c = react_1.useState(''), endDate = _c[0], setEndDate = _c[1];
+    var _d = react_1.useState([]), jobs = _d[0], setJobs = _d[1];
+    var _e = react_1.useState(false), loading = _e[0], setLoading = _e[1];
+    var _f = react_1.useState(null), error = _f[0], setError = _f[1];
+    var _g = react_1.useState(null), detailJobs = _g[0], setDetailJobs = _g[1];
+    var _h = react_1.useState(1), page = _h[0], setPage = _h[1];
+    var _j = react_1.useState({}), expandedPNRs = _j[0], setExpandedPNRs = _j[1];
+    var _k = react_1.useState(false), showConfirmedOnly = _k[0], setShowConfirmedOnly = _k[1];
+    var hasFetchedRef = react_1.useRef(false);
+    var pageSize = 6;
+    // ล้าง flag justLoggedIn หลังจากรีเซ็ตเสร็จ
+    react_1.useEffect(function () {
+        if (justLoggedIn) {
             setStartDate(getToday());
             setEndDate(getEndOfMonth());
-            setJobs([]);
-            localStorage.removeItem('startDate');
-            localStorage.removeItem('endDate');
         }
         else {
-            var savedStart = localStorage.getItem('startDate');
-            var savedEnd = localStorage.getItem('endDate');
-            var useStart = savedStart || getToday();
-            var useEnd = savedEnd || getEndOfMonth();
-            setStartDate(useStart);
-            setEndDate(useEnd);
-            // โหลด jobs cache ตามช่วงวัน
-            var cacheKey = "jobs_" + useStart + "_" + useEnd;
-            var cachedJobs = localStorage.getItem(cacheKey);
-            if (cachedJobs)
-                setJobs(JSON.parse(cachedJobs));
+            setStartDate(localStorage.getItem('startDate') || getToday());
+            setEndDate(localStorage.getItem('endDate') || getEndOfMonth());
         }
-    }, []);
-    // เวลาเปลี่ยนวันหรือ login ใหม่
+    }, [justLoggedIn]);
+    // เก็บวันที่ใหม่หลังจาก user เปลี่ยน
     react_1.useEffect(function () {
-        if (!startDate || !endDate)
+        localStorage.setItem('startDate', startDate);
+        localStorage.setItem('endDate', endDate);
+    }, ["2025-05-01", "2025-05-31"]);
+    // fetch jobs เมื่อวันที่เปลี่ยน
+    react_1.useEffect(function () {
+        if (hasFetchedRef.current)
             return;
-        if (typeof window === "undefined")
-            return;
-        var token = localStorage.getItem('token');
-        if (!token)
-            return;
-        var cacheKey = "jobs_" + startDate + "_" + endDate;
-        var cachedJobs = localStorage.getItem(cacheKey);
-        if (cachedJobs) {
-            setJobs(JSON.parse(cachedJobs));
-            return;
-        }
-        // fetch ใหม่ถ้าไม่มีใน cache
-        if (isFetching.current)
-            return;
-        isFetching.current = true;
-        setLoading(true);
-        setError(null);
-        axios_1["default"].post('https://operation.dth.travel:7082/api/guide/job', {
-            token: token,
-            startdate: startDate,
-            enddate: endDate
-        })
-            .then(function (res) {
-            setJobs(res.data);
-            localStorage.setItem("jobs_" + startDate + "_" + endDate, JSON.stringify(res.data));
-        })["catch"](function (err) {
-            setError(err.message || 'Error fetching jobs');
-            setJobs([]);
-        })["finally"](function () {
-            setLoading(false);
-            isFetching.current = false;
-        });
+        hasFetchedRef.current = true;
+        var fetchJobs = function () { return __awaiter(_this, void 0, void 0, function () {
+            var token, res, err_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        setLoading(true);
+                        setError(null);
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 3, 4, 5]);
+                        token = localStorage.getItem('token') || '';
+                        return [4 /*yield*/, axios_1["default"].post('https://operation.dth.travel:7082/api/guide/job', {
+                                token: token,
+                                startdate: startDate,
+                                enddate: endDate
+                            })];
+                    case 2:
+                        res = _a.sent();
+                        setJobs(res.data);
+                        return [3 /*break*/, 5];
+                    case 3:
+                        err_1 = _a.sent();
+                        setError(err_1.message);
+                        return [3 /*break*/, 5];
+                    case 4:
+                        setLoading(false);
+                        return [7 /*endfinally*/];
+                    case 5: return [2 /*return*/];
+                }
+            });
+        }); };
+        fetchJobs();
     }, [startDate, endDate]);
-    // กรองข้อมูลตามวันที่และสถานะยืนยัน
     var filteredByDate = jobs.filter(function (job) {
         var pickup = job.PickupDate, dropoff = job.DropoffDate;
         return (!startDate || pickup >= startDate) && (!endDate || dropoff <= endDate);
@@ -161,12 +194,6 @@ function JobsList() {
                                         setStartDate(newDate);
                                     else
                                         setEndDate(newDate);
-                                    setPage(1);
-                                    // โหลด jobs cache ตามช่วงวันใหม่
-                                    var cacheKey = "jobs_" + (i === 0 ? newDate : startDate) + "_" + (i === 0 ? endDate : newDate);
-                                    var cachedJobs = localStorage.getItem(cacheKey);
-                                    if (cachedJobs)
-                                        setJobs(JSON.parse(cachedJobs));
                                 }, className: "input input-bordered w-full" }))); })),
                         React.createElement("span", { className: "mt-2 text-xs text-gray-400 text-center px-2" }, "Please select a date range to filter the desired tasks.")),
                     React.createElement(ConfirmedFilter_1["default"], { showConfirmedOnly: showConfirmedOnly, onChange: setShowConfirmedOnly }),

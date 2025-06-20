@@ -70,11 +70,25 @@ function CalendarExcel() {
     var _c = react_1.useState(null), error = _c[0], setError = _c[1];
     var _d = react_1.useState('dayGridMonth'), currentView = _d[0], setCurrentView = _d[1];
     react_1.useEffect(function () {
+        // ดึง token จาก localStorage (ซึ่งถูกเซ็ตไว้ตอน Login)
         var token = localStorage.getItem("token") || "";
+        if (!token) {
+            setError("Token not found. Please log in.");
+            setLoading(false);
+            return;
+        }
+        setLoading(true);
+        // ดึง startDate/endDate จาก localStorage (ถูกเซ็ตจากหน้า LoginPage)
+        var getToday = function () { return new Date().toISOString().slice(0, 10); };
+        var getEndOfMonth = function () {
+            return new Date(new Date().setMonth(new Date().getMonth() + 1, 0)).toISOString().slice(0, 10);
+        };
+        var startDate = localStorage.getItem("startDate") || getToday();
+        var endDate = localStorage.getItem("endDate") || getEndOfMonth();
         fetch('https://operation.dth.travel:7082/api/guide/job', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: token, startdate: "2025-01-01", enddate: "2025-05-31" })
+            body: JSON.stringify({ token: token, startdate: startDate, enddate: endDate })
         })
             .then(function (res) { return __awaiter(_this, void 0, void 0, function () {
             var _a;
@@ -89,7 +103,13 @@ function CalendarExcel() {
                 }
             });
         }); })
-            .then(setJobs)["catch"](function (err) { return setError(err.message); })["finally"](function () { return setLoading(false); });
+            .then(function (data) {
+            setJobs(data);
+            // (optionally) cache jobs
+            localStorage.setItem("jobs_" + startDate + "_" + endDate, JSON.stringify(data));
+        })["catch"](function (err) {
+            setError(err.message || "Failed to fetch");
+        })["finally"](function () { return setLoading(false); });
     }, []);
     var events = react_1.useMemo(function () {
         if (currentView === 'dayGridMonth') {

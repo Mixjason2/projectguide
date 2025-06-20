@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import CssgGuide from '../cssguide';
 import axios from 'axios';
 import { Job } from "@/app/types/job";
@@ -50,12 +50,20 @@ function mergeJobsByPNR(jobs: Job[]): MergedJob[] {
 }
 
 const getToday = () => new Date().toISOString().slice(0, 10);
-const getEndOfMonth = () =>
-  new Date(new Date().setMonth(new Date().getMonth() + 1, 0)).toISOString().slice(0, 10);
+const getEndOfMonth = () => new Date(new Date().setMonth(new Date().getMonth() + 1, 0)).toISOString().slice(0, 10);
 
 export default function JobsList() {
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  // ✅ ตรวจสอบว่ามีการ login ใหม่
+const [justLoggedIn, setJustLoggedIn] = useState(false);
+
+useEffect(() => {
+  const flag = localStorage.getItem("justLoggedIn") === "true";
+  setJustLoggedIn(flag);
+  if (flag) localStorage.removeItem("justLoggedIn");
+}, []);
+
+const [startDate, setStartDate] = useState('');
+const [endDate, setEndDate] = useState('');
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,73 +71,57 @@ export default function JobsList() {
   const [page, setPage] = useState(1);
   const [expandedPNRs, setExpandedPNRs] = useState<{ [pnr: string]: boolean }>({});
   const [showConfirmedOnly, setShowConfirmedOnly] = useState(false);
+const hasFetchedRef = useRef(false);
   const pageSize = 6;
-  const isFetching = useRef(false);
 
-  // โหลดวันที่และ jobs cache ตอน mount
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setStartDate(getToday());
-      setEndDate(getEndOfMonth());
-      setJobs([]);
-      localStorage.removeItem('startDate');
-      localStorage.removeItem('endDate');
-    } else {
-      const savedStart = localStorage.getItem('startDate');
-      const savedEnd = localStorage.getItem('endDate');
-      const useStart = savedStart || getToday();
-      const useEnd = savedEnd || getEndOfMonth();
-      setStartDate(useStart);
-      setEndDate(useEnd);
-      // โหลด jobs cache ตามช่วงวัน
-      const cacheKey = `jobs_${useStart}_${useEnd}`;
-      const cachedJobs = localStorage.getItem(cacheKey);
-      if (cachedJobs) setJobs(JSON.parse(cachedJobs));
-    }
-  }, []);
+ // ล้าง flag justLoggedIn หลังจากรีเซ็ตเสร็จ
+useEffect(() => {
+  if (justLoggedIn) {
+    setStartDate(getToday());
+    setEndDate(getEndOfMonth());
+  } else {
+    setStartDate(localStorage.getItem('startDate') || getToday());
+    setEndDate(localStorage.getItem('endDate') || getEndOfMonth());
+  }
+}, [justLoggedIn]);
 
-  // เวลาเปลี่ยนวันหรือ login ใหม่
+  // เก็บวันที่ใหม่หลังจาก user เปลี่ยน
   useEffect(() => {
-    if (!startDate || !endDate) return;
-    if (typeof window === "undefined") return;
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    const cacheKey = `jobs_${startDate}_${endDate}`;
-    const cachedJobs = localStorage.getItem(cacheKey);
-    if (cachedJobs) {
-      setJobs(JSON.parse(cachedJobs));
-      return;
-    }
-    // fetch ใหม่ถ้าไม่มีใน cache
-    if (isFetching.current) return;
-    isFetching.current = true;
+    localStorage.setItem('startDate', startDate);
+    localStorage.setItem('endDate', endDate);
+  }, ["2025-05-01", "2025-05-31"]);
+
+  // fetch jobs เมื่อวันที่เปลี่ยน
+useEffect(() => {
+  if (hasFetchedRef.current) return;
+  hasFetchedRef.current = true;
+
+  const fetchJobs = async () => {
     setLoading(true);
     setError(null);
-    axios.post('https://operation.dth.travel:7082/api/guide/job', {
-      token,
-      startdate: startDate,
-      enddate: endDate,
-    })
-      .then(res => {
-        setJobs(res.data);
-        localStorage.setItem(`jobs_${startDate}_${endDate}`, JSON.stringify(res.data));
-      })
-      .catch(err => {
-        setError(err.message || 'Error fetching jobs');
-        setJobs([]);
-      })
-      .finally(() => {
-        setLoading(false);
-        isFetching.current = false;
+    try {
+      const token = localStorage.getItem('token') || '';
+      const res = await axios.post('https://operation.dth.travel:7082/api/guide/job', {
+        token,
+        startdate: startDate,
+        enddate: endDate,
       });
+      setJobs(res.data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+    fetchJobs();
   }, [startDate, endDate]);
 
-  // กรองข้อมูลตามวันที่และสถานะยืนยัน
   const filteredByDate = jobs.filter(job => {
     const pickup = job.PickupDate, dropoff = job.DropoffDate;
-    return (!startDate || pickup >= startDate) && (!endDate || dropoff <= endDate);
+   return (!startDate || pickup >= startDate) && (!endDate || dropoff <= endDate);
+
   });
 
   const filteredJobs = showConfirmedOnly
@@ -160,11 +152,6 @@ export default function JobsList() {
                         const newDate = e.target.value;
                         if (i === 0) setStartDate(newDate);
                         else setEndDate(newDate);
-                        setPage(1);
-                        // โหลด jobs cache ตามช่วงวันใหม่
-                        const cacheKey = `jobs_${i === 0 ? newDate : startDate}_${i === 0 ? endDate : newDate}`;
-                        const cachedJobs = localStorage.getItem(cacheKey);
-                        if (cachedJobs) setJobs(JSON.parse(cachedJobs));
                       }}
                       className="input input-bordered w-full"
                     />

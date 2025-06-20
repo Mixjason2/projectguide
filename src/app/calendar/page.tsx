@@ -70,6 +70,7 @@ export default function CalendarExcel() {
   const [currentView, setCurrentView] = useState<string>('dayGridMonth');
 
 useEffect(() => {
+  // ดึง token จาก localStorage (ซึ่งถูกเซ็ตไว้ตอน Login)
   const token = localStorage.getItem("token") || "";
 
   if (!token) {
@@ -79,22 +80,31 @@ useEffect(() => {
   }
 
   setLoading(true);
+
+  // ดึง startDate/endDate จาก localStorage (ถูกเซ็ตจากหน้า LoginPage)
+  const getToday = () => new Date().toISOString().slice(0, 10);
+  const getEndOfMonth = () =>
+    new Date(new Date().setMonth(new Date().getMonth() + 1, 0)).toISOString().slice(0, 10);
+
+  const startDate = localStorage.getItem("startDate") || getToday();
+  const endDate = localStorage.getItem("endDate") || getEndOfMonth();
+
   fetch('https://operation.dth.travel:7082/api/guide/job', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token, startdate: "2025-01-01", enddate: "2025-05-31" }),
+    body: JSON.stringify({ token, startdate: startDate, enddate: endDate }),
   })
     .then(async res => {
       if (!res.ok) throw new Error(await res.text());
       return res.json();
     })
     .then(data => {
-      console.log("Fetched jobs:", data);
       setJobs(data);
+      // (optionally) cache jobs
+      localStorage.setItem(`jobs_${startDate}_${endDate}`, JSON.stringify(data));
     })
     .catch(err => {
-      console.error("Fetch error:", err);
-      setError(err.message);
+      setError(err.message || "Failed to fetch");
     })
     .finally(() => setLoading(false));
 }, []);
