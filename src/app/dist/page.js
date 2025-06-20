@@ -58,7 +58,7 @@ function LoginPage() {
         }
     }, []);
     var handleSubmit = function (e) { return __awaiter(_this, void 0, void 0, function () {
-        var validPattern, res, data, err_1;
+        var validPattern, res, data, endOfMonth, err_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -75,7 +75,7 @@ function LoginPage() {
                     }
                     _a.label = 1;
                 case 1:
-                    _a.trys.push([1, 4, , 5]);
+                    _a.trys.push([1, 7, , 8]);
                     return [4 /*yield*/, fetch("https://operation.dth.travel:7082/api/guide/login", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
@@ -83,7 +83,7 @@ function LoginPage() {
                                 Username: username,
                                 Password: password,
                                 asmdb: "Assignment_TH",
-                                connection: "[AS-DTGTHA]" // เพิ่มบรรทัดนี้
+                                connection: "[AS-DTGTHA]"
                             })
                         })];
                 case 2:
@@ -91,32 +91,39 @@ function LoginPage() {
                     return [4 /*yield*/, res.json()];
                 case 3:
                     data = _a.sent();
-                    // Show result from API to user
-                    if (data.status && data.token) {
-                        setMessage("Login successful!");
-                        // เก็บ token ลง localStorage
-                        localStorage.setItem("token", data.token);
-                        if (rememberMe) {
-                            localStorage.setItem("savedUsername", username);
-                            localStorage.setItem("savedPassword", password);
-                        }
-                        else {
-                            localStorage.removeItem("savedUsername");
-                            localStorage.removeItem("savedPassword");
-                        }
-                        // เก็บ token ไว้ใน localStorage หรือ sessionStorage ถ้าต้องการ
-                        localStorage.setItem("token", data.token);
-                        router.push("/home");
+                    if (!(data.status && data.token)) return [3 /*break*/, 5];
+                    setMessage("Login successful!");
+                    // เก็บ token ลง localStorage
+                    localStorage.setItem("token", data.token);
+                    if (rememberMe) {
+                        localStorage.setItem("savedUsername", username);
+                        localStorage.setItem("savedPassword", password);
                     }
                     else {
-                        setMessage("Incorrect username or password.");
+                        localStorage.removeItem("savedUsername");
+                        localStorage.removeItem("savedPassword");
                     }
-                    return [3 /*break*/, 5];
+                    // ✅ เพิ่ม logic นี้: reset วันที่เป็นวันปัจจุบันหลัง login
+                    localStorage.setItem("startDate", new Date().toISOString().slice(0, 10));
+                    endOfMonth = new Date(new Date().setMonth(new Date().getMonth() + 1, 0)).toISOString().slice(0, 10);
+                    localStorage.setItem("endDate", endOfMonth);
+                    localStorage.setItem("justLoggedIn", "true");
+                    // ✅ แก้จุดนี้: เพิ่ม delay เล็กน้อย
+                    return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(resolve, 100); })];
                 case 4:
+                    // ✅ แก้จุดนี้: เพิ่ม delay เล็กน้อย
+                    _a.sent();
+                    router.push("/home");
+                    return [3 /*break*/, 6];
+                case 5:
+                    setMessage("Incorrect username or password.");
+                    _a.label = 6;
+                case 6: return [3 /*break*/, 8];
+                case 7:
                     err_1 = _a.sent();
                     setMessage("Failed to connect to the server.");
-                    return [3 /*break*/, 5];
-                case 5: return [2 /*return*/];
+                    return [3 /*break*/, 8];
+                case 8: return [2 /*return*/];
             }
         });
     }); };
