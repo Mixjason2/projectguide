@@ -49,43 +49,56 @@ function mergeJobsByPNR(jobs: Job[]): MergedJob[] {
   return Object.values(map).map((entry) => entry.merged);
 }
 
-const getToday = () => new Date().toISOString().slice(0, 10);
-const getEndOfMonth = () => new Date(new Date().setMonth(new Date().getMonth() + 1, 0)).toISOString().slice(0, 10);
+const get30DaysAgo = () => {
+  const date = new Date();
+  date.setDate(date.getDate() - 30);
+  return date.toISOString().slice(0, 10);
+};
+
+const getEndOfLastMonth = () => {
+  const date = new Date();
+  date.setDate(0); // วันที่ 0 ของเดือนปัจจุบัน = วันสุดท้ายของเดือนก่อนหน้า
+  return date.toISOString().slice(0, 10);
+};
 
 export default function JobsList() {
-  // ✅ ตรวจสอบว่ามีการ login ใหม่
-const [justLoggedIn, setJustLoggedIn] = useState(false);
-
-useEffect(() => {
-  const flag = localStorage.getItem("justLoggedIn") === "true";
-  setJustLoggedIn(flag);
-  if (flag) localStorage.removeItem("justLoggedIn");
-}, []);
-
-const [startDate, setStartDate] = useState('');
-const [endDate, setEndDate] = useState('');
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detailJobs, setDetailJobs] = useState<Job[] | null>(null);
+  const [startDate, setStartDate] = useState<string>(get30DaysAgo());
+  const [endDate, setEndDate] = useState<string>(getEndOfLastMonth());
   const [page, setPage] = useState(1);
   const [expandedPNRs, setExpandedPNRs] = useState<{ [pnr: string]: boolean }>({});
   const [showConfirmedOnly, setShowConfirmedOnly] = useState(false);
 const hasFetchedRef = useRef(false);
   const pageSize = 6;
 
- // ล้าง flag justLoggedIn หลังจากรีเซ็ตเสร็จ
-useEffect(() => {
-  if (justLoggedIn) {
-    setStartDate(getToday());
-    setEndDate(getEndOfMonth());
-  } else {
-    setStartDate(localStorage.getItem('startDate') || getToday());
-    setEndDate(localStorage.getItem('endDate') || getEndOfMonth());
-  }
-}, [justLoggedIn]);
+  // โหลดวันที่และ jobs cache ตอน mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setStartDate(get30DaysAgo());
+      setEndDate(getEndOfLastMonth());
+      setJobs([]);
+      localStorage.removeItem('startDate');
+      localStorage.removeItem('endDate');
+    } else {
+      const savedStart = localStorage.getItem('startDate');
+      const savedEnd = localStorage.getItem('endDate');
+      const useStart = savedStart || get30DaysAgo();
+      const useEnd = savedEnd || getEndOfLastMonth();
+      setStartDate(useStart);
+      setEndDate(useEnd);
+      // โหลด jobs cache ตามช่วงวัน
+      const cacheKey = `jobs_${useStart}_${useEnd}`;
+      const cachedJobs = localStorage.getItem(cacheKey);
+      if (cachedJobs) setJobs(JSON.parse(cachedJobs));
+    }
+  }, []);
 
-  // เก็บวันที่ใหม่หลังจาก user เปลี่ยน
+  // เวลาเปลี่ยนวันหรือ login ใหม่
   useEffect(() => {
     localStorage.setItem('startDate', startDate);
     localStorage.setItem('endDate', endDate);
@@ -129,9 +142,23 @@ useEffect(() => {
     : filteredByDate;
 
   const mergedJobs = mergeJobsByPNR(filteredJobs);
+
   const totalPages = Math.ceil(mergedJobs.length / pageSize);
   const pagedJobs = mergedJobs.slice((page - 1) * pageSize, page * pageSize);
+  // console.log("Merged Jobs:", pagedJobs);
+  const fetchJobs = async (token: string, startDate: string, endDate: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await axios.post('https://operation.dth.travel:7082/api/guide/job', { token, startdate: startDate, enddate: endDate });
+      setJobs(res.data);
 
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <CssgGuide>
       <div className="flex flex-col items-center py-8 min-h-screen bg-base-200 relative bg-[#9EE4F6]">
@@ -162,7 +189,7 @@ useEffect(() => {
             </div>
 
             <ConfirmedFilter showConfirmedOnly={showConfirmedOnly} onChange={setShowConfirmedOnly} />
-            <StatusMessage loading={loading} error={error} filteredJobsLength={filteredByDate.length} />
+            <StatusMessage loading ={loading} error={error} filteredJobsLength={filteredByDate.length} />
 
             {!loading && !error && filteredByDate.length > 0 && (
               <>
@@ -197,3 +224,5 @@ useEffect(() => {
     </CssgGuide>
   );
 }
+
+

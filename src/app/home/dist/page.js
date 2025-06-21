@@ -92,41 +92,56 @@ function mergeJobsByPNR(jobs) {
     }
     return Object.values(map).map(function (entry) { return entry.merged; });
 }
-var getToday = function () { return new Date().toISOString().slice(0, 10); };
-var getEndOfMonth = function () { return new Date(new Date().setMonth(new Date().getMonth() + 1, 0)).toISOString().slice(0, 10); };
+var get30DaysAgo = function () {
+    var date = new Date();
+    date.setDate(date.getDate() - 30);
+    return date.toISOString().slice(0, 10);
+};
+var getEndOfLastMonth = function () {
+    var date = new Date();
+    date.setDate(0); // วันที่ 0 ของเดือนปัจจุบัน = วันสุดท้ายของเดือนก่อนหน้า
+    return date.toISOString().slice(0, 10);
+};
 function JobsList() {
     var _this = this;
-    // ✅ ตรวจสอบว่ามีการ login ใหม่
-    var _a = react_1.useState(false), justLoggedIn = _a[0], setJustLoggedIn = _a[1];
-    react_1.useEffect(function () {
-        var flag = localStorage.getItem("justLoggedIn") === "true";
-        setJustLoggedIn(flag);
-        if (flag)
-            localStorage.removeItem("justLoggedIn");
-    }, []);
-    var _b = react_1.useState(''), startDate = _b[0], setStartDate = _b[1];
-    var _c = react_1.useState(''), endDate = _c[0], setEndDate = _c[1];
-    var _d = react_1.useState([]), jobs = _d[0], setJobs = _d[1];
-    var _e = react_1.useState(false), loading = _e[0], setLoading = _e[1];
-    var _f = react_1.useState(null), error = _f[0], setError = _f[1];
-    var _g = react_1.useState(null), detailJobs = _g[0], setDetailJobs = _g[1];
-    var _h = react_1.useState(1), page = _h[0], setPage = _h[1];
-    var _j = react_1.useState({}), expandedPNRs = _j[0], setExpandedPNRs = _j[1];
-    var _k = react_1.useState(false), showConfirmedOnly = _k[0], setShowConfirmedOnly = _k[1];
+    var _a = react_1.useState([]), jobs = _a[0], setJobs = _a[1];
+    var _b = react_1.useState(false), loading = _b[0], setLoading = _b[1];
+    var _c = react_1.useState(null), error = _c[0], setError = _c[1];
+    var _d = react_1.useState(null), detailJobs = _d[0], setDetailJobs = _d[1];
+    var _e = react_1.useState(get30DaysAgo()), startDate = _e[0], setStartDate = _e[1];
+    var _f = react_1.useState(getEndOfLastMonth()), endDate = _f[0], setEndDate = _f[1];
+    var _g = react_1.useState(1), page = _g[0], setPage = _g[1];
+    var _h = react_1.useState({}), expandedPNRs = _h[0], setExpandedPNRs = _h[1];
+    var _j = react_1.useState(false), showConfirmedOnly = _j[0], setShowConfirmedOnly = _j[1];
     var hasFetchedRef = react_1.useRef(false);
     var pageSize = 6;
-    // ล้าง flag justLoggedIn หลังจากรีเซ็ตเสร็จ
+    // โหลดวันที่และ jobs cache ตอน mount
     react_1.useEffect(function () {
-        if (justLoggedIn) {
-            setStartDate(getToday());
-            setEndDate(getEndOfMonth());
+        if (typeof window === "undefined")
+            return;
+        var token = localStorage.getItem('token');
+        if (!token) {
+            setStartDate(get30DaysAgo());
+            setEndDate(getEndOfLastMonth());
+            setJobs([]);
+            localStorage.removeItem('startDate');
+            localStorage.removeItem('endDate');
         }
         else {
-            setStartDate(localStorage.getItem('startDate') || getToday());
-            setEndDate(localStorage.getItem('endDate') || getEndOfMonth());
+            var savedStart = localStorage.getItem('startDate');
+            var savedEnd = localStorage.getItem('endDate');
+            var useStart = savedStart || get30DaysAgo();
+            var useEnd = savedEnd || getEndOfLastMonth();
+            setStartDate(useStart);
+            setEndDate(useEnd);
+            // โหลด jobs cache ตามช่วงวัน
+            var cacheKey = "jobs_" + useStart + "_" + useEnd;
+            var cachedJobs = localStorage.getItem(cacheKey);
+            if (cachedJobs)
+                setJobs(JSON.parse(cachedJobs));
         }
-    }, [justLoggedIn]);
-    // เก็บวันที่ใหม่หลังจาก user เปลี่ยน
+    }, []);
+    // เวลาเปลี่ยนวันหรือ login ใหม่
     react_1.useEffect(function () {
         localStorage.setItem('startDate', startDate);
         localStorage.setItem('endDate', endDate);
@@ -179,6 +194,33 @@ function JobsList() {
     var mergedJobs = mergeJobsByPNR(filteredJobs);
     var totalPages = Math.ceil(mergedJobs.length / pageSize);
     var pagedJobs = mergedJobs.slice((page - 1) * pageSize, page * pageSize);
+    // console.log("Merged Jobs:", pagedJobs);
+    var fetchJobs = function (token, startDate, endDate) { return __awaiter(_this, void 0, void 0, function () {
+        var res, err_2;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    setLoading(true);
+                    setError(null);
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, 4, 5]);
+                    return [4 /*yield*/, axios_1["default"].post('https://operation.dth.travel:7082/api/guide/job', { token: token, startdate: startDate, enddate: endDate })];
+                case 2:
+                    res = _a.sent();
+                    setJobs(res.data);
+                    return [3 /*break*/, 5];
+                case 3:
+                    err_2 = _a.sent();
+                    setError(err_2.message);
+                    return [3 /*break*/, 5];
+                case 4:
+                    setLoading(false);
+                    return [7 /*endfinally*/];
+                case 5: return [2 /*return*/];
+            }
+        });
+    }); };
     return (React.createElement(cssguide_1["default"], null,
         React.createElement("div", { className: "flex flex-col items-center py-8 min-h-screen bg-base-200 relative bg-[#9EE4F6]" },
             React.createElement(JobsSummary_1["default"], { filteredByDate: filteredByDate }),

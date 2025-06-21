@@ -1,9 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import FileToBase64 from "@/app/component/FileToBase64";
 import { JobActionProps } from "@/app/types/job"; // ปรับ path ตามโครงสร้างของคุณ
 
+
 const JobAction: React.FC<JobActionProps> = ({ job, setJobs }) => {
+  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+  const [uploadedRemark, setUploadedRemark] = useState<string>("");  // ประกาศ state สำหรับ remark
   const handleAccept = async () => {
     try {
       const token = localStorage.getItem("token") || "";
@@ -20,7 +23,7 @@ const JobAction: React.FC<JobActionProps> = ({ job, setJobs }) => {
         setJobs((prevJobs) =>
           prevJobs.map((j) =>
             job.all.some((orig: { key: any; }) => orig.key === j.key)
-              ? { ...j, isConfirmed: true }
+              ? { ...j, IsConfirmed: true }
               : j
           )
         );
@@ -48,7 +51,7 @@ const JobAction: React.FC<JobActionProps> = ({ job, setJobs }) => {
         setJobs((prevJobs) =>
           prevJobs.map((j) =>
             job.all.some((orig: { key: any; }) => orig.key === j.key)
-              ? { ...j, isCancel: true }
+              ? { ...j, IsCancel: true }
               : j
           )
         );
@@ -61,40 +64,16 @@ const JobAction: React.FC<JobActionProps> = ({ job, setJobs }) => {
     }
   };
 
-  const handleUpload = async (base64List: string[]) => {
-    const token = localStorage.getItem("token") || "";
-    try {
-      const response = await axios.post(
-        "https://operation.dth.travel:7082/api/upload",
-        {
-          token,
-          data: {
-            key: 2588, // คุณอาจต้องเปลี่ยนให้เป็น job.key หรืออื่นๆ ที่เหมาะสม
-            Remark: "Test Remark",
-            Images: base64List.map((b64) => ({ ImageBase64: b64 })),
-          },
-        },
-        {
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-
-      if (response.data.success) {
-        alert("อัปโหลดสำเร็จ ID: " + response.data.id);
-      } else {
-        alert("Error: " + (response.data.error || "Unknown error"));
-      }
-    } catch (error) {
-      alert("เกิดข้อผิดพลาด: " + String(error));
-    }
+  const handleBase64ListReady = (base64List: string[], remark: string) => {
+    setUploadedFiles(base64List);
+    setUploadedRemark(remark);
+    console.log("Received base64 list:", base64List);
+    console.log("Received remark:", remark);
   };
-  console.log("isConfirmed:", job.isConfirmed, "isCancel:", job.isCancel);
-  console.log("Confirmed jobs:", job.all?.filter((j: { isConfirmed: any; }) => j.isConfirmed).length, "/", job.all?.length);
-
   return (
     <div className="relative border rounded-xl p-4 shadow bg-white">
-      {job.IsCancel ? null : ( job.IsConfirmed ? (
-        <FileToBase64 onBase64ListReady={handleUpload} />
+      {job.IsCancel ? null : (job.IsConfirmed ? (
+        <FileToBase64 bookingAssignmentId={job.key} onBase64ListReady={handleBase64ListReady} />
       ) : (
         <div className="flex gap-3">
           <button
@@ -117,3 +96,5 @@ const JobAction: React.FC<JobActionProps> = ({ job, setJobs }) => {
 };
 
 export default JobAction;
+
+
