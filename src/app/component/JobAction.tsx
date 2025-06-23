@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import FileToBase64 from "@/app/component/FileToBase64";
 import { JobActionProps } from "@/app/types/job";
+import UploadImagesWithRemark from "@/app/component/FileToBase64";
 
 const JobAction: React.FC<JobActionProps> = ({ job, setJobs }) => {
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
@@ -117,7 +118,11 @@ const JobAction: React.FC<JobActionProps> = ({ job, setJobs }) => {
   return (
     <div className="relative border rounded-xl p-4 shadow bg-white">
       {job.IsCancel ? null : job.IsConfirmed ? (
-        <FileToBase64 bookingAssignmentId={job.key} onBase64ListReady={handleBase64ListReady} />
+        <UploadImagesWithRemark
+          token={localStorage.getItem("token") || ""}
+          keyValue={job.key}
+        />
+
       ) : (
         <>
           <div className="flex gap-3">

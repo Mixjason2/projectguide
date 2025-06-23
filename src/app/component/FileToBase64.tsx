@@ -1,303 +1,263 @@
+import React, { useState, useEffect, ChangeEvent } from "react";
 import axios from "axios";
-import React, { useState, ChangeEvent, useEffect } from "react";
-import { HiUpload } from "react-icons/hi";
-import { bookingAssignmentProps } from "@/app/types/job";
 
-const FileToBase64: React.FC<bookingAssignmentProps> = ({ onBase64ListReady, bookingAssignmentId }) => {
-    const [showBox, setShowBox] = useState(false);
-    const [showResultBox, setShowResultBox] = useState(false);
-    const [previews, setPreviews] = useState<string[]>([]);
+interface UploadedImage {
+    ImageBase64: string;
+}
+
+interface UploadResponse {
+    remark: string;
+    images: UploadedImage[];
+}
+
+const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({ token, keyValue }) => {
     const [remark, setRemark] = useState("");
-    const [base64ListToUpload, setBase64ListToUpload] = useState<string[]>([]);
-    const [uploadSuccess, setUploadSuccess] = useState(false);
-
-    // โหลดข้อมูลตอน mount หรือ bookingAssignmentId เปลี่ยน (ดึงข้อมูลเดิมเก็บไว้ก่อน)
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const [previewBase64List, setPreviewBase64List] = useState<string[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [responseMsg, setResponseMsg] = useState<string | null>(null);
+    const [uploadedData, setUploadedData] = useState<any>();
+    const [initialLoading, setInitialLoading] = useState(true);
+    const [isEditing, setIsEditing] = useState(false);
+    // โหลดข้อมูลที่เคยอัปโหลดไว้ (ถ้ามี)
     useEffect(() => {
-        if (!bookingAssignmentId || (typeof bookingAssignmentId !== "string" && typeof bookingAssignmentId !== "number")) {
-            console.log("Invalid bookingAssignmentId, skipping fetch");
-            return;
-        }
-        const fetchData = async () => {
-            const token = localStorage.getItem("token") || "";
+        const fetchUploadedData = async () => {
+            console.log("🔄 กำลังโหลดข้อมูลจาก API...");
             try {
-                console.log("Fetching data for bookingAssignmentId:", bookingAssignmentId);
-                const res = await axios.post(`https://operation.dth.travel:7082/api/upload/${bookingAssignmentId}`, { token });
-                console.log("API response data:", res.data);
-                const dataArray = res.data;
+                const res = await axios.post(`https://operation.dth.travel:7082/api/upload/${keyValue}`, { token });
+                console.log("✅ ได้ข้อมูลจาก API:", res.data);
 
-                if (!Array.isArray(dataArray) || dataArray.length === 0) {
-                    console.log("No data or empty array received");
-                    setRemark("");
-                    setPreviews([]);
-                    setBase64ListToUpload([]);
-                    return;
+                if (Array.isArray(res.data)) {
+                    const matched = res.data.find((item: any) => item.BookingAssignmentId === keyValue);
+                    if (matched) {
+                        console.log("✅ พบข้อมูลที่ตรงกับ key:", keyValue);
+                        setUploadedData(res.data);
+                    } else {
+                        console.log("❌ ไม่มีข้อมูลที่ตรงกับ key:", keyValue);
+                    }
+                } else {
+                    console.log("❌ ข้อมูลที่ได้ไม่ใช่ array");
                 }
-
-                const firstRemark = dataArray.find(entry => entry.Remark)?.Remark || "";
-                console.log("First remark found:", firstRemark);
-
-                const base64s: string[] = dataArray.flatMap(entry =>
-                    Array.isArray(entry.Images)
-                        ? entry.Images
-                            .filter((img: { ImageBase64: string }) => img.ImageBase64 && img.ImageBase64.trim() !== "")
-                            .map((img: { ImageBase64: string }) => img.ImageBase64.startsWith("data:") ? img.ImageBase64 : `data:image/jpeg;base64,${img.ImageBase64}`)
-                        : []
-                );
-
-                console.log("Extracted base64 images count:", base64s.length);
-                setRemark(firstRemark);
-                setPreviews(base64s);
-                setBase64ListToUpload(base64s);
             } catch (error) {
-                console.error("Error loading data:", error);
-                setRemark("");
-                setPreviews([]);
-                setBase64ListToUpload([]);
+                console.error("❌ ดึงข้อมูลไม่สำเร็จ:", error);
+            } finally {
+                setInitialLoading(false);
             }
         };
 
-        fetchData();
-    }, [bookingAssignmentId]);
+        fetchUploadedData();
+    }, [keyValue, token]);
 
-    const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const files = event.target.files;
-        if (!files) return;
 
-        const fileArray = Array.from(files);
-
-        const promises = fileArray.map(
-            (file) =>
-                new Promise<string>((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                        if (typeof reader.result === "string") {
-                            resolve(reader.result);
-                        } else {
-                            reject("Failed to read file");
-                        }
-                    };
-                    reader.onerror = reject;
-                    reader.readAsDataURL(file);
-                })
-        );
-
-        Promise.all(promises)
-            .then((base64s) => {
-                setBase64ListToUpload((prev) => [...prev, ...base64s]);
-                setPreviews((prev) => [...prev, ...base64s]);
-                setShowBox(true);
-                setShowResultBox(false);
-            })
-            .catch((err) => {
-                console.error("Error converting files:", err);
-            });
+    const fileToBase64 = (file: File): Promise<string> => {
+        console.log("📁 เริ่มแปลงไฟล์:", file.name);
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => {
+                console.log("✅ แปลงสำเร็จ:", file.name);
+                resolve(reader.result as string);
+            };
+            reader.onerror = error => {
+                console.error("❌ แปลงไฟล์ล้มเหลว:", error);
+                reject(error);
+            };
+        });
     };
 
-    const handleSubmit = async () => {
-        if (!base64ListToUpload.length) {
-            alert("Please upload at least one file");
+    // กรณีผู้ใช้คลิก Edit
+    const handleEdit = () => {
+        if (uploadedData && Array.isArray(uploadedData) && uploadedData.length > 0) {
+            setRemark(uploadedData[0].Remark || "");
+            setPreviewBase64List(uploadedData[0].Images.map((img: any) => img.ImageBase64));
+            setIsEditing(true);
+        }
+    };
+
+    // ลบภาพที่ preview
+    const handleDeleteImage = async (indexToDelete: number) => {
+        const updatedList = previewBase64List.filter((_, i) => i !== indexToDelete);
+        setPreviewBase64List(updatedList);
+        setLoading(true);
+        setResponseMsg(null);
+        try {
+            const payload = {
+                token,
+                data: {
+                    key:indexToDelete,
+                    // keyValue: src.key,
+                    Remark: remark,
+                    BookingAssignmentId: keyValue,
+                    UploadBy: "Your Name",
+                    UploadDate: new Date().toISOString(),
+                    Images: updatedList.map(base64 => ({ ImageBase64: base64 })),
+                },
+            };
+
+            console.log("📦 Payload ที่จะส่ง:", payload);
+            const res = await axios.post(`https://operation.dth.travel:7082/api/upload/${keyValue}/delete`, payload);
+            console.log("✅ Delete สำเร็จ:", res.data);
+
+            setResponseMsg(res.data.message || "delete สำเร็จ");
+            setUploadedData(res.data.data);
+        } catch (error: any) {
+            console.error("❌ delete ล้มเหลว:", error);
+            setResponseMsg("เกิดข้อผิดพลาด: " + (error.message || "Unknown error"));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files) return;
+
+        const filesArray = Array.from(files);
+        console.log("📂 เลือกไฟล์:", filesArray.map(f => f.name));
+        setSelectedFiles(filesArray);
+
+        const base64List = await Promise.all(filesArray.map(fileToBase64));
+        setPreviewBase64List(base64List);
+        console.log("🖼 Preview base64 พร้อม:", base64List.length, "ไฟล์");
+    };
+
+    const handleUpload = async (obj: any) => {
+        if (!remark) {
+            alert("กรุณากรอก Remark");
+            return;
+        }
+        if (previewBase64List.length === 0) {
+            alert("กรุณาเลือกไฟล์รูปภาพ");
             return;
         }
 
-        const token = localStorage.getItem("token") || "";
+        setLoading(true);
+        setResponseMsg(null);
+        console.log("📤 เริ่มอัปโหลดข้อมูล...");
 
         try {
             const payload = {
                 token,
                 data: {
-                    key: bookingAssignmentId,
+                    // keyValue: src.key,
                     Remark: remark,
-                    Images: base64ListToUpload.map((base64) => ({ ImageBase64: base64 })),
+                    key: keyValue,
+                    Images: previewBase64List.map(base64 => ({ ImageBase64: base64 })),
                 },
             };
 
-            const response = await axios.post("https://operation.dth.travel:7082/api/upload", payload);
+            console.log("📦 Payload ที่จะส่ง:", payload);
+            const res = await axios.post(`https://operation.dth.travel:7082/api/upload/`, payload);
+            console.log("✅ Upload สำเร็จ:", res.data);
 
-            if (response.data.success) {
-                alert("Upload success!");
-                onBase64ListReady(base64ListToUpload, remark);
-                setShowBox(false);
-                setShowResultBox(true);
-                setUploadSuccess(true);
-            } else {
-                alert("Upload failed: " + (response.data.error || "Unknown error"));
-                setUploadSuccess(false);
-            }
-        } catch (error) {
-            console.error("Upload failed:", error);
-            alert("Upload failed.");
-            setUploadSuccess(false);
+            setResponseMsg(res.data.message || "Upload สำเร็จ");
+            setUploadedData(res.data.data);
+        } catch (error: any) {
+            console.error("❌ Upload ล้มเหลว:", error);
+            setResponseMsg("เกิดข้อผิดพลาด: " + (error.message || "Unknown error"));
+        } finally {
+            setLoading(false);
         }
     };
 
-    const handleCloseBox = () => {
-        setShowBox(false);
-        setRemark("");
-        setPreviews([]);
-        setBase64ListToUpload([]);
-        setUploadSuccess(false);
-    };
+    if (initialLoading) {
+        console.log("⏳ กำลังโหลด initial data...");
+        return <p className="text-center text-gray-500">กำลังโหลดข้อมูล...</p>;
+    }
+
+    if (uploadedData && !isEditing) {
+        return (
+            <div className="max-w-xl mx-auto p-6 bg-white rounded-2xl shadow-md">
+                <h2 className="text-xl font-semibold mb-4 text-green-600">📦 Uploaded Summary</h2>
+
+                {uploadedData.map((src: any, idx: number) => (
+                    <div key={idx} className="mb-4 border-b pb-4">
+                        <p className="mb-2"><strong>Remark:</strong> {src.Remark}</p>
+                        <div className="flex flex-wrap gap-3">
+                            {src.Images.map((img: any, imgIdx: number) => (
+                                <img
+                                    key={imgIdx}
+                                    src={img.ImageBase64}
+                                    alt={`uploaded-${imgIdx}`}
+                                    className="w-20 h-20 object-cover rounded-lg border shadow-sm"
+                                />
+                            ))}
+                        </div>
+                    </div>
+                ))}
+
+                <button
+                    onClick={handleEdit}
+                    className="mt-4 w-full py-2 px-4 rounded-full bg-yellow-500 text-white font-semibold hover:bg-yellow-600"
+                >
+                    ✏️ Edit
+                </button>
+            </div>
+        );
+    }
+
+
+    console.log("📝 แสดงหน้าสำหรับอัปโหลดใหม่");
 
     return (
-        <div className="relative flex flex-col justify-center items-center mt-6">
+
+        <div className="max-w-xl mx-auto p-6 bg-white rounded-2xl shadow-md">
+            <h2 className="text-xl font-semibold mb-4">📤 Upload Images with Remark</h2>
+            <textarea
+                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 mb-4"
+                placeholder="กรอก Remark"
+                value={remark}
+                rows={3}
+                onChange={e => setRemark(e.target.value)}
+            />
+
+            <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFileChange}
+                className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4
+          file:rounded-full file:border-0
+          file:text-sm file:font-semibold
+          file:bg-blue-100 file:text-blue-700
+          hover:file:bg-blue-200 mb-4"
+            />
+
+            <div className="flex flex-wrap gap-3 mb-4">
+                {uploadedData && uploadedData.map((src: any,idx:number) => (
+                    <div key={idx} className="relative group">
+                    <img
+                        src={src.Images[0].ImageBase64}
+                        alt={`uploaded-${src}`}
+                        className="w-20 h-20 object-cover rounded-lg border shadow-sm"
+                    />
+                    <button
+                        onClick={() => handleDeleteImage(src.key)}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-80 hover:opacity-100"
+                        title="Delete"
+                    >
+                        ✕
+                    </button>
+                    </div>
+                ))}
+            </div>
+
             <button
-                onClick={() => {
-                    if ((remark && remark.trim() !== "") || (previews && previews.length > 0)) {
-                        setShowResultBox(true);
-                        setShowBox(false);
-                    } else {
-                        setShowBox(true);
-                        setShowResultBox(false);
-                    }
-                }}
-                title="Attach files"
-                className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-700 transition-all duration-300 border-2 border-blue-700 shadow-md hover:shadow-lg text-white flex items-center justify-center gap-3"
+                onClick={handleUpload}
+                disabled={loading}
+                className={`w-full py-2 px-4 rounded-full font-semibold transition ${loading
+                    ? "bg-gray-400 text-white cursor-not-allowed"
+                    : "bg-blue-500 text-white hover:bg-blue-600"
+                    }`}
             >
-                <HiUpload className="text-2xl" />
-                <span className="text-base font-semibold">Upload</span>
+                {loading ? "Uploading..." : "📨 Upload"}
             </button>
 
-            {showBox && (
-                <>
-                    <div
-                        onClick={handleCloseBox}
-                        className="fixed inset-0 bg-black bg-opacity-60 z-40 transition-opacity"
-                        aria-label="Close popup"
-                    ></div>
-                    <div className="fixed inset-0 flex justify-center items-center z-50 p-2">
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-auto p-6 space-y-5 relative border border-blue-200">
-                            <button
-                                onClick={handleCloseBox}
-                                className="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-2xl font-bold focus:outline-none"
-                                aria-label="Close"
-                            >
-                                &times;
-                            </button>
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Remark</label>
-                                <textarea
-                                    value={remark}
-                                    onChange={(e) => setRemark(e.target.value)}
-                                    rows={4}
-                                    className="w-full border border-blue-200 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-400 transition resize-none"
-                                    placeholder="Enter your remark"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-semibold text-black-700 mb-1">Upload File</label>
-                                <input
-                                    type="file"
-                                    multiple
-                                    onChange={handleFileChange}
-                                    accept="image/*,application/pdf"
-                                    className="block w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-base file:font-semibold file:bg-blue-50 file:text-black-700 hover:file:bg-blue-100"
-                                />
-                            </div>
-                            {previews.length > 0 && (
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                    {previews.map((src, idx) => (
-                                        <div key={idx} className="relative group">
-                                            {src.startsWith("data:image") ? (
-                                                <img
-                                                    src={src}
-                                                    alt={`preview-${idx}`}
-                                                    className="w-20 h-20 object-cover rounded border"
-                                                />
-                                            ) : (
-                                                <div className="flex items-center gap-1 text-blue-700 border rounded p-1 w-20 h-20 justify-center">
-                                                    <span className="text-xl">📄</span> PDF
-                                                </div>
-                                            )}
-                                            {/* ปุ่มลบไฟล์ */}
-                                            <button
-                                                onClick={() => {
-                                                    setPreviews((prev) => prev.filter((_, i) => i !== idx));
-                                                    setBase64ListToUpload((prev) => prev.filter((_, i) => i !== idx));
-                                                }}
-                                                className="absolute top-0 right-0 bg-red-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer"
-                                                title="Remove file"
-                                            >
-                                                &times;
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                            <div className="flex justify-end gap-3 pt-2">
-                                <button
-                                    onClick={handleSubmit}
-                                    className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
-                                >
-                                    Save
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </>
-            )}
-
-            {showResultBox && (
-                <div className="fixed inset-0 flex justify-center items-center z-50 p-2">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-auto p-6 space-y-5 relative border border-green-300">
-                        <button
-                            onClick={() => setShowResultBox(false)}
-                            className="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-2xl font-bold focus:outline-none"
-                            aria-label="Close"
-                        >
-                            &times;
-                        </button>
-                        <h2 className="text-lg font-semibold text-green-700">Upload Summary</h2>
-                        <div className="mb-3">
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Remark</label>
-                            <textarea
-                                value={remark}
-                                readOnly
-                                rows={3}
-                                className="w-full border border-blue-300 rounded px-2 py-1 resize-none bg-gray-100 cursor-not-allowed"
-                                placeholder="Remark"
-                            />
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                            {previews.length > 0 ? (
-                                previews.map((src, idx) => (
-                                    <div key={idx} className="relative group">
-                                        {src.startsWith("data:image") ? (
-                                            <img
-                                                src={src}
-                                                alt={`preview-${idx}`}
-                                                className="w-20 h-20 object-cover rounded border"
-                                            />
-                                        ) : (
-                                            <a
-                                                href={src.startsWith("data:application/pdf") ? src : `data:application/pdf;base64,${src}`}
-                                                download={`attachment-${idx + 1}.pdf`}
-                                                className="flex items-center gap-1 text-blue-700 hover:underline w-20 h-20 border rounded p-1 justify-center"
-                                            >
-                                                <span className="text-xl">📄</span> PDF
-                                            </a>
-                                        )}
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="text-gray-500 italic">No images uploaded.</div>
-                            )}
-                        </div>
-                        {/* ปุ่ม Edit */}
-                        <div className="pt-4 flex justify-end">
-                            <button
-                                onClick={() => {
-                                    setShowResultBox(false);
-                                    setShowBox(true);
-                                }}
-                                className="px-4 py-2 rounded-lg bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition"
-                            >
-                                Edit
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            {responseMsg && (
+                <p className="mt-4 text-center text-sm text-green-600">{responseMsg}</p>
             )}
         </div>
     );
 };
-export default FileToBase64;
+
+export default UploadImagesWithRemark;
