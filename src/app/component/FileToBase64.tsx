@@ -293,9 +293,14 @@ const FileToBase64: React.FC<bookingAssignmentProps> = ({ onBase64ListReady, boo
                                         className="w-20 h-20 object-cover rounded border"
                                     />
                                 ) : (
-                                    <div key={idx} className="flex items-center gap-1 text-blue-700">
-                                        <span className="text-xl">📄</span> PDF attached
-                                    </div>
+                                    <a
+                                        key={idx}
+                                        href={src.startsWith("data:application/pdf") ? src : `data:application/pdf;base64,${src}`}
+                                        download={`attachment-${idx + 1}.pdf`}
+                                        className="flex items-center gap-1 text-blue-700 hover:underline"
+                                    >
+                                        <span className="text-xl">📄</span> Download PDF
+                                    </a>
                                 )
                             ) : (
                                 <div className="text-gray-500 italic">No images uploaded.</div>
