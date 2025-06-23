@@ -13,11 +13,10 @@ const FileToBase64: React.FC<bookingAssignmentProps> = ({ onBase64ListReady, boo
 
     // โหลดข้อมูลตอน mount หรือ bookingAssignmentId เปลี่ยน (ดึงข้อมูลเดิมเก็บไว้ก่อน)
     useEffect(() => {
-        if (!bookingAssignmentId || typeof bookingAssignmentId !== "string" && typeof bookingAssignmentId !== "number") {
+        if (!bookingAssignmentId || (typeof bookingAssignmentId !== "string" && typeof bookingAssignmentId !== "number")) {
             console.log("Invalid bookingAssignmentId, skipping fetch");
             return;
         }
-
         const fetchData = async () => {
             const token = localStorage.getItem("token") || "";
             try {
@@ -30,6 +29,7 @@ const FileToBase64: React.FC<bookingAssignmentProps> = ({ onBase64ListReady, boo
                     console.log("No data or empty array received");
                     setRemark("");
                     setPreviews([]);
+                    setBase64ListToUpload([]);
                     return;
                 }
 
@@ -47,47 +47,17 @@ const FileToBase64: React.FC<bookingAssignmentProps> = ({ onBase64ListReady, boo
                 console.log("Extracted base64 images count:", base64s.length);
                 setRemark(firstRemark);
                 setPreviews(base64s);
+                setBase64ListToUpload(base64s);
             } catch (error) {
                 console.error("Error loading data:", error);
                 setRemark("");
                 setPreviews([]);
+                setBase64ListToUpload([]);
             }
         };
 
         fetchData();
     }, [bookingAssignmentId]);
-
-
-    // ฟังก์ชันโหลดข้อมูลซ้ำ (ใช้ตอนกดปุ่ม Upload เพื่อตรวจสอบข้อมูลล่าสุด)
-    const fetchDataAndShowSummary = async () => {
-        const token = localStorage.getItem("token") || "";
-        try {
-            const res = await axios.post(`https://operation.dth.travel:7082/api/upload/${bookingAssignmentId}`, { token });
-            const dataArray = res.data;
-
-            if (!Array.isArray(dataArray) || dataArray.length === 0) {
-                alert("No data to show in summary");
-                return;
-            }
-
-            const firstRemark = dataArray.find(entry => entry.Remark)?.Remark || "";
-            const base64s: string[] = dataArray.flatMap(entry =>
-                Array.isArray(entry.Images)
-                    ? entry.Images
-                        .filter((img: { ImageBase64: string }) => img.ImageBase64 && img.ImageBase64.trim() !== "")
-                        .map((img: { ImageBase64: string }) => img.ImageBase64.startsWith("data:") ? img.ImageBase64 : `data:image/jpeg;base64,${img.ImageBase64}`)
-                    : []
-            );
-
-            setRemark(firstRemark);
-            setPreviews(base64s);
-            setShowResultBox(true);
-            setShowBox(false);
-        } catch (error) {
-            console.error("Error loading data:", error);
-            alert("Failed to load data for summary.");
-        }
-    };
 
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
@@ -176,7 +146,6 @@ const FileToBase64: React.FC<bookingAssignmentProps> = ({ onBase64ListReady, boo
                         setShowResultBox(true);
                         setShowBox(false);
                     } else {
-                        // ถ้าไม่มีข้อมูล ให้เปิดหน้าป้อนข้อมูลเลย
                         setShowBox(true);
                         setShowResultBox(false);
                     }
@@ -195,7 +164,6 @@ const FileToBase64: React.FC<bookingAssignmentProps> = ({ onBase64ListReady, boo
                         className="fixed inset-0 bg-black bg-opacity-60 z-40 transition-opacity"
                         aria-label="Close popup"
                     ></div>
-
                     <div className="fixed inset-0 flex justify-center items-center z-50 p-2">
                         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-auto p-6 space-y-5 relative border border-blue-200">
                             <button
@@ -205,18 +173,16 @@ const FileToBase64: React.FC<bookingAssignmentProps> = ({ onBase64ListReady, boo
                             >
                                 &times;
                             </button>
-
                             <div>
-                                <label className="block text-sm font-semibold text-black-700 mb-1">Remark</label>
-                                <input
-                                    type="text"
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">Remark</label>
+                                <textarea
                                     value={remark}
                                     onChange={(e) => setRemark(e.target.value)}
-                                    className="w-full border border-blue-200 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                                    rows={4}
+                                    className="w-full border border-blue-200 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-400 transition resize-none"
                                     placeholder="Enter your remark"
                                 />
                             </div>
-
                             <div>
                                 <label className="block text-sm font-semibold text-black-700 mb-1">Upload File</label>
                                 <input
@@ -227,26 +193,36 @@ const FileToBase64: React.FC<bookingAssignmentProps> = ({ onBase64ListReady, boo
                                     className="block w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-base file:font-semibold file:bg-blue-50 file:text-black-700 hover:file:bg-blue-100"
                                 />
                             </div>
-
                             {previews.length > 0 && (
                                 <div className="flex flex-wrap gap-2 mt-2">
-                                    {previews.map((src, idx) =>
-                                        src.startsWith("data:image") ? (
-                                            <img
-                                                key={idx}
-                                                src={src}
-                                                alt={`preview-${idx}`}
-                                                className="w-20 h-20 object-cover rounded border"
-                                            />
-                                        ) : (
-                                            <div key={idx} className="flex items-center gap-1 text-blue-700">
-                                                <span className="text-xl">📄</span> PDF attached
-                                            </div>
-                                        )
-                                    )}
+                                    {previews.map((src, idx) => (
+                                        <div key={idx} className="relative group">
+                                            {src.startsWith("data:image") ? (
+                                                <img
+                                                    src={src}
+                                                    alt={`preview-${idx}`}
+                                                    className="w-20 h-20 object-cover rounded border"
+                                                />
+                                            ) : (
+                                                <div className="flex items-center gap-1 text-blue-700 border rounded p-1 w-20 h-20 justify-center">
+                                                    <span className="text-xl">📄</span> PDF
+                                                </div>
+                                            )}
+                                            {/* ปุ่มลบไฟล์ */}
+                                            <button
+                                                onClick={() => {
+                                                    setPreviews((prev) => prev.filter((_, i) => i !== idx));
+                                                    setBase64ListToUpload((prev) => prev.filter((_, i) => i !== idx));
+                                                }}
+                                                className="absolute top-0 right-0 bg-red-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                                                title="Remove file"
+                                            >
+                                                &times;
+                                            </button>
+                                        </div>
+                                    ))}
                                 </div>
                             )}
-
                             <div className="flex justify-end gap-3 pt-2">
                                 <button
                                     onClick={handleCloseBox}
@@ -276,35 +252,53 @@ const FileToBase64: React.FC<bookingAssignmentProps> = ({ onBase64ListReady, boo
                         >
                             &times;
                         </button>
-
                         <h2 className="text-lg font-semibold text-green-700">Upload Summary</h2>
-
-                        <div className="text-sm text-gray-700">
-                            <strong>Remark:</strong> {remark || "(No remark)"}
+                        <div className="mb-3">
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">Remark</label>
+                            <textarea
+                                value={remark}
+                                readOnly
+                                rows={3}
+                                className="w-full border border-blue-300 rounded px-2 py-1 resize-none bg-gray-100 cursor-not-allowed"
+                                placeholder="Remark"
+                            />
                         </div>
-
                         <div className="flex flex-wrap gap-2">
-                            {previews.length > 0 ? previews.map((src, idx) =>
-                                src.startsWith("data:image") ? (
-                                    <img
-                                        key={idx}
-                                        src={src}
-                                        alt={`preview-${idx}`}
-                                        className="w-20 h-20 object-cover rounded border"
-                                    />
-                                ) : (
-                                    <a
-                                        key={idx}
-                                        href={src.startsWith("data:application/pdf") ? src : `data:application/pdf;base64,${src}`}
-                                        download={`attachment-${idx + 1}.pdf`}
-                                        className="flex items-center gap-1 text-blue-700 hover:underline"
-                                    >
-                                        <span className="text-xl">📄</span> Download PDF
-                                    </a>
-                                )
+                            {previews.length > 0 ? (
+                                previews.map((src, idx) => (
+                                    <div key={idx} className="relative group">
+                                        {src.startsWith("data:image") ? (
+                                            <img
+                                                src={src}
+                                                alt={`preview-${idx}`}
+                                                className="w-20 h-20 object-cover rounded border"
+                                            />
+                                        ) : (
+                                            <a
+                                                href={src.startsWith("data:application/pdf") ? src : `data:application/pdf;base64,${src}`}
+                                                download={`attachment-${idx + 1}.pdf`}
+                                                className="flex items-center gap-1 text-blue-700 hover:underline w-20 h-20 border rounded p-1 justify-center"
+                                            >
+                                                <span className="text-xl">📄</span> PDF
+                                            </a>
+                                        )}
+                                    </div>
+                                ))
                             ) : (
                                 <div className="text-gray-500 italic">No images uploaded.</div>
                             )}
+                        </div>
+                        {/* ปุ่ม Edit */}
+                        <div className="pt-4 flex justify-end">
+                            <button
+                                onClick={() => {
+                                    setShowResultBox(false);
+                                    setShowBox(true);
+                                }}
+                                className="px-4 py-2 rounded-lg bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition"
+                            >
+                                Edit
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -312,5 +306,4 @@ const FileToBase64: React.FC<bookingAssignmentProps> = ({ onBase64ListReady, boo
         </div>
     );
 };
-
 export default FileToBase64;
