@@ -11,62 +11,83 @@ const FileToBase64: React.FC<bookingAssignmentProps> = ({ onBase64ListReady, boo
     const [base64ListToUpload, setBase64ListToUpload] = useState<string[]>([]);
     const [uploadSuccess, setUploadSuccess] = useState(false);
 
-    // โหลดข้อมูลตอน mount หรือ bookingAssignmentId เปลี่ยน
+    // โหลดข้อมูลตอน mount หรือ bookingAssignmentId เปลี่ยน (ดึงข้อมูลเดิมเก็บไว้ก่อน)
     useEffect(() => {
+        if (!bookingAssignmentId || typeof bookingAssignmentId !== "string" && typeof bookingAssignmentId !== "number") {
+            console.log("Invalid bookingAssignmentId, skipping fetch");
+            return;
+        }
+
         const fetchData = async () => {
             const token = localStorage.getItem("token") || "";
             try {
+                console.log("Fetching data for bookingAssignmentId:", bookingAssignmentId);
                 const res = await axios.post(`https://operation.dth.travel:7082/api/upload/${bookingAssignmentId}`, { token });
-                console.log("API response:", res.data);
-                const data = res.data?.data; // สมมติ data เป็น array ตามตัวอย่าง
+                console.log("API response data:", res.data);
+                const dataArray = res.data;
 
-                if (data && Array.isArray(data) && data.length > 0) {
-                    // สมมติ data[0] คือ object ที่เราต้องการ
-                    const first = res.data;
-                    console.log("First entry:", first);
-                    setRemark(first.Remark || "");
-
-                    const base64s: string[] = [];
-
-                    if (Array.isArray(first.Images)) {
-                        for (const img of first.Images) {
-                            if (img.ImageBase64 && img.ImageBase64.trim() !== "") {
-                                let base64 = img.ImageBase64;
-                                if (!base64.startsWith("data:")) {
-                                    base64 = `data:image/jpeg;base64,${base64}`;
-                                }
-                                base64s.push(base64);
-                            }
-                        }
-                    }
-
-                    setPreviews(base64s);
-                    setShowResultBox(true);
-                    setShowBox(false);
-                    console.log("Remark set to:", first.Remark);
-                    console.log("Previews set to:", base64s);
-                    console.log("showResultBox set to true");
-                } else {
+                if (!Array.isArray(dataArray) || dataArray.length === 0) {
+                    console.log("No data or empty array received");
                     setRemark("");
                     setPreviews([]);
-                    setShowBox(false);
-                    setShowResultBox(false);
-                    console.log("No data or empty data, hide showResultBox");
+                    return;
                 }
+
+                const firstRemark = dataArray.find(entry => entry.Remark)?.Remark || "";
+                console.log("First remark found:", firstRemark);
+
+                const base64s: string[] = dataArray.flatMap(entry =>
+                    Array.isArray(entry.Images)
+                        ? entry.Images
+                            .filter((img: { ImageBase64: string }) => img.ImageBase64 && img.ImageBase64.trim() !== "")
+                            .map((img: { ImageBase64: string }) => img.ImageBase64.startsWith("data:") ? img.ImageBase64 : `data:image/jpeg;base64,${img.ImageBase64}`)
+                        : []
+                );
+
+                console.log("Extracted base64 images count:", base64s.length);
+                setRemark(firstRemark);
+                setPreviews(base64s);
             } catch (error) {
                 console.error("Error loading data:", error);
-                setShowBox(false);
-                setShowResultBox(false);
+                setRemark("");
+                setPreviews([]);
             }
         };
 
-        if (bookingAssignmentId) {
-            console.log("BookingAssignmentId changed:", bookingAssignmentId);
-            fetchData();
-        } else {
-            console.log("No bookingAssignmentId available");
-        }
+        fetchData();
     }, [bookingAssignmentId]);
+
+
+    // ฟังก์ชันโหลดข้อมูลซ้ำ (ใช้ตอนกดปุ่ม Upload เพื่อตรวจสอบข้อมูลล่าสุด)
+    const fetchDataAndShowSummary = async () => {
+        const token = localStorage.getItem("token") || "";
+        try {
+            const res = await axios.post(`https://operation.dth.travel:7082/api/upload/${bookingAssignmentId}`, { token });
+            const dataArray = res.data;
+
+            if (!Array.isArray(dataArray) || dataArray.length === 0) {
+                alert("No data to show in summary");
+                return;
+            }
+
+            const firstRemark = dataArray.find(entry => entry.Remark)?.Remark || "";
+            const base64s: string[] = dataArray.flatMap(entry =>
+                Array.isArray(entry.Images)
+                    ? entry.Images
+                        .filter((img: { ImageBase64: string }) => img.ImageBase64 && img.ImageBase64.trim() !== "")
+                        .map((img: { ImageBase64: string }) => img.ImageBase64.startsWith("data:") ? img.ImageBase64 : `data:image/jpeg;base64,${img.ImageBase64}`)
+                    : []
+            );
+
+            setRemark(firstRemark);
+            setPreviews(base64s);
+            setShowResultBox(true);
+            setShowBox(false);
+        } catch (error) {
+            console.error("Error loading data:", error);
+            alert("Failed to load data for summary.");
+        }
+    };
 
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
@@ -94,8 +115,8 @@ const FileToBase64: React.FC<bookingAssignmentProps> = ({ onBase64ListReady, boo
             .then((base64s) => {
                 setBase64ListToUpload((prev) => [...prev, ...base64s]);
                 setPreviews((prev) => [...prev, ...base64s]);
-                setShowBox(true); // เปิดกล่อง upload เมื่อเลือกไฟล์
-                setShowResultBox(false); // ปิดกล่องแสดงผลเดิมถ้ามี
+                setShowBox(true);
+                setShowResultBox(false);
             })
             .catch((err) => {
                 console.error("Error converting files:", err);
@@ -151,18 +172,13 @@ const FileToBase64: React.FC<bookingAssignmentProps> = ({ onBase64ListReady, boo
         <div className="relative flex flex-col justify-center items-center mt-6">
             <button
                 onClick={() => {
-                    console.log("uploadSuccess:", uploadSuccess);
-                    console.log("showResultBox:", showResultBox);
-                    console.log("showBox:", showBox);
-                    // เปิดกล่อง upload หรือ show result ตามสถานะ
-                    if (uploadSuccess || showResultBox) {
+                    if ((remark && remark.trim() !== "") || (previews && previews.length > 0)) {
                         setShowResultBox(true);
                         setShowBox(false);
-                        console.log("Show Result Box forced open");
                     } else {
+                        // ถ้าไม่มีข้อมูล ให้เปิดหน้าป้อนข้อมูลเลย
                         setShowBox(true);
                         setShowResultBox(false);
-                        console.log("Show Upload Box forced open");
                     }
                 }}
                 title="Attach files"
