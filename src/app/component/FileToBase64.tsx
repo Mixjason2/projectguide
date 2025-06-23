@@ -225,12 +225,6 @@ const FileToBase64: React.FC<bookingAssignmentProps> = ({ onBase64ListReady, boo
                             )}
                             <div className="flex justify-end gap-3 pt-2">
                                 <button
-                                    onClick={handleCloseBox}
-                                    className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
-                                >
-                                    Cancel
-                                </button>
-                                <button
                                     onClick={handleSubmit}
                                     className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
                                 >
