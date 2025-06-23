@@ -11,8 +11,10 @@ import JobsSummary from '@/app/component/JobsSummary';
 import JobCard from '@/app/component/JobCard';
 import AllJobDetailsModal from "@/app/component/AllJobDetailsModal";
 
+// Merge jobs by PNR, combine fields that are different into arrays
 function mergeJobsByPNR(jobs: Job[]): MergedJob[] {
   const map: Record<string, { merged: MergedJob; all: Job[] }> = {};
+
   for (const job of jobs) {
     if (!map[job.PNR]) {
       map[job.PNR] = {
@@ -29,8 +31,15 @@ function mergeJobsByPNR(jobs: Job[]): MergedJob[] {
         const prev = map[job.PNR].merged[k];
         const curr = job[k];
 
-        if (k === "IsConfirmed" || k === "IsCancel") {
-          map[job.PNR].merged[k] = Boolean(prev) || Boolean(curr);
+        if (k === "IsConfirmed") {
+          const mergedVal = Boolean(prev) || Boolean(curr);
+          map[job.PNR].merged[k] = mergedVal;
+          continue;
+        }
+
+        if (k === "IsCancel") {
+          const mergedVal = Boolean(prev) || Boolean(curr);
+          map[job.PNR].merged[k] = mergedVal;
           continue;
         }
 
@@ -133,6 +142,7 @@ useEffect(() => {
 
   const filteredByDate = jobs.filter(job => {
     const pickup = job.PickupDate, dropoff = job.DropoffDate;
+    return (!startDate && !endDate) || (startDate && pickup >= startDate) || (endDate && dropoff <= endDate);
    return (!startDate || pickup >= startDate) && (!endDate || dropoff <= endDate);
 
   });
@@ -144,6 +154,7 @@ useEffect(() => {
   const mergedJobs = mergeJobsByPNR(filteredJobs);
 
   const totalPages = Math.ceil(mergedJobs.length / pageSize);
+
   const pagedJobs = mergedJobs.slice((page - 1) * pageSize, page * pageSize);
   // console.log("Merged Jobs:", pagedJobs);
   const fetchJobs = async (token: string, startDate: string, endDate: string) => {
@@ -177,6 +188,8 @@ useEffect(() => {
                       value={i === 0 ? startDate : endDate}
                       onChange={(e) => {
                         const newDate = e.target.value;
+                        i === 0 ? setStartDate(newDate) : setEndDate(newDate);
+                        fetchJobs(localStorage.getItem('token') || '', i === 0 ? newDate : startDate, i === 0 ? endDate : newDate);
                         if (i === 0) setStartDate(newDate);
                         else setEndDate(newDate);
                       }}
@@ -187,11 +200,11 @@ useEffect(() => {
               </div>
               <span className="mt-2 text-xs text-gray-400 text-center px-2">Please select a date range to filter the desired tasks.</span>
             </div>
-
             <ConfirmedFilter showConfirmedOnly={showConfirmedOnly} onChange={setShowConfirmedOnly} />
-            <StatusMessage loading ={loading} error={error} filteredJobsLength={filteredByDate.length} />
-
+            <StatusMessage loading={loading} error={error} filteredJobsLength={filteredByDate.length} />
+           
             {!loading && !error && filteredByDate.length > 0 && (
+              // render list jobs
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {pagedJobs.map((job) => (
@@ -206,7 +219,6 @@ useEffect(() => {
                     />
                   ))}
                 </div>
-
                 <div className="w-full flex justify-center mt-6">
                   <div className="inline-flex items-center gap-2 bg-base-100 border border-base-300 rounded-full shadow px-4 py-2">
                     <button className="btn btn-outline btn-sm rounded-full min-w-[64px]" disabled={page === 1} onClick={() => setPage(page - 1)}>Prev</button>
@@ -214,7 +226,6 @@ useEffect(() => {
                     <button className="btn btn-outline btn-sm rounded-full min-w-[64px]" disabled={page === totalPages} onClick={() => setPage(page + 1)}>Next</button>
                   </div>
                 </div>
-
                 <AllJobDetailsModal detailJobs={detailJobs} setDetailJobs={setDetailJobs} />
               </>
             )}

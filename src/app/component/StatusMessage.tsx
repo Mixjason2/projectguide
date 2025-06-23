@@ -1,6 +1,11 @@
 import React from "react";
 import { Ripple } from 'react-spinners-css';
-import { Props } from "@/app/types/job"; // ปรับ path ตามโครงสร้างของคุณ
+
+type Props = {
+  loading: boolean;
+  error: string | null;
+  filteredJobsLength: number;
+};
 
 const StatusMessage: React.FC<Props> = ({ loading, error, filteredJobsLength }) => {
   if (loading) {

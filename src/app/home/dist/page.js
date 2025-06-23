@@ -56,6 +56,7 @@ var ConfirmedFilter_1 = require("@/app/component/ConfirmedFilter");
 var JobsSummary_1 = require("@/app/component/JobsSummary");
 var JobCard_1 = require("@/app/component/JobCard");
 var AllJobDetailsModal_1 = require("@/app/component/AllJobDetailsModal");
+// Merge jobs by PNR, combine fields that are different into arrays
 function mergeJobsByPNR(jobs) {
     var map = {};
     for (var _i = 0, jobs_1 = jobs; _i < jobs_1.length; _i++) {
@@ -75,8 +76,14 @@ function mergeJobsByPNR(jobs) {
                     continue;
                 var prev = map[job.PNR].merged[k];
                 var curr = job[k];
-                if (k === "IsConfirmed" || k === "IsCancel") {
-                    map[job.PNR].merged[k] = Boolean(prev) || Boolean(curr);
+                if (k === "IsConfirmed") {
+                    var mergedVal = Boolean(prev) || Boolean(curr);
+                    map[job.PNR].merged[k] = mergedVal;
+                    continue;
+                }
+                if (k === "IsCancel") {
+                    var mergedVal = Boolean(prev) || Boolean(curr);
+                    map[job.PNR].merged[k] = mergedVal;
                     continue;
                 }
                 if (Array.isArray(prev)) {
@@ -186,6 +193,7 @@ function JobsList() {
     }, [startDate, endDate]);
     var filteredByDate = jobs.filter(function (job) {
         var pickup = job.PickupDate, dropoff = job.DropoffDate;
+        return (!startDate && !endDate) || (startDate && pickup >= startDate) || (endDate && dropoff <= endDate);
         return (!startDate || pickup >= startDate) && (!endDate || dropoff <= endDate);
     });
     var filteredJobs = showConfirmedOnly
@@ -232,6 +240,8 @@ function JobsList() {
                             React.createElement("label", { htmlFor: "" + label.toLowerCase().replace(' ', '-'), className: "mb-1 text-xs text-gray-500 font-Arial" }, label),
                             React.createElement("input", { id: "" + label.toLowerCase().replace(' ', '-'), type: "date", value: i === 0 ? startDate : endDate, onChange: function (e) {
                                     var newDate = e.target.value;
+                                    i === 0 ? setStartDate(newDate) : setEndDate(newDate);
+                                    fetchJobs(localStorage.getItem('token') || '', i === 0 ? newDate : startDate, i === 0 ? endDate : newDate);
                                     if (i === 0)
                                         setStartDate(newDate);
                                     else
@@ -240,7 +250,9 @@ function JobsList() {
                         React.createElement("span", { className: "mt-2 text-xs text-gray-400 text-center px-2" }, "Please select a date range to filter the desired tasks.")),
                     React.createElement(ConfirmedFilter_1["default"], { showConfirmedOnly: showConfirmedOnly, onChange: setShowConfirmedOnly }),
                     React.createElement(StatusMessage_1["default"], { loading: loading, error: error, filteredJobsLength: filteredByDate.length }),
-                    !loading && !error && filteredByDate.length > 0 && (React.createElement(React.Fragment, null,
+                    !loading && !error && filteredByDate.length > 0 && (
+                    // render list jobs
+                    React.createElement(React.Fragment, null,
                         React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" }, pagedJobs.map(function (job) { return (React.createElement(JobCard_1["default"], { key: job.PNR, job: job, expandedPNRs: expandedPNRs, setExpandedPNRs: setExpandedPNRs, setDetailJobs: setDetailJobs, jobs: jobs, setJobs: setJobs })); })),
                         React.createElement("div", { className: "w-full flex justify-center mt-6" },
                             React.createElement("div", { className: "inline-flex items-center gap-2 bg-base-100 border border-base-300 rounded-full shadow px-4 py-2" },
