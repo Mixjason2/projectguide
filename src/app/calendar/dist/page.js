@@ -43,13 +43,13 @@ var Loading_1 = require("./components/Loading");
 var ErrorMessage_1 = require("./components/ErrorMessage");
 require("./calendar.css");
 var cssguide_1 = require("../cssguide");
-// ฟังก์ชันช่วยคำนวณวันที่ 3 เดือนก่อน
-function getThreeMonthsAgoISO() {
+// ✅ ฟังก์ชันคำนวณวันที่ย้อนหลังตามจำนวนเดือนที่กำหนด
+function getMonthsAgoISO(months) {
     var date = new Date();
-    date.setMonth(date.getMonth() - 3);
+    date.setMonth(date.getMonth() - months);
     return date.toISOString().slice(0, 10);
 }
-// ฟังก์ชันช่วยคำนวณวันที่วันนี้ (ISO yyyy-MM-dd)
+// ฟังก์ชันคำนวณวันที่วันนี้ (ISO yyyy-MM-dd)
 function getTodayISO() {
     return new Date().toISOString().slice(0, 10);
 }
@@ -58,8 +58,7 @@ function Page() {
     var _a = react_1.useState([]), jobs = _a[0], setJobs = _a[1];
     var _b = react_1.useState(true), loading = _b[0], setLoading = _b[1];
     var _c = react_1.useState(null), error = _c[0], setError = _c[1];
-    // เริ่มต้นเป็น 3 เดือนก่อนจนถึงวันนี้
-    var _d = react_1.useState(getThreeMonthsAgoISO()), startDate = _d[0], setStartDate = _d[1];
+    var _d = react_1.useState(getMonthsAgoISO(3)), startDate = _d[0], setStartDate = _d[1]; // ✅ ลดเหลือ 3 เดือน
     var _e = react_1.useState(getTodayISO()), endDate = _e[0], setEndDate = _e[1];
     var fetchJobs = function (start, end) {
         var token = localStorage.getItem('token') || '';
@@ -71,6 +70,7 @@ function Page() {
         }
         setLoading(true);
         setError(null);
+        console.time('⏱️ fetchJobs');
         fetch('https://operation.dth.travel:7082/api/guide/job', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -89,12 +89,29 @@ function Page() {
                 }
             });
         }); })
-            .then(function (data) { return setJobs(data); })["catch"](function (err) {
+            .then(function (data) {
+            console.timeEnd('⏱️ fetchJobs');
+            setJobs(data);
+            localStorage.setItem('cachedJobs', JSON.stringify(data)); // 🔄 cache
+        })["catch"](function (err) {
+            console.timeEnd('⏱️ fetchJobs');
             setError(err.message || 'Failed to fetch');
             setJobs([]);
         })["finally"](function () { return setLoading(false); });
     };
     react_1.useEffect(function () {
+        // ✅ โหลดจากแคชก่อน (แสดงเร็วขึ้น)
+        var cached = localStorage.getItem('cachedJobs');
+        if (cached) {
+            try {
+                var parsed = JSON.parse(cached);
+                setJobs(parsed);
+            }
+            catch (e) {
+                console.warn('⚠️ Failed to parse cached jobs', e);
+            }
+        }
+        // ✅ ดึงข้อมูลล่าสุดจากเซิร์ฟเวอร์
         if (startDate && endDate) {
             fetchJobs(startDate, endDate);
         }

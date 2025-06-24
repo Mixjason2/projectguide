@@ -7,6 +7,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 import { DatesSetArg } from '@fullcalendar/core';
+import JobFilter from '@/app/component/JobFilter';
 
 import { Job, getTotalPax } from './types';
 
@@ -18,16 +19,18 @@ const CalendarView: React.FC<CalendarViewProps> = ({ jobs }) => {
   const [currentView, setCurrentView] = useState<string>('dayGridMonth');
 
   const events = useMemo(() => {
+    const confirmedJobs = jobs.filter(job => job.IsConfirmed);
+
     if (currentView === 'dayGridMonth') {
       const grouped: Record<string, Job[]> = {};
-      jobs.forEach(job => {
+      confirmedJobs.forEach(job => {
         if (!job.PickupDate) return;
         const date = job.PickupDate.split('T')[0];
         (grouped[date] ??= []).push(job);
       });
 
       return Object.entries(grouped).map(([date, jobsOnDate]) => ({
-        title: `(${jobsOnDate.length}) งาน`,
+        title: `(${jobsOnDate.length}) job`,
         start: date,
         allDay: true,
         backgroundColor: '#95c941',
@@ -35,15 +38,14 @@ const CalendarView: React.FC<CalendarViewProps> = ({ jobs }) => {
         textColor: 'white',
         extendedProps: {
           jobs: jobsOnDate,
-          isChanged: jobsOnDate.some(j => j.isChange),
         },
       }));
     } else {
-      return jobs.map(job => ({
+      return confirmedJobs.map(job => ({
         id: job.key.toString(),
         title: `${job.serviceProductName}`,
         start: job.PickupDate,
-        backgroundColor: job.isChange ? '#fb923c' : '#95c941',
+        backgroundColor: '#95c941',
         borderColor: '#0369a1',
         textColor: 'white',
         extendedProps: {
@@ -84,44 +86,81 @@ const CalendarView: React.FC<CalendarViewProps> = ({ jobs }) => {
   };
 
   const renderEventContent = (arg: any) => {
-    const job = arg.event.extendedProps?.job;
-    const isChanged = arg.event.extendedProps?.isChanged;
+    const job = arg.event?.extendedProps?.job;
+    const jobs: Job[] = arg.event?.extendedProps?.jobs;
+
+    type Status = { color: string; label: string };
+    const statusDots: Status[] = [];
+
+    if (jobs && Array.isArray(jobs)) {
+      const hasNew = jobs.some(j => j.isNew);
+      const hasChange = jobs.some(j => j.isChange);
+      if (hasNew) statusDots.push({ color: '#0891b2', label: 'New' });
+      if (hasChange) statusDots.push({ color: '#fb923c', label: 'Changed' });
+      if (!hasNew && !hasChange) statusDots.push({ color: '#404040', label: 'Normal' });
+    }
+
+    if (job) {
+      if (job.isNew) statusDots.push({ color: '#0891b2', label: 'New' });
+      if (job.isChange) statusDots.push({ color: '#fb923c', label: 'Changed' });
+      if (!job.isNew && !job.isChange) statusDots.push({ color: '#404040', label: 'Normal' });
+    }
+
     return (
+   <div
+  className="fc-event-main"
+  style={{
+    backgroundColor: '#95c941',
+    color: 'white',
+    borderColor: '#0369a1',
+    borderRadius: 4,
+    padding: '2px 4px', // ✅ เพิ่ม padding ด้านในเล็กน้อย
+    display: 'flex',
+    alignItems: 'center',
+    boxSizing: 'border-box',
+    width: '100%',
+    fontSize: '0.5rem', // ✅ ขยายขนาดตัวอักษรนิดหน่อย
+    lineHeight: 1.4, // ✅ เพิ่มความสูงบรรทัด
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    minWidth: 0,
+    minHeight: 24, // ✅ เพิ่มความสูงขั้นต่ำให้กรอบใหญ่ขึ้น
+  }}
+>
       <div
-        className="fc-event-main flex items-center"
         style={{
-          backgroundColor: '#95c941',
-          color: 'white',
-          borderColor: '#0369a1',
-          borderRadius: 4,
-          padding: '2px 6px',
           display: 'flex',
-          alignItems: 'center',
-          boxSizing: 'border-box',
-          width: '100%',
-          fontSize: '0.75rem',
-          lineHeight: 1.2,
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
+          flexShrink: 0,
+          marginRight: 2, // ✅ ชิดซ้ายสุด แต่เว้นนิดให้ตัวหนังสือไม่ชนวงกลม
         }}
       >
-        <span
-          style={{
-            backgroundColor: isChanged ? '#fb923c' : job?.isChange ? '#fb923c' : '#0891b2',
-            width: 8,
-            height: 8,
-            borderRadius: '50%',
-            display: 'inline-block',
-            marginRight: 6,
-            borderWidth: 1,
-            borderStyle: 'solid',
-            boxSizing: 'border-box',
-            flexShrink: 0,
-          }}
-        />
-        <span>{arg.event.title}</span>
+        {statusDots.map(({ color, label }, index) => (
+          <span
+            key={index}
+            title={label}
+            style={{
+              backgroundColor: color,
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              border: '1px solid white',
+              flexShrink: 0,
+              display: 'inline-block',
+              marginRight: index < statusDots.length - 1 ? 1 : 0, // ✅ วงกลมติด ๆ กัน
+            }}
+          />
+        ))}
       </div>
+      <span
+        style={{
+          flexShrink: 1,
+          minWidth: 0,
+        }}
+      >
+        {arg.event.title}
+      </span>
+    </div>
     );
   };
 
@@ -150,7 +189,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ jobs }) => {
         meridiem: false,
       }}
       dayHeaderFormat={{
-        weekday: 'short', // แสดงชื่อวันแบบสั้น (Sun, Mon, Tue, ...)
+        weekday: 'short',
       }}
       views={{
         timeGridWeek: {
@@ -161,7 +200,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ jobs }) => {
           },
           dayHeaderFormat: {
             weekday: 'short',
-            day: 'numeric', // แสดงชื่อวันและเลขวันที่ในโหมด week
+            day: 'numeric',
           },
         },
       }}
