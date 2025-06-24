@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import CssgGuide from '../cssguide';
 import axios from 'axios';
 import { Job } from "@/app/types/job";
@@ -80,71 +80,43 @@ export default function JobsList() {
   const [page, setPage] = useState(1);
   const [expandedPNRs, setExpandedPNRs] = useState<{ [pnr: string]: boolean }>({});
   const [showConfirmedOnly, setShowConfirmedOnly] = useState(false);
-const hasFetchedRef = useRef(false);
   const pageSize = 6;
 
-  // โหลดวันที่และ jobs cache ตอน mount
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setStartDate(get30DaysAgo());
-      setEndDate(getEndOfLastMonth());
-      setJobs([]);
-      localStorage.removeItem('startDate');
-      localStorage.removeItem('endDate');
-    } else {
-      const savedStart = localStorage.getItem('startDate');
-      const savedEnd = localStorage.getItem('endDate');
-      const useStart = savedStart || get30DaysAgo();
-      const useEnd = savedEnd || getEndOfLastMonth();
-      setStartDate(useStart);
-      setEndDate(useEnd);
-      // โหลด jobs cache ตามช่วงวัน
-      const cacheKey = `jobs_${useStart}_${useEnd}`;
-      const cachedJobs = localStorage.getItem(cacheKey);
-      if (cachedJobs) setJobs(JSON.parse(cachedJobs));
-    }
-  }, []);
-
-  // เวลาเปลี่ยนวันหรือ login ใหม่
-  useEffect(() => {
-    localStorage.setItem('startDate', startDate);
-    localStorage.setItem('endDate', endDate);
-  }, ["2025-05-01", "2025-05-31"]);
-
-  // fetch jobs เมื่อวันที่เปลี่ยน
-useEffect(() => {
-  if (hasFetchedRef.current) return;
-  hasFetchedRef.current = true;
-
-  const fetchJobs = async () => {
+  useEffect(() => { 
+    const token = localStorage.getItem('token') || '';
     setLoading(true);
-    setError(null);
-    try {
-      const token = localStorage.getItem('token') || '';
-      const res = await axios.post('https://operation.dth.travel:7082/api/guide/job', {
-        token,
+    fetch('https://operation.dth.travel:7082/api/guide/job', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: token, // ✅ ใช้ token จาก localStorage
         startdate: startDate,
-        enddate: endDate,
+        enddate: endDate
+      }),
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const text = await res.text(); // แปลง error เป็นข้อความ
+          throw new Error(text);
+        }
+        return res.json(); // ✅ แปลงเป็น JSON
+      })
+      .then((data) => {
+        // console.log("Job data:", data);
+        setJobs(data); // ✅ เซ็ตข้อมูลให้ state
+      })
+      .catch((err) => {
+        // console.error("Fetch error:", err);
+        setError(err.message);
+      })
+      .finally(() => {
+        setLoading(false);
       });
-      setJobs(res.data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
-    fetchJobs();
   }, [startDate, endDate]);
 
   const filteredByDate = jobs.filter(job => {
     const pickup = job.PickupDate, dropoff = job.DropoffDate;
     return (!startDate && !endDate) || (startDate && pickup >= startDate) || (endDate && dropoff <= endDate);
-   return (!startDate || pickup >= startDate) && (!endDate || dropoff <= endDate);
-
   });
 
   const filteredJobs = showConfirmedOnly
@@ -190,8 +162,6 @@ useEffect(() => {
                         const newDate = e.target.value;
                         i === 0 ? setStartDate(newDate) : setEndDate(newDate);
                         fetchJobs(localStorage.getItem('token') || '', i === 0 ? newDate : startDate, i === 0 ? endDate : newDate);
-                        if (i === 0) setStartDate(newDate);
-                        else setEndDate(newDate);
                       }}
                       className="input input-bordered w-full"
                     />
@@ -202,7 +172,6 @@ useEffect(() => {
             </div>
             <ConfirmedFilter showConfirmedOnly={showConfirmedOnly} onChange={setShowConfirmedOnly} />
             <StatusMessage loading={loading} error={error} filteredJobsLength={filteredByDate.length} />
-           
             {!loading && !error && filteredByDate.length > 0 && (
               // render list jobs
               <>
@@ -235,5 +204,3 @@ useEffect(() => {
     </CssgGuide>
   );
 }
-
-

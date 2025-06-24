@@ -229,3 +229,32 @@
 
 
 
+/* ✅ ขยายความกว้าง column headers */
+.fc .fc-col-header-cell {
+  min-width: 100px;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+}
+
+/* ✅ ลดขนาดตัวอักษรในอีเวนต์ให้พอดีกับช่อง */
+.fc .fc-daygrid-event {
+  font-size: 0.75rem;
+  padding: 2px 4px;
+}
+
+/* ✅ ซ่อนเลขวันที่ใน header ของ month view */
+.fc .fc-col-header-cell-cushion {
+  font-size: 0.85rem;
+}
+
+/* ✅ Responsive */
+@media (max-width: 640px) {
+  .fc .fc-col-header-cell-cushion {
+    font-size: 0.75rem;
+  }
+
+  .fc .fc-daygrid-event {
+    font-size: 0.65rem;
+    padding: 1px 3px;
+  }
+}

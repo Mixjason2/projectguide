@@ -120,81 +120,46 @@ function JobsList() {
     var _g = react_1.useState(1), page = _g[0], setPage = _g[1];
     var _h = react_1.useState({}), expandedPNRs = _h[0], setExpandedPNRs = _h[1];
     var _j = react_1.useState(false), showConfirmedOnly = _j[0], setShowConfirmedOnly = _j[1];
-    var hasFetchedRef = react_1.useRef(false);
     var pageSize = 6;
-    // โหลดวันที่และ jobs cache ตอน mount
     react_1.useEffect(function () {
-        if (typeof window === "undefined")
-            return;
-        var token = localStorage.getItem('token');
-        if (!token) {
-            setStartDate(get30DaysAgo());
-            setEndDate(getEndOfLastMonth());
-            setJobs([]);
-            localStorage.removeItem('startDate');
-            localStorage.removeItem('endDate');
-        }
-        else {
-            var savedStart = localStorage.getItem('startDate');
-            var savedEnd = localStorage.getItem('endDate');
-            var useStart = savedStart || get30DaysAgo();
-            var useEnd = savedEnd || getEndOfLastMonth();
-            setStartDate(useStart);
-            setEndDate(useEnd);
-            // โหลด jobs cache ตามช่วงวัน
-            var cacheKey = "jobs_" + useStart + "_" + useEnd;
-            var cachedJobs = localStorage.getItem(cacheKey);
-            if (cachedJobs)
-                setJobs(JSON.parse(cachedJobs));
-        }
-    }, []);
-    // เวลาเปลี่ยนวันหรือ login ใหม่
-    react_1.useEffect(function () {
-        localStorage.setItem('startDate', startDate);
-        localStorage.setItem('endDate', endDate);
-    }, ["2025-05-01", "2025-05-31"]);
-    // fetch jobs เมื่อวันที่เปลี่ยน
-    react_1.useEffect(function () {
-        if (hasFetchedRef.current)
-            return;
-        hasFetchedRef.current = true;
-        var fetchJobs = function () { return __awaiter(_this, void 0, void 0, function () {
-            var token, res, err_1;
+        var token = localStorage.getItem('token') || '';
+        setLoading(true);
+        fetch('https://operation.dth.travel:7082/api/guide/job', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                token: token,
+                startdate: startDate,
+                enddate: endDate
+            })
+        })
+            .then(function (res) { return __awaiter(_this, void 0, void 0, function () {
+            var text;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        setLoading(true);
-                        setError(null);
-                        _a.label = 1;
+                        if (!!res.ok) return [3 /*break*/, 2];
+                        return [4 /*yield*/, res.text()];
                     case 1:
-                        _a.trys.push([1, 3, 4, 5]);
-                        token = localStorage.getItem('token') || '';
-                        return [4 /*yield*/, axios_1["default"].post('https://operation.dth.travel:7082/api/guide/job', {
-                                token: token,
-                                startdate: startDate,
-                                enddate: endDate
-                            })];
-                    case 2:
-                        res = _a.sent();
-                        setJobs(res.data);
-                        return [3 /*break*/, 5];
-                    case 3:
-                        err_1 = _a.sent();
-                        setError(err_1.message);
-                        return [3 /*break*/, 5];
-                    case 4:
-                        setLoading(false);
-                        return [7 /*endfinally*/];
-                    case 5: return [2 /*return*/];
+                        text = _a.sent();
+                        throw new Error(text);
+                    case 2: return [2 /*return*/, res.json()]; // ✅ แปลงเป็น JSON
                 }
             });
-        }); };
-        fetchJobs();
+        }); })
+            .then(function (data) {
+            // console.log("Job data:", data);
+            setJobs(data); // ✅ เซ็ตข้อมูลให้ state
+        })["catch"](function (err) {
+            // console.error("Fetch error:", err);
+            setError(err.message);
+        })["finally"](function () {
+            setLoading(false);
+        });
     }, [startDate, endDate]);
     var filteredByDate = jobs.filter(function (job) {
         var pickup = job.PickupDate, dropoff = job.DropoffDate;
         return (!startDate && !endDate) || (startDate && pickup >= startDate) || (endDate && dropoff <= endDate);
-        return (!startDate || pickup >= startDate) && (!endDate || dropoff <= endDate);
     });
     var filteredJobs = showConfirmedOnly
         ? filteredByDate.filter(function (job) { return job.IsConfirmed === true; })
@@ -204,7 +169,7 @@ function JobsList() {
     var pagedJobs = mergedJobs.slice((page - 1) * pageSize, page * pageSize);
     // console.log("Merged Jobs:", pagedJobs);
     var fetchJobs = function (token, startDate, endDate) { return __awaiter(_this, void 0, void 0, function () {
-        var res, err_2;
+        var res, err_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -219,8 +184,8 @@ function JobsList() {
                     setJobs(res.data);
                     return [3 /*break*/, 5];
                 case 3:
-                    err_2 = _a.sent();
-                    setError(err_2.message);
+                    err_1 = _a.sent();
+                    setError(err_1.message);
                     return [3 /*break*/, 5];
                 case 4:
                     setLoading(false);
@@ -242,10 +207,6 @@ function JobsList() {
                                     var newDate = e.target.value;
                                     i === 0 ? setStartDate(newDate) : setEndDate(newDate);
                                     fetchJobs(localStorage.getItem('token') || '', i === 0 ? newDate : startDate, i === 0 ? endDate : newDate);
-                                    if (i === 0)
-                                        setStartDate(newDate);
-                                    else
-                                        setEndDate(newDate);
                                 }, className: "input input-bordered w-full" }))); })),
                         React.createElement("span", { className: "mt-2 text-xs text-gray-400 text-center px-2" }, "Please select a date range to filter the desired tasks.")),
                     React.createElement(ConfirmedFilter_1["default"], { showConfirmedOnly: showConfirmedOnly, onChange: setShowConfirmedOnly }),
