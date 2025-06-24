@@ -4,16 +4,11 @@ import { ExpandedJobDetailProps } from "@/app/types/job"; // ปรับ path �
 
 const ExpandedJobDetail: React.FC<ExpandedJobDetailProps> = ({
   job,
-  jobs,
   expandedPNRs,
   renderPlaceDate,
   renderField,
 }) => {
   if (!expandedPNRs[job.PNR]) return null;
-
-  const confirme = Array.isArray(job.IsConfirmed)
-    ? job.IsConfirmed.some((c) => c === true)
-    : job.IsConfirmed ?? false;
 
   return (
     <div className="p-6 pt-0 flex-1 flex flex-col">
@@ -28,7 +23,13 @@ const ExpandedJobDetail: React.FC<ExpandedJobDetailProps> = ({
           Array.isArray(job.DropoffDate) ? job.DropoffDate.join(", ") : job.DropoffDate,
           "Dropoff"
         )}
-        {renderField("Pax", job.Pax)}
+        {renderField(
+          "Pax",
+          (job.AdultQty || 0) +
+          (job.ChildQty || 0) +
+          (job.ChildShareQty || 0) +
+          (job.InfantQty || 0)
+        )}
         {renderField("Source", job.Source)}
       </div>
     </div>
