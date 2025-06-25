@@ -3,7 +3,7 @@ import axios from "axios";
 import FileToBase64 from "@/app/component/FileToBase64";
 import { JobActionProps } from "@/app/types/job";
 import UploadImagesWithRemark from "@/app/component/FileToBase64";
-
+import {Job} from "@/app/types/job";
 const JobAction: React.FC<JobActionProps> = ({ job, setJobs }) => {
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [uploadedRemark, setUploadedRemark] = useState<string>("");
@@ -61,10 +61,14 @@ const JobAction: React.FC<JobActionProps> = ({ job, setJobs }) => {
         );
 
         await sendEmail({
-          emails: ["veeratha.p@dth.travel"],
+          emails: ["fomexii@hotmail.com"],
           emails_CC: "",
-          subject: `Job Accepted: ${job.key}`,
-          body: `The job with key ${job.key} has been accepted successfully.`,
+          subject: `Job Accepted: ${job.PNR}`,
+          body: `The job for service ${job.serviceProductName} has been successfully accepted.
+
+Please note that this confirmation is part of the scheduled PNR: ${job.PNR}.
+
+If you have any questions or require further details, please feel free to contact us.`,
         });
       } else {
         alert("Failed to accept the job: " + (result?.error || "Unknown error"));
@@ -97,8 +101,10 @@ const JobAction: React.FC<JobActionProps> = ({ job, setJobs }) => {
         await sendEmail({
           emails: ["veeratha.p@dth.travel"],
           emails_CC: "",
-          subject: `Job Canceled: ${job.key}`,
-          body: `The job with key ${job.key} has been canceled.`,
+          subject: `Job Canceled: PNR ${job.PNR}`,
+          body: `The job associated with PNR ${job.PNR} and the service "${job.serviceProductName}" has been canceled.
+
+If you have any questions or need further assistance, please do not hesitate to contact us.`,
         });
       } else {
         alert("Failed to cancel the job: " + (result?.error || "Unknown error"));

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, ChangeEvent } from "react";
 import axios from "axios";
+import { Job } from "@/app/types/job"; // แก้ path ให้ถูกต้อง
 
 interface UploadedImage {
     ImageBase64: string;
@@ -10,7 +11,7 @@ interface UploadResponse {
     images: UploadedImage[];
 }
 
-const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({ token, keyValue }) => {
+const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number;job: Job }> = ({ token, keyValue,job }) => {
     const [remark, setRemark] = useState("");
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const [previewBase64List, setPreviewBase64List] = useState<string[]>([]);
@@ -188,7 +189,12 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
                 emails: ["veeratha.p@dth.travel"],
                 emails_CC: "",
                 subject: `Job Updated: ${keyValue}`,
-                body: `Job ${keyValue} has been updated with remark: ${remark}`,
+                body: `The job associated with reference number ${job.PNR} has been successfully updated with the following remark:
+
+"${remark}"
+
+If you have any questions or require further information, please do not hesitate to contact the operations te
+`,
             });
             setIsEditing(false);
         } catch (error: any) {
@@ -236,7 +242,11 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
                 emails: ["veeratha.p@dth.travel"],
                 emails_CC: "",
                 subject: `Job Uploaded: ${keyValue}`,
-                body: `Job ${keyValue} has been uploaded with remark: ${remark}`,
+                body: `The job associated with reference number ${job.PNR} has been successfully uploaded with the following remark:
+
+"${remark}"
+
+Please contact the operations team if you require any further assistance.`,
             });
             setIsEditing(false);
         } catch (error: any) {
