@@ -14,7 +14,11 @@ type CalendarViewProps = {
   jobs: Job[];
 };
 
-function getStatusDots(input: Job | Job[]): { color: string; label: string }[] {
+function getStatusDots(input: Job | Job[] | "all"): { color: string; label: string }[] {
+  if (input === "all") {
+    return [{ color: '#404040', label: 'All Jobs' }];
+  }
+
   const jobs = Array.isArray(input) ? input : [input];
   const hasNew = jobs.some(j => j.isNew);
   const hasChange = jobs.some(j => j.isChange);
@@ -136,7 +140,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({ jobs }) => {
     const type = arg.event.extendedProps?.type;
     const job = arg.event.extendedProps?.job;
     const jobs: Job[] = arg.event.extendedProps?.jobs;
-    const statusDots = getStatusDots(job ?? jobs ?? []);
+
+    const statusDots = getStatusDots(
+      type === 'viewAll' ? 'all' : job ?? jobs ?? []
+    );
 
     const backgroundColor = type === 'viewAll' ? '#404040' : '#95c941';
 

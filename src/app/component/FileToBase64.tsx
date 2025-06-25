@@ -19,6 +19,7 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
     const [uploadedData, setUploadedData] = useState<any>();
     const [initialLoading, setInitialLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
+    const [hasUploaded, setHasUploaded] = useState(false); // เคยอัปโหลดหรือยัง
     // โหลดข้อมูลที่เคยอัปโหลดไว้ (ถ้ามี)
     const fetchUploadedData = async () => {
         console.log("🔄 กำลังโหลดข้อมูลจาก API...");
@@ -32,20 +33,25 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
                 if (matched) {
                     console.log("✅ พบข้อมูลที่ตรงกับ key:", keyValue);
                     setUploadedData(res.data);
+                    setHasUploaded(true);
+                    setIsEditing(false);
                 } else {
                     console.log("❌ ไม่มีข้อมูลที่ตรงกับ key:", keyValue);
                     setUploadedData([]);
-                    setIsEditing(true); // ให้แสดงหน้า UploadsetUploadedData([]);
+                    setHasUploaded(false);
+                    setIsEditing(false); // ให้แสดงหน้า UploadsetUploadedData([]);
                 }
             } else {
                 console.log("❌ ข้อมูลที่ได้ไม่ใช่ array");
                 setUploadedData([]);
-                setIsEditing(true);
+                setHasUploaded(false);
+                setIsEditing(false);
             }
         } catch (error) {
             console.error("❌ ดึงข้อมูลไม่สำเร็จ:", error);
             setUploadedData([]);
-            setIsEditing(true);
+            setHasUploaded(false);
+            setIsEditing(false);
         } finally {
             setInitialLoading(false);
         }
@@ -54,8 +60,6 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
     useEffect(() => {
         fetchUploadedData();
     }, [keyValue, token]);
-
-
 
     const fileToBase64 = (file: File): Promise<string> => {
         console.log("📁 เริ่มแปลงไฟล์:", file.name);
@@ -82,15 +86,35 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
         }
     };
 
-    // ลบภาพที่ preview
     const handleRemovePreviewImage = async (groupIndex: number, imageIndex: number) => {
-        const target = uploadedData[groupIndex];
+        if (!uploadedData) return;
+
+        // สร้างข้อมูลใหม่จาก state เก่า (immutable update)
+        const updatedData = [...uploadedData];
+        const target = updatedData[groupIndex];
+
+        // ลบภาพออกจาก Images ใน group ที่ระบุ
         const updatedImages = target.Images.filter((_: any, idx: number) => idx !== imageIndex);
 
+        updatedData[groupIndex] = {
+            ...target,
+            Images: updatedImages,
+        };
+
+        // อัพเดต state ทันทีให้ UI รีเฟรช
+        setUploadedData(updatedData);
+
+        // *** อัพเดต previewBase64List ให้ตรงกับ uploadedData[0].Images ***
+        if (groupIndex === 0) {
+            const updatedBase64List = updatedImages.map((img: any) => img.ImageBase64);
+            setPreviewBase64List(updatedBase64List);
+        }
+
+        // ส่งลบภาพไป backend
         const payload = {
             token,
             data: {
-                key: target.key, // ✅ ส่ง key ของชุดรูป ไม่ใช่ index ของภาพ
+                key: target.key,
                 Remark: target.Remark,
                 BookingAssignmentId: keyValue,
                 UploadBy: target.UploadBy || "Your Name",
@@ -98,21 +122,39 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
                 Images: updatedImages,
             },
         };
-
-        try {
-            const res = await axios.post(
-                `https://operation.dth.travel:7082/api/upload/${keyValue}/delete`,
-                payload
-            );
-            console.log("✅ ลบสำเร็จ:", res.data);
-            await fetchUploadedData(); // โหลดข้อมูลใหม่หลังลบ
-        } catch (error) {
-            console.error("❌ ลบล้มเหลว:", error);
-        }
     };
 
-
-
+    const handleSave = async () => {
+        if (!uploadedData || !Array.isArray(uploadedData) || uploadedData.length === 0) return;
+        setLoading(true);
+        setResponseMsg(null);
+        const payload = {
+            token,
+            data: {
+                key: uploadedData[0].key, // หรือ BookingAssignmentId ถ้าคุณใช้เป็น key
+                Remark: remark,
+                BookingAssignmentId: keyValue,
+                UploadBy: uploadedData[0].UploadBy || "Your Name",
+                UploadDate: new Date().toISOString(),
+                Images: previewBase64List.map(base64 => ({ ImageBase64: base64 })),
+            },
+        };
+        console.log(payload)
+        try {
+            const res = await axios.post(
+                `https://operation.dth.travel:7082/api/upload/${keyValue}/update`, // <-- ใช้ endpoint แก้ไขจริง
+                payload
+            );
+            setResponseMsg(res.data.message || "อัปเดตสำเร็จ");
+            await fetchUploadedData();
+            setIsEditing(false);
+        } catch (error: any) {
+            console.error("❌ อัปเดตล้มเหลว:", error);
+            setResponseMsg("เกิดข้อผิดพลาด: " + (error.message || "Unknown error"));
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
@@ -130,14 +172,11 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
     const handleUpload = async () => {
         setLoading(true);
         setResponseMsg(null);
-
-        // ✅ เงื่อนไข validation
         if (previewBase64List.length === 0 && remark.trim()) {
             setResponseMsg("❌ ไม่สามารถใส่ Remark โดยไม่มีรูปภาพได้");
             setLoading(false);
             return;
         }
-
         try {
             const payload = {
                 token,
@@ -147,7 +186,6 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
                     Images: previewBase64List.map(base64 => ({ ImageBase64: base64 })),
                 },
             };
-
             const res = await axios.post(`https://operation.dth.travel:7082/api/upload/`, payload);
             setResponseMsg(res.data.message || "Upload สำเร็จ");
             await fetchUploadedData();
@@ -158,14 +196,10 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
             setLoading(false);
         }
     };
-
-
     if (initialLoading) {
-        console.log("⏳ กำลังโหลด initial data...");
-        return <p className="text-center text-gray-500">กำลังโหลดข้อมูล...</p>;
+        return <p className="text-center text-gray-500">⏳ กำลังโหลดข้อมูล...</p>;
     }
-
-    if (uploadedData && Array.isArray(uploadedData) && !isEditing) {
+    if (uploadedData && Array.isArray(uploadedData) && hasUploaded && !isEditing) {
         return (
             <div className="max-w-xl mx-auto p-6 bg-white rounded-2xl shadow-md">
                 <h2 className="text-xl font-semibold mb-4 text-green-600">📦 Uploaded Summary</h2>
@@ -174,7 +208,7 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
                     <div key={idx} className="mb-4 border-b pb-4">
                         <p className="mb-2"><strong>Remark:</strong> {src.Remark}</p>
                         <div className="flex flex-wrap gap-3">
-                            {src.Images && src.Images.map((img: any, imgIdx: number) => (
+                            {src.Images?.map((img: any, imgIdx: number) => (
                                 <img
                                     key={imgIdx}
                                     src={img.ImageBase64}
@@ -185,7 +219,6 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
                         </div>
                     </div>
                 ))}
-
                 <button
                     onClick={handleEdit}
                     className="mt-4 w-full py-2 px-4 rounded-full bg-yellow-500 text-white font-semibold hover:bg-yellow-600"
@@ -195,9 +228,7 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
             </div>
         );
     }
-
     console.log("📝 แสดงหน้าสำหรับอัปโหลดใหม่");
-
     return (
 
         <div className="max-w-xl mx-auto p-6 bg-white rounded-2xl shadow-md">
@@ -209,7 +240,6 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
                 rows={3}
                 onChange={e => setRemark(e.target.value)}
             />
-
             <input
                 type="file"
                 accept="image/*"
@@ -221,7 +251,6 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
           file:bg-blue-100 file:text-blue-700
           hover:file:bg-blue-200 mb-4"
             />
-
             <div className="flex flex-wrap gap-3 mb-4">
                 {uploadedData && uploadedData.map((src: any, groupIdx: number) => (
                     <div key={groupIdx} className="mb-4 border-b pb-4">
@@ -246,23 +275,31 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
                         </div>
                     </div>
                 ))}
-
             </div>
-
-            <button
-                onClick={handleUpload}
-                disabled={
-                    loading || (previewBase64List.length === 0 && !!remark.trim())
-                }
-                className={`w-full py-2 px-4 rounded-full font-semibold transition ${loading || (previewBase64List.length === 0 && !!remark.trim())
+            {!hasUploaded && (
+                <button
+                    onClick={handleUpload}
+                    disabled={loading || (previewBase64List.length === 0 && !!remark.trim())}
+                    className={`w-full py-2 px-4 rounded-full font-semibold transition ${loading || (previewBase64List.length === 0 && !!remark.trim())
                         ? "bg-gray-400 text-white cursor-not-allowed"
                         : "bg-green-500 text-white hover:bg-green-600"
-                    }`}
-            >
-                {loading ? (isEditing ? "Saving..." : "Uploading...") : (isEditing ? "💾 Save" : "📤 Upload")}
-            </button>
-
-
+                        }`}
+                >
+                    {loading ? "Uploading..." : "📤 Upload"}
+                </button>
+            )}
+            {hasUploaded && isEditing && (
+                <button
+                    onClick={handleSave}
+                    disabled={loading || (previewBase64List.length === 0 && !!remark.trim())}
+                    className={`w-full py-2 px-4 rounded-full font-semibold transition ${loading || (previewBase64List.length === 0 && !!remark.trim())
+                        ? "bg-gray-400 text-white cursor-not-allowed"
+                        : "bg-blue-500 text-white hover:bg-blue-600"
+                        }`}
+                >
+                    {loading ? "Saving..." : "💾 Save"}
+                </button>
+            )}
             {responseMsg && (
                 <p className="mt-4 text-center text-sm text-green-600">{responseMsg}</p>
             )}

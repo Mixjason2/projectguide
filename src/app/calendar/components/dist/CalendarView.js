@@ -11,6 +11,9 @@ exports.__esModule = true;
 var react_1 = require("react");
 var types_1 = require("./types");
 function getStatusDots(input) {
+    if (input === "all") {
+        return [{ color: '#404040', label: 'All Jobs' }];
+    }
     var jobs = Array.isArray(input) ? input : [input];
     var hasNew = jobs.some(function (j) { return j.isNew; });
     var hasChange = jobs.some(function (j) { return j.isChange; });
@@ -119,7 +122,7 @@ var renderEventContent = function (arg) {
     var type = (_a = arg.event.extendedProps) === null || _a === void 0 ? void 0 : _a.type;
     var job = (_b = arg.event.extendedProps) === null || _b === void 0 ? void 0 : _b.job;
     var jobs = (_c = arg.event.extendedProps) === null || _c === void 0 ? void 0 : _c.jobs;
-    var statusDots = getStatusDots((_d = job !== null && job !== void 0 ? job : jobs) !== null && _d !== void 0 ? _d : []);
+    var statusDots = getStatusDots(type === 'viewAll' ? 'all' : (_d = job !== null && job !== void 0 ? job : jobs) !== null && _d !== void 0 ? _d : []);
     var backgroundColor = type === 'viewAll' ? '#404040' : '#95c941';
     return (react_1["default"].createElement("div", { className: "fc-event-main", style: {
             backgroundColor: backgroundColor,

@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ChangeEvent, ReactNode } from "react";
 
 export type Job = {
   Driver: any;
@@ -95,7 +95,16 @@ export type Props = {
     onBase64ListReady: (b64List: string[], remark: string) => void;
 };
 
-export interface bookingAssignmentProps {
-  onBase64ListReady: (base64List: string[], remark: string) => void;
-  bookingAssignmentId: number;  // เพิ่มตรงนี้
+export interface EditFormProps {
+    token:string;
+    bookingAssignmentId:number;
+    uploadedBy:string;
+    remark: string;
+    previewBase64List: string[];
+    loading: boolean;
+    responseMsg: string | null;
+    setRemark: React.Dispatch<React.SetStateAction<string>>;
+    handleFileChange: (e: ChangeEvent<HTMLInputElement>) => void;
+    handleUpload: () => void;
+    handleRemovePreviewImage: (indexToDelete: number) => void;
 }
