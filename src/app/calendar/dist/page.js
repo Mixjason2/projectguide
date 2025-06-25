@@ -157,7 +157,16 @@ function Page() {
         react_1["default"].createElement("div", { className: "max-w-4xl mx-auto p-4 overflow-auto" },
             react_1["default"].createElement("h1", { className: "text-2xl font-bold mb-4" }, "Calendar"),
             react_1["default"].createElement(CalendarView_1["default"], { jobs: jobs, gotoDate: currentCenterDate, currentViewProp: currentView, onDatesSet: handleDatesSet }),
-            loading && react_1["default"].createElement("p", null, "Loading more data..."),
+            loading && (react_1["default"].createElement("div", { className: "flex items-center justify-center bg-white bg-opacity-80 rounded-lg shadow-md p-4", style: {
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 9999,
+                    pointerEvents: 'none'
+                } },
+                react_1["default"].createElement("div", { className: "animate-spin rounded-full h-5 w-5 border-t-2 border-green-500" }),
+                react_1["default"].createElement("span", { className: "ml-2 text-black-600 text-sm" }, "Loading more data..."))),
             error && react_1["default"].createElement("p", { className: "text-red-600" }, error))));
 }
 exports["default"] = Page;

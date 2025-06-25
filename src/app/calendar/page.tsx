@@ -131,7 +131,24 @@ export default function Page() {
           currentViewProp={currentView}
           onDatesSet={handleDatesSet}
         />
-        {loading && <p>Loading more data...</p>}
+{loading && (
+  <div
+    className="flex items-center justify-center bg-white bg-opacity-80 rounded-lg shadow-md p-4"
+    style={{
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      zIndex: 9999,
+      pointerEvents: 'none',
+    }}
+  >
+    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-green-500" />
+    <span className="ml-2 text-black-600 text-sm">Loading more data...</span>
+  </div>
+)}
+
+
         {error && <p className="text-red-600">{error}</p>}
       </div>
     </CssgGuide>
