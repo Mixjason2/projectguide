@@ -108,3 +108,8 @@ export interface EditFormProps {
     handleUpload: () => void;
     handleRemovePreviewImage: (indexToDelete: number) => void;
 }
+
+export interface PendingFilterProps {
+  showPendingOnly: boolean;
+  onChange: (checked: boolean) => void;
+}

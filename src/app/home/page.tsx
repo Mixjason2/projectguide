@@ -10,6 +10,7 @@ import ConfirmedFilter from '@/app/component/ConfirmedFilter';
 import JobsSummary from '@/app/component/JobsSummary';
 import JobCard from '@/app/component/JobCard';
 import AllJobDetailsModal from "@/app/component/AllJobDetailsModal";
+import PendingFilter from "@/app/component/PendingFilter";
 
 // Merge jobs by PNR, combine fields that are different into arrays
 function mergeJobsByPNR(jobs: Job[]): MergedJob[] {
@@ -80,9 +81,10 @@ export default function JobsList() {
   const [page, setPage] = useState(1);
   const [expandedPNRs, setExpandedPNRs] = useState<{ [pnr: string]: boolean }>({});
   const [showConfirmedOnly, setShowConfirmedOnly] = useState(false);
+  const [showPendingOnly, setShowPendingOnly] = useState(false);
   const pageSize = 6;
 
-  useEffect(() => { 
+  useEffect(() => {
     const token = localStorage.getItem('token') || '';
     setLoading(true);
     fetch('https://operation.dth.travel:7082/api/guide/job', {
@@ -119,9 +121,13 @@ export default function JobsList() {
     return (!startDate && !endDate) || (startDate && pickup >= startDate) || (endDate && dropoff <= endDate);
   });
 
-  const filteredJobs = showConfirmedOnly
-    ? filteredByDate.filter(job => job.IsConfirmed === true)
-    : filteredByDate;
+  const filteredJobs = filteredByDate.filter(job => {
+    if (showConfirmedOnly) return job.IsConfirmed === true;
+    if (showPendingOnly) return job.IsConfirmed === false && job.IsCancel === false;
+    return true; // แสดงทั้งหมด
+  });
+
+
 
   const mergedJobs = mergeJobsByPNR(filteredJobs);
 
@@ -170,7 +176,23 @@ export default function JobsList() {
               </div>
               <span className="mt-2 text-xs text-gray-400 text-center px-2">Please select a date range to filter the desired tasks.</span>
             </div>
-            <ConfirmedFilter showConfirmedOnly={showConfirmedOnly} onChange={setShowConfirmedOnly} />
+            <div className="flex items-center gap-x-6 px-4 mb-4">
+              <ConfirmedFilter
+                showConfirmedOnly={showConfirmedOnly}
+                onChange={checked => {
+                  setShowConfirmedOnly(checked);
+                  if (checked) setShowPendingOnly(false);
+                }}
+              />
+              <PendingFilter
+                showPendingOnly={showPendingOnly}
+                onChange={checked => {
+                  setShowPendingOnly(checked);
+                  if (checked) setShowConfirmedOnly(false);
+                }}
+              />
+            </div>
+
             <StatusMessage loading={loading} error={error} filteredJobsLength={filteredByDate.length} />
             {!loading && !error && filteredByDate.length > 0 && (
               // render list jobs

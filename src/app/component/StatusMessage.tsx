@@ -1,8 +1,8 @@
 import React from "react";
 import { Ripple } from 'react-spinners-css';
-import { Props } from "@/app/types/job"; // ปรับ path ตามโครงสร้างของคุณ
+import { FetchStatusProps } from "@/app/types/job"; // ปรับ path ตามโครงสร้างของคุณ
 
-const StatusMessage: React.FC<Props> = ({ loading, error, filteredJobsLength }) => {
+const StatusMessage: React.FC<FetchStatusProps> = ({ loading, error, filteredJobsLength }) => {
   if (loading) {
     return (
       <div className="w-full py-10 flex flex-col items-center justify-center text-gray-600">
