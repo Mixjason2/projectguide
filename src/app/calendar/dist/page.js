@@ -50,47 +50,41 @@ var Loading_1 = require("./components/Loading");
 var ErrorMessage_1 = require("./components/ErrorMessage");
 require("./calendar.css");
 var cssguide_1 = require("../cssguide");
-function getMonthsAgoISO(months) {
-    var date = new Date();
-    date.setMonth(date.getMonth() - months);
+function addMonths(date, months) {
+    var d = new Date(date);
+    d.setMonth(d.getMonth() + months);
+    return d;
+}
+function formatISO(date) {
     return date.toISOString().slice(0, 10);
-}
-function getTodayISO() {
-    return new Date().toISOString().slice(0, 10);
-}
-// ✅ แปลง ISO string เป็น timestamp (ms)
-function toTimestamp(date) {
-    return new Date(date).getTime();
-}
-// ✅ รวมงานใหม่แบบไม่ซ้ำ key
-function mergeJobs(oldJobs, newJobs) {
-    var map = new Map();
-    for (var _i = 0, _a = __spreadArrays(oldJobs, newJobs); _i < _a.length; _i++) {
-        var job = _a[_i];
-        map.set(job.key, job);
-    }
-    return Array.from(map.values());
 }
 function Page() {
     var _this = this;
     var _a = react_1.useState([]), jobs = _a[0], setJobs = _a[1];
-    var _b = react_1.useState([]), filteredJobs = _b[0], setFilteredJobs = _b[1];
-    var _c = react_1.useState(true), loading = _c[0], setLoading = _c[1];
-    var _d = react_1.useState(null), error = _d[0], setError = _d[1];
-    var _e = react_1.useState(getMonthsAgoISO(3)), startDate = _e[0], setStartDate = _e[1];
-    var _f = react_1.useState(getTodayISO()), endDate = _f[0], setEndDate = _f[1];
-    var _g = react_1.useState([]), fetchedRanges = _g[0], setFetchedRanges = _g[1];
+    var _b = react_1.useState(false), loading = _b[0], setLoading = _b[1];
+    var _c = react_1.useState(null), error = _c[0], setError = _c[1];
+    var _d = react_1.useState(function () {
+        var d = addMonths(new Date(), -2);
+        return formatISO(d);
+    }), dataStartDate = _d[0], setDataStartDate = _d[1];
+    var _e = react_1.useState(function () {
+        var d = addMonths(new Date(), 2);
+        return formatISO(d);
+    }), dataEndDate = _e[0], setDataEndDate = _e[1];
+    var _f = react_1.useState('dayGridMonth'), currentView = _f[0], setCurrentView = _f[1];
+    var _g = react_1.useState(null), currentCenterDate = _g[0], setCurrentCenterDate = _g[1];
     var fetchJobs = function (start, end) {
         var token = localStorage.getItem('token') || '';
         if (!token) {
             setError('Token not found. Please log in.');
             setLoading(false);
+            setJobs([]);
             return;
         }
         setLoading(true);
         setError(null);
         console.time('⏱️ fetchJobs');
-        fetch('https://operation.dth.travel:7082/api/guide/job', {
+        return fetch('https://operation.dth.travel:7082/api/guide/job', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token: token, startdate: start, enddate: end })
@@ -114,54 +108,56 @@ function Page() {
         }); })
             .then(function (data) {
             console.timeEnd('⏱️ fetchJobs');
-            setJobs(function (prev) { return mergeJobs(prev, data); });
-            setFilteredJobs(function (prev) { return mergeJobs(prev, data); });
-            localStorage.setItem('cachedJobs', JSON.stringify(mergeJobs(jobs, data)));
-            setFetchedRanges(function (prev) { return __spreadArrays(prev, [{ start: start, end: end }]); });
+            setJobs(function (prev) {
+                var combined = __spreadArrays(prev);
+                data.forEach(function (newJob) {
+                    if (!combined.find(function (j) { return j.key === newJob.key; })) {
+                        combined.push(newJob);
+                    }
+                });
+                return combined;
+            });
+            setError(null);
         })["catch"](function (err) {
             console.timeEnd('⏱️ fetchJobs');
             setError(err.message || 'Failed to fetch');
         })["finally"](function () { return setLoading(false); });
     };
     react_1.useEffect(function () {
-        var cached = localStorage.getItem('cachedJobs');
-        if (cached) {
-            try {
-                var parsed = JSON.parse(cached);
-                setJobs(parsed);
-                setFilteredJobs(parsed);
-            }
-            catch (e) {
-                console.warn('⚠️ Failed to parse cached jobs', e);
-            }
-        }
-        if (startDate && endDate) {
-            fetchJobs(startDate, endDate);
-        }
-    }, [startDate, endDate]);
-    // ✅ ฟังก์ชันเรียกเมื่อ user เปลี่ยนเดือน/ช่วงวันที่ใน calendar
+        fetchJobs(dataStartDate, dataEndDate);
+    }, []);
     var handleDatesSet = function (arg) {
-        var viewStart = arg.startStr.slice(0, 10);
-        var viewEnd = arg.endStr.slice(0, 10);
-        var alreadyFetched = fetchedRanges.some(function (r) {
-            return toTimestamp(viewStart) >= toTimestamp(r.start) &&
-                toTimestamp(viewEnd) <= toTimestamp(r.end);
-        });
-        if (!alreadyFetched) {
-            console.log('📆 Fetching extra range:', viewStart, 'to', viewEnd);
-            fetchJobs(viewStart, viewEnd);
+        // เช็คก่อน setCurrentView ว่าต่างจากเดิมไหม
+        if (arg.view.type !== currentView) {
+            setCurrentView(arg.view.type);
         }
-        else {
-            console.log('✅ Already fetched:', viewStart, 'to', viewEnd);
+        // เช็คก่อน setCurrentCenterDate ว่าต่างจากเดิมไหม (เทียบด้วยเวลา)
+        if (!currentCenterDate ||
+            arg.view.currentStart.getTime() !== currentCenterDate.getTime()) {
+            setCurrentCenterDate(arg.view.currentStart);
+        }
+        var viewStart = formatISO(arg.start);
+        var viewEnd = formatISO(arg.end);
+        if (viewEnd > dataEndDate) {
+            var newEndDate = formatISO(addMonths(new Date(dataEndDate), 3));
+            setDataEndDate(newEndDate);
+            fetchJobs(dataEndDate, newEndDate);
+        }
+        if (viewStart < dataStartDate) {
+            var newStartDate = formatISO(addMonths(new Date(dataStartDate), -3));
+            setDataStartDate(newStartDate);
+            fetchJobs(newStartDate, dataStartDate);
         }
     };
-    if (loading)
+    if (loading && jobs.length === 0)
         return react_1["default"].createElement(Loading_1["default"], null);
-    if (error)
+    if (error && jobs.length === 0)
         return react_1["default"].createElement(ErrorMessage_1["default"], { error: error });
     return (react_1["default"].createElement(cssguide_1["default"], null,
         react_1["default"].createElement("div", { className: "max-w-4xl mx-auto p-4 overflow-auto" },
             react_1["default"].createElement("h1", { className: "text-2xl font-bold mb-4" }, "Calendar"),
-            react_1["default"].createElement(CalendarView_1["default"], { jobs: filteredJobs, onDatesSet: handleDatesSet }))));
+            react_1["default"].createElement(CalendarView_1["default"], { jobs: jobs, gotoDate: currentCenterDate, currentViewProp: currentView, onDatesSet: handleDatesSet }),
+            loading && react_1["default"].createElement("p", null, "Loading more data..."),
+            error && react_1["default"].createElement("p", { className: "text-red-600" }, error))));
 }
 exports["default"] = Page;

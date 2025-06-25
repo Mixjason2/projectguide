@@ -1,46 +1,66 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 import { DatesSetArg } from '@fullcalendar/core';
-
 import { Job, getTotalPax } from './types';
 
 type CalendarViewProps = {
   jobs: Job[];
   onDatesSet?: (arg: DatesSetArg) => void;
+  gotoDate?: Date | null;
+  currentViewProp?: string;
 };
 
-function getStatusDots(input: Job | Job[] | "all"): { color: string; label: string }[] {
-  if (input === "all") {
-    return [{ color: '#404040', label: 'All Jobs' }];
-  }
-
+function getStatusDots(input: Job | Job[] | 'all'): { color: string; label: string }[] {
+  if (input === 'all') return [{ color: '#404040', label: 'All Jobs' }];
   const jobs = Array.isArray(input) ? input : [input];
   const hasNew = jobs.some(j => j.isNew);
   const hasChange = jobs.some(j => j.isChange);
-
   if (hasNew || hasChange) {
     return [
       ...(hasNew ? [{ color: '#0891b2', label: 'New' }] : []),
       ...(hasChange ? [{ color: '#fb923c', label: 'Changed' }] : []),
     ];
   }
-
   return [{ color: '#404040', label: 'Normal' }];
 }
 
-const CalendarView: React.FC<CalendarViewProps> = ({ jobs, onDatesSet }) => {
-  const [currentView, setCurrentView] = useState<string>('dayGridMonth');
+const CalendarView: React.FC<CalendarViewProps> = ({
+  jobs,
+  onDatesSet,
+  gotoDate,
+  currentViewProp = 'dayGridMonth',
+}) => {
+  const calendarRef = useRef<FullCalendar>(null);
+
+useEffect(() => {
+  const timeout = setTimeout(() => {
+    const calendarEl = calendarRef.current;
+    if (calendarEl) {
+      const calendarApi = calendarEl.getApi();
+
+      if (calendarApi.view.type !== currentViewProp) {
+        calendarApi.changeView(currentViewProp);
+      }
+
+      if (gotoDate) {
+        calendarApi.gotoDate(gotoDate);
+      }
+    }
+  }, 0);
+
+  return () => clearTimeout(timeout); // cleanup
+}, [currentViewProp, gotoDate]);
 
   const events = useMemo(() => {
     const confirmedJobs = jobs.filter(job => job.IsConfirmed);
 
-    if (currentView === 'dayGridMonth') {
+    if (currentViewProp === 'dayGridMonth') {
       const allJobsGrouped: Record<string, Job[]> = {};
       const groupedConfirmed: Record<string, Job[]> = {};
 
@@ -51,10 +71,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({ jobs, onDatesSet }) => {
         if (job.IsConfirmed) (groupedConfirmed[date] ??= []).push(job);
       });
 
-      const allDates = Array.from(new Set([
-        ...Object.keys(allJobsGrouped),
-        ...Object.keys(groupedConfirmed),
-      ]));
+      const allDates = Array.from(
+        new Set([...Object.keys(allJobsGrouped), ...Object.keys(groupedConfirmed)])
+      );
 
       return allDates.flatMap(date => {
         const confirmed = groupedConfirmed[date] || [];
@@ -100,15 +119,13 @@ const CalendarView: React.FC<CalendarViewProps> = ({ jobs, onDatesSet }) => {
         backgroundColor: '#95c941',
         borderColor: '#0369a1',
         textColor: 'white',
-        extendedProps: {
-          job,
-        },
+        extendedProps: { job },
       }));
     }
-  }, [jobs, currentView]);
+  }, [jobs, currentViewProp]);
 
   const handleEventClick = (info: any) => {
-    if (currentView === 'dayGridMonth') {
+    if (currentViewProp === 'dayGridMonth') {
       const jobsOnDate: Job[] = info.event.extendedProps.jobs || [];
       const clickedDate = info.event.startStr.split('T')[0];
       const details = jobsOnDate
@@ -142,10 +159,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ jobs, onDatesSet }) => {
     const job = arg.event.extendedProps?.job;
     const jobs: Job[] = arg.event.extendedProps?.jobs;
 
-    const statusDots = getStatusDots(
-      type === 'viewAll' ? 'all' : job ?? jobs ?? []
-    );
-
+    const statusDots = getStatusDots(type === 'viewAll' ? 'all' : job ?? jobs ?? []);
     const backgroundColor = type === 'viewAll' ? '#404040' : '#95c941';
 
     return (
@@ -195,11 +209,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({ jobs, onDatesSet }) => {
 
   return (
     <FullCalendar
+      ref={calendarRef}
       plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
-      initialView="dayGridMonth"
+      initialView={currentViewProp}
       events={events}
       datesSet={(arg: DatesSetArg) => {
-        setCurrentView(arg.view.type);
         onDatesSet?.(arg);
       }}
       height="auto"
@@ -215,14 +229,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ jobs, onDatesSet }) => {
       expandRows={true}
       eventClick={handleEventClick}
       eventContent={renderEventContent}
-      slotLabelFormat={{
-        hour: '2-digit',
-        minute: '2-digit',
-        meridiem: false,
-      }}
-      dayHeaderFormat={{
-        weekday: 'short',
-      }}
+      slotLabelFormat={{ hour: '2-digit', minute: '2-digit', meridiem: false }}
+      dayHeaderFormat={{ weekday: 'short' }}
       views={{
         timeGridWeek: {
           slotLabelFormat: {

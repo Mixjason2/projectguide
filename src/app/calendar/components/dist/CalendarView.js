@@ -11,9 +11,8 @@ exports.__esModule = true;
 var react_1 = require("react");
 var types_1 = require("./types");
 function getStatusDots(input) {
-    if (input === "all") {
+    if (input === 'all')
         return [{ color: '#404040', label: 'All Jobs' }];
-    }
     var jobs = Array.isArray(input) ? input : [input];
     var hasNew = jobs.some(function (j) { return j.isNew; });
     var hasChange = jobs.some(function (j) { return j.isChange; });
@@ -23,12 +22,27 @@ function getStatusDots(input) {
     return [{ color: '#404040', label: 'Normal' }];
 }
 var CalendarView = function (_a) {
-    var jobs = _a.jobs, onDatesSet = _a.onDatesSet;
-    var _b = react_1.useState('dayGridMonth'), currentView = _b[0], setCurrentView = _b[1];
+    var jobs = _a.jobs, onDatesSet = _a.onDatesSet, gotoDate = _a.gotoDate, _b = _a.currentViewProp, currentViewProp = _b === void 0 ? 'dayGridMonth' : _b;
+    var calendarRef = react_1.useRef(null);
+    react_1.useEffect(function () {
+        var timeout = setTimeout(function () {
+            var calendarEl = calendarRef.current;
+            if (calendarEl) {
+                var calendarApi = calendarEl.getApi();
+                if (calendarApi.view.type !== currentViewProp) {
+                    calendarApi.changeView(currentViewProp);
+                }
+                if (gotoDate) {
+                    calendarApi.gotoDate(gotoDate);
+                }
+            }
+        }, 0);
+        return function () { return clearTimeout(timeout); }; // cleanup
+    }, [currentViewProp, gotoDate]);
     var events = react_1.useMemo(function () {
         var _a;
         var confirmedJobs = jobs.filter(function (job) { return job.IsConfirmed; });
-        if (currentView === 'dayGridMonth') {
+        if (currentViewProp === 'dayGridMonth') {
             var allJobsGrouped_1 = {};
             var groupedConfirmed = {};
             jobs.forEach(function (job) {
@@ -84,15 +98,13 @@ return allDates.flatMap(function (date) {
         backgroundColor: '#95c941',
         borderColor: '#0369a1',
         textColor: 'white',
-        extendedProps: {
-            job: job
-        }
+        extendedProps: { job: job }
     }); });
 }
-[jobs, currentView];
+[jobs, currentViewProp];
 ;
 var handleEventClick = function (info) {
-    if (currentView === 'dayGridMonth') {
+    if (currentViewProp === 'dayGridMonth') {
         var jobsOnDate = info.event.extendedProps.jobs || [];
         var clickedDate = info.event.startStr.split('T')[0];
         var details = jobsOnDate
@@ -157,20 +169,13 @@ var renderEventContent = function (arg) {
         })),
         react_1["default"].createElement("span", { style: { flexShrink: 1, minWidth: 0 } }, arg.event.title)));
 };
-return (react_1["default"].createElement(react_2["default"], { plugins: [daygrid_1["default"], timegrid_1["default"], list_1["default"], interaction_1["default"]], initialView: "dayGridMonth", events: events, datesSet: function (arg) {
-        setCurrentView(arg.view.type);
+return (react_1["default"].createElement(react_2["default"], { ref: calendarRef, plugins: [daygrid_1["default"], timegrid_1["default"], list_1["default"], interaction_1["default"]], initialView: currentViewProp, events: events, datesSet: function (arg) {
         onDatesSet === null || onDatesSet === void 0 ? void 0 : onDatesSet(arg);
     }, height: "auto", contentHeight: "auto", aspectRatio: 1.7, headerToolbar: {
         start: 'title',
         center: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth',
         end: 'today prev,next'
-    }, editable: false, selectable: true, expandRows: true, eventClick: handleEventClick, eventContent: renderEventContent, slotLabelFormat: {
-        hour: '2-digit',
-        minute: '2-digit',
-        meridiem: false
-    }, dayHeaderFormat: {
-        weekday: 'short'
-    }, views: {
+    }, editable: false, selectable: true, expandRows: true, eventClick: handleEventClick, eventContent: renderEventContent, slotLabelFormat: { hour: '2-digit', minute: '2-digit', meridiem: false }, dayHeaderFormat: { weekday: 'short' }, views: {
         timeGridWeek: {
             slotLabelFormat: {
                 hour: '2-digit',
