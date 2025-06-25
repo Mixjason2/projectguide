@@ -49,7 +49,6 @@ const ExpandedJobDetail: React.FC<ExpandedJobDetailProps> = ({
           (job.ChildShareQty || 0) +
           (job.InfantQty || 0)
         )}
-        {renderField("Source", job.Source)}
       </div>
     </div>
   );
