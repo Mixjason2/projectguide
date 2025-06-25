@@ -36,6 +36,13 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __spreadArrays = (this && this.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
 exports.__esModule = true;
 var react_1 = require("react");
 var CalendarView_1 = require("./components/CalendarView");
@@ -51,6 +58,19 @@ function getMonthsAgoISO(months) {
 function getTodayISO() {
     return new Date().toISOString().slice(0, 10);
 }
+// ✅ แปลง ISO string เป็น timestamp (ms)
+function toTimestamp(date) {
+    return new Date(date).getTime();
+}
+// ✅ รวมงานใหม่แบบไม่ซ้ำ key
+function mergeJobs(oldJobs, newJobs) {
+    var map = new Map();
+    for (var _i = 0, _a = __spreadArrays(oldJobs, newJobs); _i < _a.length; _i++) {
+        var job = _a[_i];
+        map.set(job.key, job);
+    }
+    return Array.from(map.values());
+}
 function Page() {
     var _this = this;
     var _a = react_1.useState([]), jobs = _a[0], setJobs = _a[1];
@@ -59,12 +79,12 @@ function Page() {
     var _d = react_1.useState(null), error = _d[0], setError = _d[1];
     var _e = react_1.useState(getMonthsAgoISO(3)), startDate = _e[0], setStartDate = _e[1];
     var _f = react_1.useState(getTodayISO()), endDate = _f[0], setEndDate = _f[1];
+    var _g = react_1.useState([]), fetchedRanges = _g[0], setFetchedRanges = _g[1];
     var fetchJobs = function (start, end) {
         var token = localStorage.getItem('token') || '';
         if (!token) {
             setError('Token not found. Please log in.');
             setLoading(false);
-            setJobs([]);
             return;
         }
         setLoading(true);
@@ -94,14 +114,13 @@ function Page() {
         }); })
             .then(function (data) {
             console.timeEnd('⏱️ fetchJobs');
-            setJobs(data);
-            setFilteredJobs(data);
-            localStorage.setItem('cachedJobs', JSON.stringify(data));
+            setJobs(function (prev) { return mergeJobs(prev, data); });
+            setFilteredJobs(function (prev) { return mergeJobs(prev, data); });
+            localStorage.setItem('cachedJobs', JSON.stringify(mergeJobs(jobs, data)));
+            setFetchedRanges(function (prev) { return __spreadArrays(prev, [{ start: start, end: end }]); });
         })["catch"](function (err) {
             console.timeEnd('⏱️ fetchJobs');
             setError(err.message || 'Failed to fetch');
-            setJobs([]);
-            setFilteredJobs([]);
         })["finally"](function () { return setLoading(false); });
     };
     react_1.useEffect(function () {
@@ -120,6 +139,22 @@ function Page() {
             fetchJobs(startDate, endDate);
         }
     }, [startDate, endDate]);
+    // ✅ ฟังก์ชันเรียกเมื่อ user เปลี่ยนเดือน/ช่วงวันที่ใน calendar
+    var handleDatesSet = function (arg) {
+        var viewStart = arg.startStr.slice(0, 10);
+        var viewEnd = arg.endStr.slice(0, 10);
+        var alreadyFetched = fetchedRanges.some(function (r) {
+            return toTimestamp(viewStart) >= toTimestamp(r.start) &&
+                toTimestamp(viewEnd) <= toTimestamp(r.end);
+        });
+        if (!alreadyFetched) {
+            console.log('📆 Fetching extra range:', viewStart, 'to', viewEnd);
+            fetchJobs(viewStart, viewEnd);
+        }
+        else {
+            console.log('✅ Already fetched:', viewStart, 'to', viewEnd);
+        }
+    };
     if (loading)
         return react_1["default"].createElement(Loading_1["default"], null);
     if (error)
@@ -127,6 +162,6 @@ function Page() {
     return (react_1["default"].createElement(cssguide_1["default"], null,
         react_1["default"].createElement("div", { className: "max-w-4xl mx-auto p-4 overflow-auto" },
             react_1["default"].createElement("h1", { className: "text-2xl font-bold mb-4" }, "Calendar"),
-            react_1["default"].createElement(CalendarView_1["default"], { jobs: filteredJobs }))));
+            react_1["default"].createElement(CalendarView_1["default"], { jobs: filteredJobs, onDatesSet: handleDatesSet }))));
 }
 exports["default"] = Page;

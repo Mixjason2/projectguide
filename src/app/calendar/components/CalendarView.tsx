@@ -12,6 +12,7 @@ import { Job, getTotalPax } from './types';
 
 type CalendarViewProps = {
   jobs: Job[];
+  onDatesSet?: (arg: DatesSetArg) => void;
 };
 
 function getStatusDots(input: Job | Job[] | "all"): { color: string; label: string }[] {
@@ -33,7 +34,7 @@ function getStatusDots(input: Job | Job[] | "all"): { color: string; label: stri
   return [{ color: '#404040', label: 'Normal' }];
 }
 
-const CalendarView: React.FC<CalendarViewProps> = ({ jobs }) => {
+const CalendarView: React.FC<CalendarViewProps> = ({ jobs, onDatesSet }) => {
   const [currentView, setCurrentView] = useState<string>('dayGridMonth');
 
   const events = useMemo(() => {
@@ -197,7 +198,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({ jobs }) => {
       plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
       initialView="dayGridMonth"
       events={events}
-      datesSet={(arg: DatesSetArg) => setCurrentView(arg.view.type)}
+      datesSet={(arg: DatesSetArg) => {
+        setCurrentView(arg.view.type);
+        onDatesSet?.(arg);
+      }}
       height="auto"
       contentHeight="auto"
       aspectRatio={1.7}

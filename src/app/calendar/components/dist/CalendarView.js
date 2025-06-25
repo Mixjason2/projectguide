@@ -23,7 +23,7 @@ function getStatusDots(input) {
     return [{ color: '#404040', label: 'Normal' }];
 }
 var CalendarView = function (_a) {
-    var jobs = _a.jobs;
+    var jobs = _a.jobs, onDatesSet = _a.onDatesSet;
     var _b = react_1.useState('dayGridMonth'), currentView = _b[0], setCurrentView = _b[1];
     var events = react_1.useMemo(function () {
         var _a;
@@ -157,7 +157,10 @@ var renderEventContent = function (arg) {
         })),
         react_1["default"].createElement("span", { style: { flexShrink: 1, minWidth: 0 } }, arg.event.title)));
 };
-return (react_1["default"].createElement(react_2["default"], { plugins: [daygrid_1["default"], timegrid_1["default"], list_1["default"], interaction_1["default"]], initialView: "dayGridMonth", events: events, datesSet: function (arg) { return setCurrentView(arg.view.type); }, height: "auto", contentHeight: "auto", aspectRatio: 1.7, headerToolbar: {
+return (react_1["default"].createElement(react_2["default"], { plugins: [daygrid_1["default"], timegrid_1["default"], list_1["default"], interaction_1["default"]], initialView: "dayGridMonth", events: events, datesSet: function (arg) {
+        setCurrentView(arg.view.type);
+        onDatesSet === null || onDatesSet === void 0 ? void 0 : onDatesSet(arg);
+    }, height: "auto", contentHeight: "auto", aspectRatio: 1.7, headerToolbar: {
         start: 'title',
         center: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth',
         end: 'today prev,next'

@@ -8,6 +8,7 @@ import ErrorMessage from './components/ErrorMessage';
 import { Job } from './components/types';
 import './calendar.css';
 import CssgGuide from '../cssguide';
+import { DatesSetArg } from '@fullcalendar/core';
 
 function getMonthsAgoISO(months: number): string {
   const date = new Date();
@@ -19,6 +20,20 @@ function getTodayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+// ✅ แปลง ISO string เป็น timestamp (ms)
+function toTimestamp(date: string) {
+  return new Date(date).getTime();
+}
+
+// ✅ รวมงานใหม่แบบไม่ซ้ำ key
+function mergeJobs(oldJobs: Job[], newJobs: Job[]): Job[] {
+  const map = new Map<string, Job>();
+  for (const job of [...oldJobs, ...newJobs]) {
+    map.set(job.key, job);
+  }
+  return Array.from(map.values());
+}
+
 export default function Page() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
@@ -28,12 +43,13 @@ export default function Page() {
   const [startDate, setStartDate] = useState(getMonthsAgoISO(3));
   const [endDate, setEndDate] = useState(getTodayISO());
 
+  const [fetchedRanges, setFetchedRanges] = useState<{ start: string, end: string }[]>([]);
+
   const fetchJobs = (start: string, end: string) => {
     const token = localStorage.getItem('token') || '';
     if (!token) {
       setError('Token not found. Please log in.');
       setLoading(false);
-      setJobs([]);
       return;
     }
 
@@ -58,15 +74,14 @@ export default function Page() {
       })
       .then(data => {
         console.timeEnd('⏱️ fetchJobs');
-        setJobs(data);
-        setFilteredJobs(data);
-        localStorage.setItem('cachedJobs', JSON.stringify(data));
+        setJobs(prev => mergeJobs(prev, data));
+        setFilteredJobs(prev => mergeJobs(prev, data));
+        localStorage.setItem('cachedJobs', JSON.stringify(mergeJobs(jobs, data)));
+        setFetchedRanges(prev => [...prev, { start, end }]);
       })
       .catch(err => {
         console.timeEnd('⏱️ fetchJobs');
         setError(err.message || 'Failed to fetch');
-        setJobs([]);
-        setFilteredJobs([]);
       })
       .finally(() => setLoading(false));
   };
@@ -88,6 +103,24 @@ export default function Page() {
     }
   }, [startDate, endDate]);
 
+  // ✅ ฟังก์ชันเรียกเมื่อ user เปลี่ยนเดือน/ช่วงวันที่ใน calendar
+  const handleDatesSet = (arg: DatesSetArg) => {
+    const viewStart = arg.startStr.slice(0, 10);
+    const viewEnd = arg.endStr.slice(0, 10);
+
+    const alreadyFetched = fetchedRanges.some(r =>
+      toTimestamp(viewStart) >= toTimestamp(r.start) &&
+      toTimestamp(viewEnd) <= toTimestamp(r.end)
+    );
+
+    if (!alreadyFetched) {
+      console.log('📆 Fetching extra range:', viewStart, 'to', viewEnd);
+      fetchJobs(viewStart, viewEnd);
+    } else {
+      console.log('✅ Already fetched:', viewStart, 'to', viewEnd);
+    }
+  };
+
   if (loading) return <Loading />;
   if (error) return <ErrorMessage error={error} />;
 
@@ -95,7 +128,7 @@ export default function Page() {
     <CssgGuide>
       <div className="max-w-4xl mx-auto p-4 overflow-auto">
         <h1 className="text-2xl font-bold mb-4">Calendar</h1>
-        <CalendarView jobs={filteredJobs} />
+        <CalendarView jobs={filteredJobs} onDatesSet={handleDatesSet} />
       </div>
     </CssgGuide>
   );
