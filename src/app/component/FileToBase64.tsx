@@ -63,6 +63,32 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
         fetchUploadedData();
     }, [keyValue, token]);
 
+    const sendEmail = async ({
+        emails,
+        emails_CC,
+        subject,
+        body,
+    }: {
+        emails: string[];
+        emails_CC: string;
+        subject: string;
+        body: string;
+    }) => {
+        try {
+            const res = await axios.post("https://onlinedt.diethelmtravel.com:5281/api/EmailSender", {
+                emails,
+                emails_CC,
+                subject,
+                body,
+            });
+            alert("📧 Email sent successfully!");
+            return res.data;
+        } catch (error) {
+            console.error("❌ Failed to send email", error);
+            alert("❌ Failed to send email");
+        }
+    };
+
     const fileToBase64 = (file: File): Promise<string> => {
         console.log("📁 เริ่มแปลงไฟล์:", file.name);
         return new Promise((resolve, reject) => {
@@ -158,6 +184,12 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
             );
             setResponseMsg(res.data.message || "อัปเดตสำเร็จ");
             await fetchUploadedData();
+            await sendEmail({
+                emails: ["veeratha.p@dth.travel"],
+                emails_CC: "",
+                subject: `Job Updated: ${keyValue}`,
+                body: `Job ${keyValue} has been updated with remark: ${remark}`,
+            });
             setIsEditing(false);
         } catch (error: any) {
             console.error("❌ อัปเดตล้มเหลว:", error);
@@ -200,6 +232,12 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
             const res = await axios.post(`https://operation.dth.travel:7082/api/upload/`, payload);
             setResponseMsg(res.data.message || "Upload สำเร็จ");
             await fetchUploadedData();
+            await sendEmail({
+                emails: ["veeratha.p@dth.travel"],
+                emails_CC: "",
+                subject: `Job Uploaded: ${keyValue}`,
+                body: `Job ${keyValue} has been uploaded with remark: ${remark}`,
+            });
             setIsEditing(false);
         } catch (error: any) {
             setResponseMsg("เกิดข้อผิดพลาด: " + (error.message || "Unknown error"));
