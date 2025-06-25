@@ -83,11 +83,10 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
                                 <li>
                                     <a href="/home" className="flex items-center p-4 text-lg font-semibold text-white rounded-xl hover:bg-[#1f2b68] group">
                                         <svg className="w-8 h-8 text-white transition duration-75 group-hover:text-gray-200"
-                                            aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                            <rect x="4" y="4" width="16" height="16" rx="3" fill="#2D3E92" />
-                                            <path stroke="#ffffff" strokeWidth="2" strokeLinecap="round" d="M8 9h8M8 13h5" />
-                                            <circle cx="7" cy="9" r="1" fill="#ffffff" />
-                                            <circle cx="7" cy="13" r="1" fill="#ffffff" />
+                                            xmlns="http://www.w3.org/2000/svg" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round"
+                                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002-2h2a2 2 0 002 2M9 9h6M9 13h6M9 17h2" />
                                         </svg>
                                         <span className="ms-4">Jobs List</span>
                                     </a>

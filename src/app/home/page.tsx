@@ -176,22 +176,27 @@ export default function JobsList() {
               </div>
               <span className="mt-2 text-xs text-gray-400 text-center px-2">Please select a date range to filter the desired tasks.</span>
             </div>
-            <div className="flex items-center gap-x-6 px-4 mb-4">
-              <ConfirmedFilter
-                showConfirmedOnly={showConfirmedOnly}
-                onChange={checked => {
-                  setShowConfirmedOnly(checked);
-                  if (checked) setShowPendingOnly(false);
+            <div className="px-4 mb-4">
+              <label className="block mb-1 font-medium text-gray-700">Filter by Status</label>
+              <select
+                className="w-full md:w-60 border rounded-lg p-2 focus:outline-none focus:ring focus:border-blue-300"
+                value={
+                  showConfirmedOnly ? "confirmed" :
+                    showPendingOnly ? "pending" :
+                      "all"
+                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setShowConfirmedOnly(value === "confirmed");
+                  setShowPendingOnly(value === "pending");
                 }}
-              />
-              <PendingFilter
-                showPendingOnly={showPendingOnly}
-                onChange={checked => {
-                  setShowPendingOnly(checked);
-                  if (checked) setShowConfirmedOnly(false);
-                }}
-              />
+              >
+                <option value="all">🟡 All Jobs</option>
+                <option value="confirmed">✅ Confirmed Only</option>
+                <option value="pending">🕒 Pending Only</option>
+              </select>
             </div>
+
 
             <StatusMessage loading={loading} error={error} filteredJobsLength={filteredByDate.length} />
             {!loading && !error && filteredByDate.length > 0 && (
