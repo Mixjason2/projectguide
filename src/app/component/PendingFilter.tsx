@@ -3,17 +3,14 @@ import { PendingFilterProps } from "@/app/types/job"; // ปรับ path ต�
 
 const PendingFilter: React.FC<PendingFilterProps> = ({ showPendingOnly, onChange }) => {
   return (
-    <div className="mb-4 flex items-center gap-2 px-4">
+    <div className="flex flex-col items-center w-32 text-sm text-gray-700">
+      <span className="mb-1 text-center">Show Pending</span>
       <input
         type="checkbox"
-        id="showPendingOnly"
         checked={showPendingOnly}
         onChange={e => onChange(e.target.checked)}
         className="checkbox checkbox-secondary"
       />
-      <label htmlFor="showPendingOnly" className="font-Arial text-sm text-gray-700 cursor-pointer">
-        Show Pending Only
-      </label>
     </div>
   );
 };
