@@ -20,6 +20,8 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
     const [initialLoading, setInitialLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [hasUploaded, setHasUploaded] = useState(false); // เคยอัปโหลดหรือยัง
+    const [previewModal, setPreviewModal] = useState<{ base64: string; index: number } | null>(null);
+
     // โหลดข้อมูลที่เคยอัปโหลดไว้ (ถ้ามี)
     const fetchUploadedData = async () => {
         console.log("🔄 กำลังโหลดข้อมูลจาก API...");
@@ -84,6 +86,15 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
             setPreviewBase64List(uploadedData[0].Images.map((img: any) => img.ImageBase64));
             setIsEditing(true);
         }
+    };
+
+    const openPreview = (base64: string, index: number) => {
+        setPreviewModal({ base64, index });
+    };
+
+    // ฟังก์ชันปิด modal
+    const closePreview = () => {
+        setPreviewModal(null);
     };
 
     const handleRemovePreviewImage = async (groupIndex: number, imageIndex: number) => {
@@ -209,16 +220,29 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
                         <p className="mb-2"><strong>Remark:</strong> {src.Remark}</p>
                         <div className="flex flex-wrap gap-3">
                             {src.Images?.map((img: any, imgIdx: number) => (
-                                <img
-                                    key={imgIdx}
-                                    src={img.ImageBase64}
-                                    alt={`uploaded-${imgIdx}`}
-                                    className="w-20 h-20 object-cover rounded-lg border shadow-sm"
-                                />
+                                img.ImageBase64.startsWith("data:application/pdf") ? (
+                                    <a
+                                        key={imgIdx}
+                                        href={img.ImageBase64}
+                                        download={`file-${imgIdx}.pdf`}
+                                        className="w-20 h-20 flex items-center justify-center bg-gray-100 border rounded-lg text-blue-600 text-xs font-medium text-center hover:underline"
+                                        title="ดาวน์โหลด PDF"
+                                    >
+                                        📄 Download PDF
+                                    </a>
+                                ) : (
+                                    <img
+                                        key={imgIdx}
+                                        src={img.ImageBase64}
+                                        alt={`uploaded-${imgIdx}`}
+                                        className="w-20 h-20 object-cover rounded-lg border shadow-sm"
+                                    />
+                                )
                             ))}
                         </div>
                     </div>
                 ))}
+
                 <button
                     onClick={handleEdit}
                     className="mt-4 w-full py-2 px-4 rounded-full bg-yellow-500 text-white font-semibold hover:bg-yellow-600"
@@ -242,7 +266,7 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
             />
             <input
                 type="file"
-                accept="image/*"
+                accept="image/*,application/pdf" // 👈 เพิ่ม pdf
                 multiple
                 onChange={handleFileChange}
                 className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4
@@ -258,11 +282,24 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
                         <div className="flex flex-wrap gap-3">
                             {src.Images?.map((img: any, imgIdx: number) => (
                                 <div key={imgIdx} className="relative group">
-                                    <img
-                                        src={img.ImageBase64}
-                                        alt={`uploaded-${imgIdx}`}
-                                        className="w-20 h-20 object-cover rounded-lg border shadow-sm"
-                                    />
+                                    {img.ImageBase64.startsWith("data:application/pdf") ? (
+                                        <a
+                                            href={img.ImageBase64}
+                                            download={`file-${imgIdx}.pdf`}
+                                            className="w-20 h-20 flex items-center justify-center bg-gray-100 border rounded-lg text-blue-600 text-xs font-medium text-center hover:underline"
+                                            title="ดาวน์โหลด PDF"
+                                        >
+                                            📄 Download PDF
+                                        </a>
+                                    ) : (
+                                        <img
+                                            src={img.ImageBase64}
+                                            alt={`uploaded-${imgIdx}`}
+                                            className="w-20 h-20 object-cover rounded-lg border shadow-sm"
+                                            onClick={() => openPreview(img.ImageBase64, imgIdx)}  // <-- เพิ่มตรงนี้
+                                        />
+                                    )}
+
                                     <button
                                         onClick={() => handleRemovePreviewImage(groupIdx, imgIdx)}
                                         className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-80 hover:opacity-100"
@@ -272,9 +309,58 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
                                     </button>
                                 </div>
                             ))}
+
                         </div>
                     </div>
                 ))}
+                {previewModal && (
+                    <div
+                        className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50"
+                        onClick={closePreview}
+                    >
+                        <div
+                            className="relative max-w-3xl max-h-[80vh] p-4 bg-white rounded-lg shadow-lg"
+                            onClick={(e) => e.stopPropagation()} // กันคลิกหลุดจาก modal
+                        >
+                            {/* รูปภาพใหญ่ */}
+                            {/* รูปภาพใหญ่ */}
+                            {previewModal.base64.startsWith("data:application/pdf") ? (
+                                <iframe
+                                    src={previewModal.base64}
+                                    className="w-full h-[70vh]"
+                                    title="PDF Preview"
+                                />
+                            ) : (
+                                <img
+                                    src={previewModal.base64}
+                                    alt={`Preview-${previewModal.index}`}
+                                    className="max-w-full max-h-[70vh] rounded"
+                                />
+                            )}
+
+                            {/* ปุ่มดาวน์โหลด */}
+                            <div className="flex justify-center mt-4">
+                                <a
+                                    href={previewModal.base64}
+                                    download={`file-${previewModal.index}${previewModal.base64.startsWith("data:application/pdf") ? ".pdf" : ".png"}`}
+                                    className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                >
+                                    ⬇️ Download
+                                </a>
+                            </div>
+
+
+                            {/* ปุ่มปิด */}
+                            <button
+                                onClick={closePreview}
+                                className="absolute top-2 right-2 text-gray-700 hover:text-gray-900 text-2xl font-bold"
+                                aria-label="Close Preview"
+                            >
+                                ×
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
             {!hasUploaded && (
                 <button
