@@ -83,40 +83,36 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
     };
 
     // ลบภาพที่ preview
-    const handleRemovePreviewImage = async (indexToDelete: number) => {
-        const updatedList = previewBase64List.filter((_, i) => i !== indexToDelete);
-        setPreviewBase64List(updatedList);
-        setLoading(true);
-        setResponseMsg(null);
+    const handleRemovePreviewImage = async (groupIndex: number, imageIndex: number) => {
+        const target = uploadedData[groupIndex];
+        const updatedImages = target.Images.filter((_: any, idx: number) => idx !== imageIndex);
+
+        const payload = {
+            token,
+            data: {
+                key: target.key, // ✅ ส่ง key ของชุดรูป ไม่ใช่ index ของภาพ
+                Remark: target.Remark,
+                BookingAssignmentId: keyValue,
+                UploadBy: target.UploadBy || "Your Name",
+                UploadDate: new Date().toISOString(),
+                Images: updatedImages,
+            },
+        };
+
         try {
-            const payload = {
-                token,
-                data: {
-                    key: indexToDelete,
-                    // keyValue: src.key,
-                    Remark: remark,
-                    BookingAssignmentId: keyValue,
-                    UploadBy: "Your Name",
-                    UploadDate: new Date().toISOString(),
-                    Images: updatedList.map(base64 => ({ ImageBase64: base64 })),
-                },
-            };
-
-            console.log("📦 Payload ที่จะส่ง:", payload);
-            const res = await axios.post(`https://operation.dth.travel:7082/api/upload/${keyValue}/delete`, payload);
-            console.log("✅ Delete สำเร็จ:", res.data);
-
-            setResponseMsg(res.data.message || "delete สำเร็จ");
-            setUploadedData(res.data.data);
-            setIsEditing(false);
-            fetchUploadedData();
-        } catch (error: any) {
-            console.error("❌ delete ล้มเหลว:", error);
-            setResponseMsg("เกิดข้อผิดพลาด: " + (error.message || "Unknown error"));
-        } finally {
-            setLoading(false);
+            const res = await axios.post(
+                `https://operation.dth.travel:7082/api/upload/${keyValue}/delete`,
+                payload
+            );
+            console.log("✅ ลบสำเร็จ:", res.data);
+            await fetchUploadedData(); // โหลดข้อมูลใหม่หลังลบ
+        } catch (error) {
+            console.error("❌ ลบล้มเหลว:", error);
         }
     };
+
+
+
 
     const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
@@ -134,6 +130,13 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
     const handleUpload = async () => {
         setLoading(true);
         setResponseMsg(null);
+
+        // ✅ เงื่อนไข validation
+        if (previewBase64List.length === 0 && remark.trim()) {
+            setResponseMsg("❌ ไม่สามารถใส่ Remark โดยไม่มีรูปภาพได้");
+            setLoading(false);
+            return;
+        }
 
         try {
             const payload = {
@@ -156,41 +159,42 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
         }
     };
 
+
     if (initialLoading) {
         console.log("⏳ กำลังโหลด initial data...");
         return <p className="text-center text-gray-500">กำลังโหลดข้อมูล...</p>;
     }
 
     if (uploadedData && Array.isArray(uploadedData) && !isEditing) {
-    return (
-        <div className="max-w-xl mx-auto p-6 bg-white rounded-2xl shadow-md">
-            <h2 className="text-xl font-semibold mb-4 text-green-600">📦 Uploaded Summary</h2>
+        return (
+            <div className="max-w-xl mx-auto p-6 bg-white rounded-2xl shadow-md">
+                <h2 className="text-xl font-semibold mb-4 text-green-600">📦 Uploaded Summary</h2>
 
-            {uploadedData.map((src: any, idx: number) => (
-                <div key={idx} className="mb-4 border-b pb-4">
-                    <p className="mb-2"><strong>Remark:</strong> {src.Remark}</p>
-                    <div className="flex flex-wrap gap-3">
-                        {src.Images && src.Images.map((img: any, imgIdx: number) => (
-                            <img
-                                key={imgIdx}
-                                src={img.ImageBase64}
-                                alt={`uploaded-${imgIdx}`}
-                                className="w-20 h-20 object-cover rounded-lg border shadow-sm"
-                            />
-                        ))}
+                {uploadedData.map((src: any, idx: number) => (
+                    <div key={idx} className="mb-4 border-b pb-4">
+                        <p className="mb-2"><strong>Remark:</strong> {src.Remark}</p>
+                        <div className="flex flex-wrap gap-3">
+                            {src.Images && src.Images.map((img: any, imgIdx: number) => (
+                                <img
+                                    key={imgIdx}
+                                    src={img.ImageBase64}
+                                    alt={`uploaded-${imgIdx}`}
+                                    className="w-20 h-20 object-cover rounded-lg border shadow-sm"
+                                />
+                            ))}
+                        </div>
                     </div>
-                </div>
-            ))}
+                ))}
 
-            <button
-                onClick={handleEdit}
-                className="mt-4 w-full py-2 px-4 rounded-full bg-yellow-500 text-white font-semibold hover:bg-yellow-600"
-            >
-                ✏️ Edit
-            </button>
-        </div>
-    );
-}
+                <button
+                    onClick={handleEdit}
+                    className="mt-4 w-full py-2 px-4 rounded-full bg-yellow-500 text-white font-semibold hover:bg-yellow-600"
+                >
+                    ✏️ Edit
+                </button>
+            </div>
+        );
+    }
 
     console.log("📝 แสดงหน้าสำหรับอัปโหลดใหม่");
 
@@ -219,32 +223,45 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number }> = ({
             />
 
             <div className="flex flex-wrap gap-3 mb-4">
-                {uploadedData && uploadedData.map((src: any, idx: number) => (
-                    <div key={idx} className="relative group">
-                        <img
-                            src={src.Images?.[0]?.ImageBase64}
-                            alt={`uploaded-${src}`}
-                            className="w-20 h-20 object-cover rounded-lg border shadow-sm"
-                        />
-                        <button
-                            onClick={() => handleRemovePreviewImage(src.key)}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-80 hover:opacity-100"
-                            title="Delete"
-                        >
-                            ✕
-                        </button>
+                {uploadedData && uploadedData.map((src: any, groupIdx: number) => (
+                    <div key={groupIdx} className="mb-4 border-b pb-4">
+                        <p className="mb-2"><strong>Remark:</strong> {src.Remark}</p>
+                        <div className="flex flex-wrap gap-3">
+                            {src.Images?.map((img: any, imgIdx: number) => (
+                                <div key={imgIdx} className="relative group">
+                                    <img
+                                        src={img.ImageBase64}
+                                        alt={`uploaded-${imgIdx}`}
+                                        className="w-20 h-20 object-cover rounded-lg border shadow-sm"
+                                    />
+                                    <button
+                                        onClick={() => handleRemovePreviewImage(groupIdx, imgIdx)}
+                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-80 hover:opacity-100"
+                                        title="Delete"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 ))}
+
             </div>
 
             <button
                 onClick={handleUpload}
-                disabled={loading}
-                className={`w-full py-2 px-4 rounded-full font-semibold transition ${loading ? "bg-gray-400 text-white cursor-not-allowed" : "bg-green-500 text-white hover:bg-green-600"
+                disabled={
+                    loading || (previewBase64List.length === 0 && !!remark.trim())
+                }
+                className={`w-full py-2 px-4 rounded-full font-semibold transition ${loading || (previewBase64List.length === 0 && !!remark.trim())
+                        ? "bg-gray-400 text-white cursor-not-allowed"
+                        : "bg-green-500 text-white hover:bg-green-600"
                     }`}
             >
                 {loading ? (isEditing ? "Saving..." : "Uploading...") : (isEditing ? "💾 Save" : "📤 Upload")}
             </button>
+
 
             {responseMsg && (
                 <p className="mt-4 text-center text-sm text-green-600">{responseMsg}</p>

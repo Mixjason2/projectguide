@@ -7,13 +7,27 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 import { DatesSetArg } from '@fullcalendar/core';
-import JobFilter from '@/app/component/JobFilter';
 
 import { Job, getTotalPax } from './types';
 
 type CalendarViewProps = {
   jobs: Job[];
 };
+
+function getStatusDots(input: Job | Job[]): { color: string; label: string }[] {
+  const jobs = Array.isArray(input) ? input : [input];
+  const hasNew = jobs.some(j => j.isNew);
+  const hasChange = jobs.some(j => j.isChange);
+
+  if (hasNew || hasChange) {
+    return [
+      ...(hasNew ? [{ color: '#0891b2', label: 'New' }] : []),
+      ...(hasChange ? [{ color: '#fb923c', label: 'Changed' }] : []),
+    ];
+  }
+
+  return [{ color: '#404040', label: 'Normal' }];
+}
 
 const CalendarView: React.FC<CalendarViewProps> = ({ jobs }) => {
   const [currentView, setCurrentView] = useState<string>('dayGridMonth');
@@ -22,27 +36,60 @@ const CalendarView: React.FC<CalendarViewProps> = ({ jobs }) => {
     const confirmedJobs = jobs.filter(job => job.IsConfirmed);
 
     if (currentView === 'dayGridMonth') {
-      const grouped: Record<string, Job[]> = {};
-      confirmedJobs.forEach(job => {
+      const allJobsGrouped: Record<string, Job[]> = {};
+      const groupedConfirmed: Record<string, Job[]> = {};
+
+      jobs.forEach(job => {
         if (!job.PickupDate) return;
         const date = job.PickupDate.split('T')[0];
-        (grouped[date] ??= []).push(job);
+        (allJobsGrouped[date] ??= []).push(job);
+        if (job.IsConfirmed) (groupedConfirmed[date] ??= []).push(job);
       });
 
-      return Object.entries(grouped).map(([date, jobsOnDate]) => ({
-        title: `(${jobsOnDate.length}) job`,
-        start: date,
-        allDay: true,
-        backgroundColor: '#95c941',
-        borderColor: '#0369a1',
-        textColor: 'white',
-        extendedProps: {
-          jobs: jobsOnDate,
-        },
-      }));
+      const allDates = Array.from(new Set([
+        ...Object.keys(allJobsGrouped),
+        ...Object.keys(groupedConfirmed),
+      ]));
+
+      return allDates.flatMap(date => {
+        const confirmed = groupedConfirmed[date] || [];
+        const all = allJobsGrouped[date] || [];
+
+        const result = [];
+
+        if (confirmed.length > 0) {
+          result.push({
+            title: `(${confirmed.length}) job`,
+            start: date,
+            allDay: true,
+            backgroundColor: '#95c941',
+            borderColor: '#0369a1',
+            textColor: 'white',
+            extendedProps: {
+              jobs: confirmed,
+              type: 'confirmed',
+            },
+          });
+        }
+
+        result.push({
+          title: `All (${all.length})`,
+          start: date,
+          allDay: true,
+          backgroundColor: '#404040',
+          borderColor: '#0369a1',
+          textColor: 'white',
+          extendedProps: {
+            jobs: all,
+            type: 'viewAll',
+          },
+        });
+
+        return result;
+      });
     } else {
       return confirmedJobs.map(job => ({
-        id: job.key.toString(),
+        id: `job-${job.key}`,
         title: `${job.serviceProductName}`,
         start: job.PickupDate,
         backgroundColor: '#95c941',
@@ -86,81 +133,55 @@ const CalendarView: React.FC<CalendarViewProps> = ({ jobs }) => {
   };
 
   const renderEventContent = (arg: any) => {
-    const job = arg.event?.extendedProps?.job;
-    const jobs: Job[] = arg.event?.extendedProps?.jobs;
+    const type = arg.event.extendedProps?.type;
+    const job = arg.event.extendedProps?.job;
+    const jobs: Job[] = arg.event.extendedProps?.jobs;
+    const statusDots = getStatusDots(job ?? jobs ?? []);
 
-    type Status = { color: string; label: string };
-    const statusDots: Status[] = [];
-
-    if (jobs && Array.isArray(jobs)) {
-      const hasNew = jobs.some(j => j.isNew);
-      const hasChange = jobs.some(j => j.isChange);
-      if (hasNew) statusDots.push({ color: '#0891b2', label: 'New' });
-      if (hasChange) statusDots.push({ color: '#fb923c', label: 'Changed' });
-      if (!hasNew && !hasChange) statusDots.push({ color: '#404040', label: 'Normal' });
-    }
-
-    if (job) {
-      if (job.isNew) statusDots.push({ color: '#0891b2', label: 'New' });
-      if (job.isChange) statusDots.push({ color: '#fb923c', label: 'Changed' });
-      if (!job.isNew && !job.isChange) statusDots.push({ color: '#404040', label: 'Normal' });
-    }
+    const backgroundColor = type === 'viewAll' ? '#404040' : '#95c941';
 
     return (
-   <div
-  className="fc-event-main"
-  style={{
-    backgroundColor: '#95c941',
-    color: 'white',
-    borderColor: '#0369a1',
-    borderRadius: 4,
-    padding: '2px 4px', // ✅ เพิ่ม padding ด้านในเล็กน้อย
-    display: 'flex',
-    alignItems: 'center',
-    boxSizing: 'border-box',
-    width: '100%',
-    fontSize: '0.5rem', // ✅ ขยายขนาดตัวอักษรนิดหน่อย
-    lineHeight: 1.4, // ✅ เพิ่มความสูงบรรทัด
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    minWidth: 0,
-    minHeight: 24, // ✅ เพิ่มความสูงขั้นต่ำให้กรอบใหญ่ขึ้น
-  }}
->
       <div
+        className="fc-event-main"
         style={{
+          backgroundColor,
+          color: 'white',
+          borderColor: '#0369a1',
+          borderRadius: 4,
+          padding: '2px 0px',
           display: 'flex',
-          flexShrink: 0,
-          marginRight: 2, // ✅ ชิดซ้ายสุด แต่เว้นนิดให้ตัวหนังสือไม่ชนวงกลม
-        }}
-      >
-        {statusDots.map(({ color, label }, index) => (
-          <span
-            key={index}
-            title={label}
-            style={{
-              backgroundColor: color,
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              border: '1px solid white',
-              flexShrink: 0,
-              display: 'inline-block',
-              marginRight: index < statusDots.length - 1 ? 1 : 0, // ✅ วงกลมติด ๆ กัน
-            }}
-          />
-        ))}
-      </div>
-      <span
-        style={{
-          flexShrink: 1,
+          alignItems: 'center',
+          boxSizing: 'border-box',
+          width: '100%',
+          fontSize: '0.52rem',
+          lineHeight: 1.4,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
           minWidth: 0,
+          minHeight: 24,
+          gap: 2,
         }}
       >
-        {arg.event.title}
-      </span>
-    </div>
+        <div style={{ display: 'flex', flexShrink: 0, gap: 1 }}>
+          {statusDots.map(({ color, label }, index) => (
+            <span
+              key={index}
+              title={label}
+              style={{
+                backgroundColor: color,
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                border: '1px solid white',
+                flexShrink: 0,
+                display: 'inline-block',
+              }}
+            />
+          ))}
+        </div>
+        <span style={{ flexShrink: 1, minWidth: 0 }}>{arg.event.title}</span>
+      </div>
     );
   };
 

@@ -43,23 +43,22 @@ var Loading_1 = require("./components/Loading");
 var ErrorMessage_1 = require("./components/ErrorMessage");
 require("./calendar.css");
 var cssguide_1 = require("../cssguide");
-// ✅ ฟังก์ชันคำนวณวันที่ย้อนหลังตามจำนวนเดือนที่กำหนด
 function getMonthsAgoISO(months) {
     var date = new Date();
     date.setMonth(date.getMonth() - months);
     return date.toISOString().slice(0, 10);
 }
-// ฟังก์ชันคำนวณวันที่วันนี้ (ISO yyyy-MM-dd)
 function getTodayISO() {
     return new Date().toISOString().slice(0, 10);
 }
 function Page() {
     var _this = this;
     var _a = react_1.useState([]), jobs = _a[0], setJobs = _a[1];
-    var _b = react_1.useState(true), loading = _b[0], setLoading = _b[1];
-    var _c = react_1.useState(null), error = _c[0], setError = _c[1];
-    var _d = react_1.useState(getMonthsAgoISO(3)), startDate = _d[0], setStartDate = _d[1]; // ✅ ลดเหลือ 3 เดือน
-    var _e = react_1.useState(getTodayISO()), endDate = _e[0], setEndDate = _e[1];
+    var _b = react_1.useState([]), filteredJobs = _b[0], setFilteredJobs = _b[1];
+    var _c = react_1.useState(true), loading = _c[0], setLoading = _c[1];
+    var _d = react_1.useState(null), error = _d[0], setError = _d[1];
+    var _e = react_1.useState(getMonthsAgoISO(3)), startDate = _e[0], setStartDate = _e[1];
+    var _f = react_1.useState(getTodayISO()), endDate = _f[0], setEndDate = _f[1];
     var fetchJobs = function (start, end) {
         var token = localStorage.getItem('token') || '';
         if (!token) {
@@ -82,6 +81,10 @@ function Page() {
                 switch (_b.label) {
                     case 0:
                         if (!!res.ok) return [3 /*break*/, 2];
+                        if (res.status === 401) {
+                            localStorage.removeItem('token');
+                            window.location.href = '/login';
+                        }
                         _a = Error.bind;
                         return [4 /*yield*/, res.text()];
                     case 1: throw new (_a.apply(Error, [void 0, _b.sent()]))();
@@ -92,26 +95,27 @@ function Page() {
             .then(function (data) {
             console.timeEnd('⏱️ fetchJobs');
             setJobs(data);
-            localStorage.setItem('cachedJobs', JSON.stringify(data)); // 🔄 cache
+            setFilteredJobs(data);
+            localStorage.setItem('cachedJobs', JSON.stringify(data));
         })["catch"](function (err) {
             console.timeEnd('⏱️ fetchJobs');
             setError(err.message || 'Failed to fetch');
             setJobs([]);
+            setFilteredJobs([]);
         })["finally"](function () { return setLoading(false); });
     };
     react_1.useEffect(function () {
-        // ✅ โหลดจากแคชก่อน (แสดงเร็วขึ้น)
         var cached = localStorage.getItem('cachedJobs');
         if (cached) {
             try {
                 var parsed = JSON.parse(cached);
                 setJobs(parsed);
+                setFilteredJobs(parsed);
             }
             catch (e) {
                 console.warn('⚠️ Failed to parse cached jobs', e);
             }
         }
-        // ✅ ดึงข้อมูลล่าสุดจากเซิร์ฟเวอร์
         if (startDate && endDate) {
             fetchJobs(startDate, endDate);
         }
@@ -121,8 +125,8 @@ function Page() {
     if (error)
         return react_1["default"].createElement(ErrorMessage_1["default"], { error: error });
     return (react_1["default"].createElement(cssguide_1["default"], null,
-        react_1["default"].createElement("div", { className: "max-w-4xl mx-auto p-4" },
+        react_1["default"].createElement("div", { className: "max-w-4xl mx-auto p-4 overflow-auto" },
             react_1["default"].createElement("h1", { className: "text-2xl font-bold mb-4" }, "Calendar"),
-            react_1["default"].createElement(CalendarView_1["default"], { jobs: jobs }))));
+            react_1["default"].createElement(CalendarView_1["default"], { jobs: filteredJobs }))));
 }
 exports["default"] = Page;
