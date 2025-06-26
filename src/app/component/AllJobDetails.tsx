@@ -1,10 +1,10 @@
 import React from "react";
-import { Job } from "@/app/types/job"; // ปรับ path ตามโครงสร้างของคุณ
-import { JobDetailsProps } from "@/app/types/job"; // ปรับ path ตามโครงสร้างของคุณ
+import { Job } from "@/app/types/job"; // Ensure correct path
+import { JobDetailsProps } from "@/app/types/job"; // Ensure correct path
 
 const AllJobDetails: React.FC<JobDetailsProps> = ({ jobs, formatDate }) => {
   // Group jobs by key fields (excluding TypeName)
-  const groupedJobs: Record<string, { job: Job; typeNames: string[] }> = {};
+  const groupedJobs: Record<string, { jobs: Job[]; typeNames: string[] }> = {};
 
   jobs.forEach((job) => {
     const groupKey = JSON.stringify({
@@ -20,21 +20,25 @@ const AllJobDetails: React.FC<JobDetailsProps> = ({ jobs, formatDate }) => {
 
     const typeName = job.serviceTypeName || job.TypeName || "Unknown";
 
+    // Group by unique key
     if (!groupedJobs[groupKey]) {
       groupedJobs[groupKey] = {
-        job: { ...job },
-        typeNames: [typeName],
+        jobs: [job],
+        typeNames: [typeName], // Declare typeNames as string[]
       };
     } else {
-      groupedJobs[groupKey].typeNames.push(typeName);
+      groupedJobs[groupKey].jobs.push(job);
+      if (!groupedJobs[groupKey].typeNames.includes(typeName)) {
+        groupedJobs[groupKey].typeNames.push(typeName);
+      }
     }
   });
 
   return (
     <div className="max-h-[60vh] overflow-auto text-xs">
-      {Object.values(groupedJobs).map(({ job, typeNames }, idx) => (
+      {Object.values(groupedJobs).map(({ jobs, typeNames }, idx) => (
         <div
-          key={job.key + "-" + idx}
+          key={jobs[0].PNR + "-" + idx}
           className="mb-3 border-b border-gray-200 pb-3 last:border-b-0"
           style={{
             borderBottom: "5px solid #000000",
@@ -43,9 +47,9 @@ const AllJobDetails: React.FC<JobDetailsProps> = ({ jobs, formatDate }) => {
         >
           {/* PNR Header */}
           <div className="font-Arial text-sm bg-gray-100 p-3 shadow text-black mb-3 flex items-center gap-2">
-            <span>PNR: {job.PNR}</span>
-            {job.PNR && job.serviceSupplierName && (
-              <span>/ SupplierName: {job.serviceSupplierName}</span>
+            <span>PNR: {jobs[0].PNR}</span>
+            {jobs[0].PNR && jobs[0].serviceSupplierName && (
+              <span>/ SupplierName: {jobs[0].serviceSupplierName}</span>
             )}
           </div>
 
@@ -54,15 +58,22 @@ const AllJobDetails: React.FC<JobDetailsProps> = ({ jobs, formatDate }) => {
             {/* Comment */}
             <div className="flex items-start">
               <span className="font-bold text-gray-600 w-24 shrink-0">Comment:</span>
-              <span className="text-gray-800 break-words">{job.Comment}</span>
+              <span className="text-gray-800 break-words">{jobs[0].Comment}</span>
             </div>
 
             {/* Pickup */}
             <div className="flex items-start">
               <span className="font-bold text-gray-600 w-24 shrink-0">Pickup:</span>
               <span className="text-gray-800 break-words">
-                <span className="font-Arial">{job.Pickup}{job.Pickup && job.PickupDate ? " / " : ""}</span>
-                <span className="font-Arial font-bold">{job.PickupDate ? formatDate(job.PickupDate) : ""}</span>
+                {jobs.map((job, index) => (
+                  <span key={index}>
+                    <span className="font-Arial">{job.Pickup}</span>
+                    {job.Pickup && job.PickupDate ? " / " : ""}
+                    <span className="font-Arial font-bold">{job.PickupDate ? formatDate(job.PickupDate) : ""}</span>
+                    {/* แสดงจุดคอมม่าถ้าไม่ใช่ job ล่าสุด */}
+                    {index < jobs.length - 1 && ", "}
+                  </span>
+                ))}
               </span>
             </div>
 
@@ -70,27 +81,36 @@ const AllJobDetails: React.FC<JobDetailsProps> = ({ jobs, formatDate }) => {
             <div className="flex items-start">
               <span className="font-bold text-gray-600 w-24 shrink-0">Dropoff:</span>
               <span className="text-gray-800 break-words">
-                {job.Dropoff}{job.Dropoff && job.DropoffDate ? " / " : ""}
-                <span className="font-Arial font-bold">{job.DropoffDate ? formatDate(job.DropoffDate) : ""}</span>
+                {jobs.map((job, index) => (
+                  <span key={index}>
+                    <span className="font-Arial">{job.Dropoff}</span>
+                    {job.Dropoff && job.DropoffDate ? " / " : ""}
+                    <span className="font-Arial font-bold">{job.DropoffDate ? formatDate(job.DropoffDate) : ""}</span>
+                    {/* แสดงจุดคอมม่าถ้าไม่ใช่ job ล่าสุด */}
+                    {index < jobs.length - 1 && ", "}
+                  </span>
+                ))}
               </span>
             </div>
 
             {/* Consultant */}
             <div className="flex items-start">
               <span className="font-bold text-gray-600 w-24 shrink-0">Consultant:</span>
-              <span className="text-gray-800 break-words">{job.Booking_Consultant}{job.Booking_Consultant && job.Phone ? ", " : ""}{job.Phone}</span>
+              <span className="text-gray-800 break-words">
+                {jobs[0].Booking_Consultant}{jobs[0].Booking_Consultant && jobs[0].Phone ? ", " : ""}{jobs[0].Phone}
+              </span>
             </div>
 
             {/* Booking Name */}
             <div className="flex items-start">
               <span className="font-bold text-gray-600 w-24 shrink-0">Booking Name:</span>
-              <span className="text-gray-800 break-words">{[job.Booking_Name].filter(Boolean).join(", ")}</span>
+              <span className="text-gray-800 break-words">{[jobs[0].Booking_Name].filter(Boolean).join(", ")}</span>
             </div>
 
             {/* Client Name */}
             <div className="flex items-start">
               <span className="font-bold text-gray-600 w-24 shrink-0">Client Name:</span>
-              <span className="text-gray-800 break-words">{job.pax_name}</span>
+              <span className="text-gray-800 break-words">{jobs[0].pax_name}</span>
             </div>
 
             {/* Table */}
@@ -106,10 +126,10 @@ const AllJobDetails: React.FC<JobDetailsProps> = ({ jobs, formatDate }) => {
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="px-1 py-1 text-left">{job.AdultQty || 0}</td>
-                    <td className="px-1 py-1 text-left">{job.ChildQty || 0}</td>
-                    <td className="px-1 py-1 text-left">{job.ChildShareQty || 0}</td>
-                    <td className="px-1 py-1 text-left">{job.InfantQty || 0}</td>
+                    <td className="px-1 py-1 text-left">{jobs[0].AdultQty || 0}</td>
+                    <td className="px-1 py-1 text-left">{jobs[0].ChildQty || 0}</td>
+                    <td className="px-1 py-1 text-left">{jobs[0].ChildShareQty || 0}</td>
+                    <td className="px-1 py-1 text-left">{jobs[0].InfantQty || 0}</td>
                   </tr>
                 </tbody>
               </table>
@@ -118,11 +138,11 @@ const AllJobDetails: React.FC<JobDetailsProps> = ({ jobs, formatDate }) => {
             {/* Guide, Vehicle, Driver */}
             <div className="flex items-start">
               <span className="font-bold text-gray-600 w-24 shrink-0">Guide:</span>
-              <span className="text-gray-800 break-words">{[job.Guide, job.Vehicle, job.Driver].filter(Boolean).join(", ")}</span>
+              <span className="text-gray-800 break-words">{[jobs[0].Guide, jobs[0].Vehicle, jobs[0].Driver].filter(Boolean).join(", ")}</span>
             </div>
 
             {/* Other fields */}
-            {Object.entries(job)
+            {Object.entries(jobs[0])
               .filter(([k]) =>
                 ![
                   "IsConfirmed", "IsCancel", "key", "BSL_ID",
@@ -138,11 +158,7 @@ const AllJobDetails: React.FC<JobDetailsProps> = ({ jobs, formatDate }) => {
               )
               .map(([k, v]) => {
                 let label = k;
-                if (k === "serviceSupplierCode_TP") label = "SupplierCode_TP";
-                if (k === "serviceProductName") label = "ProductName";
-                if (k === "serviceSupplierName") label = "Supplier";
-                if (k === "ServiceLocationName") label = "Location";
-                if (k === "pax_name") label = "Client Name";
+                // Rename fields as needed
                 return (
                   <div key={k} className="flex items-start">
                     <span className="font-bold text-gray-600 w-24 shrink-0">{label}:</span>

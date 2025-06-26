@@ -65,6 +65,42 @@ const get30DaysAgo = () => {
   return date.toISOString().slice(0, 10);
 };
 
+const renderPlaceDate = (pickupDate: string) => {
+  return (
+    <div className="mb-2">
+      <span className="text-gray-500 ml-2">
+        ({pickupDate})
+      </span>
+    </div>
+  );
+};
+
+const formatDateTime = (input: string | string[]): string => {
+  const format = (dateStr: string) => {
+    const d = new Date(dateStr);
+
+    if (isNaN(d.getTime())) {
+      return dateStr; // คืนค่ากลับไปหากไม่ใช่วัน
+    }
+
+    // แสดงผลวันที่ที่ถูกต้องในรูปแบบที่ต้องการ
+    const formattedDate = d.toLocaleString("en-GB", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+
+    return formattedDate;
+  };
+
+  if (Array.isArray(input)) {
+    return input.map(format).join(", ");
+  }
+
+  return format(input);
+};
+
+
 const getEndOfLastMonth = () => {
   const date = new Date();
   date.setDate(0); // วันที่ 0 ของเดือนปัจจุบัน = วันสุดท้ายของเดือนก่อนหน้า
@@ -87,7 +123,6 @@ export default function JobsList() {
   useEffect(() => {
     const token = localStorage.getItem('token') || '';
     setLoading(true);
-    // ทำการ fetch ข้อมูลที่ต้องการแค่ครั้งเดียว
     fetchJobs(token, startDate, endDate);
   }, []); // เรียกครั้งเดียวเมื่อ component โหลด
 
@@ -109,18 +144,18 @@ export default function JobsList() {
     return (!startDate && !endDate) || (startDate && pickup >= startDate) || (endDate && dropoff <= endDate);
   });
 
-  const filteredJobs = filteredByDate.filter(job => {
-    if (showConfirmedOnly) return job.IsConfirmed === true;
-    if (showPendingOnly) return job.IsConfirmed === false && job.IsCancel === false;
-    return true; // แสดงทั้งหมด
-  });
+  const filteredJobs = filteredByDate
+    .filter(job => {
+      if (showConfirmedOnly) return job.IsConfirmed === true;
+      if (showPendingOnly) return job.IsConfirmed === false && job.IsCancel === false;
+      return true;
+    })
+    .sort((a, b) => new Date(a.PickupDate).getTime() - new Date(b.PickupDate).getTime());
 
   const mergedJobs = mergeJobsByPNR(filteredJobs);
-
   const totalPages = Math.ceil(mergedJobs.length / pageSize);
-
   const pagedJobs = mergedJobs.slice((page - 1) * pageSize, page * pageSize);
-  // console.log("Merged Jobs:", pagedJobs);
+
   return (
     <CssgGuide>
       <div className="flex flex-col items-center py-8 min-h-screen bg-base-200 relative bg-[#9EE4F6]">
@@ -170,23 +205,37 @@ export default function JobsList() {
               </select>
             </div>
 
-
             <StatusMessage loading={loading} error={error} filteredJobsLength={filteredByDate.length} />
             {!loading && !error && filteredByDate.length > 0 && (
-              // render list jobs
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {pagedJobs.map((job) => (
-                    <JobCard
-                      key={job.PNR}
-                      job={job}
-                      expandedPNRs={expandedPNRs}
-                      setExpandedPNRs={setExpandedPNRs}
-                      setDetailJobs={setDetailJobs}
-                      jobs={jobs}
-                      setJobs={setJobs}
-                    />
+                    <div key={job.PNR} className="border rounded-lg p-4 shadow bg-white">
+                      <div className="text-sm text-gray-600 mb-2">
+                        {job.all
+                          .sort((a, b) => new Date(a.PickupDate).getTime() - new Date(b.PickupDate).getTime())
+                          .map((j, index) => {
+                            return (
+                              <div key={index} className="mb-2">
+                                {renderPlaceDate(
+                                  formatDateTime(job.PickupDate),
+                                )}
+                              </div>
+                            );
+                          })}
+                      </div>
+                      {/* Job card component */}
+                      <JobCard
+                        job={job}
+                        expandedPNRs={expandedPNRs}
+                        setExpandedPNRs={setExpandedPNRs}
+                        setDetailJobs={setDetailJobs}
+                        jobs={jobs}
+                        setJobs={setJobs}
+                      />
+                    </div>
                   ))}
+
                 </div>
                 <div className="w-full flex justify-center mt-6">
                   <div className="inline-flex items-center gap-2 bg-base-100 border border-base-300 rounded-full shadow px-4 py-2">

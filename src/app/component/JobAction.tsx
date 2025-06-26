@@ -127,6 +127,7 @@ If you have any questions or need further assistance, please do not hesitate to 
         <UploadImagesWithRemark
           token={localStorage.getItem("token") || ""}
           keyValue={job.key}
+          job={job} // ✅ ส่ง job เข้าไป
         />
 
       ) : (
