@@ -76,18 +76,18 @@ return allDates.flatMap(function (date) {
             }
         });
     }
-    result.push({
-        title: "All (" + all.length + ")",
-        start: date,
-        allDay: true,
-        backgroundColor: '#404040',
-        borderColor: '#0369a1',
-        textColor: 'white',
-        extendedProps: {
-            jobs: all,
-            type: 'viewAll'
-        }
-    });
+    // result.push({
+    //   title: `All (${all.length})`,
+    //   start: date,
+    //   allDay: true,
+    //   backgroundColor: '#404040',
+    //   borderColor: '#0369a1',
+    //   textColor: 'white',
+    //   extendedProps: {
+    //     jobs: all,
+    //     type: 'viewAll',
+    //   },
+    // });
     return result;
 });
 {
@@ -169,11 +169,12 @@ var renderEventContent = function (arg) {
         })),
         react_1["default"].createElement("span", { style: { flexShrink: 1, minWidth: 0 } }, arg.event.title)));
 };
-return (react_1["default"].createElement(react_2["default"], { ref: calendarRef, plugins: [daygrid_1["default"], timegrid_1["default"], list_1["default"], interaction_1["default"]], initialView: currentViewProp, events: events, datesSet: function (arg) {
+return (react_1["default"].createElement(react_2["default"], { ref: calendarRef, plugins: [list_1["default"], interaction_1["default"]], initialView: "listMonth" //{currentViewProp}
+    , events: events, datesSet: function (arg) {
         onDatesSet === null || onDatesSet === void 0 ? void 0 : onDatesSet(arg);
     }, height: "auto", contentHeight: "auto", aspectRatio: 1.7, headerToolbar: {
         start: 'title',
-        center: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth',
+        center: '',
         end: 'today prev,next'
     }, editable: false, selectable: true, expandRows: true, eventClick: handleEventClick, eventContent: renderEventContent, slotLabelFormat: { hour: '2-digit', minute: '2-digit', meridiem: false }, dayHeaderFormat: { weekday: 'short' }, views: {
         timeGridWeek: {

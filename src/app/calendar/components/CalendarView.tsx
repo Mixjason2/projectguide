@@ -96,18 +96,18 @@ useEffect(() => {
           });
         }
 
-        result.push({
-          title: `All (${all.length})`,
-          start: date,
-          allDay: true,
-          backgroundColor: '#404040',
-          borderColor: '#0369a1',
-          textColor: 'white',
-          extendedProps: {
-            jobs: all,
-            type: 'viewAll',
-          },
-        });
+        // result.push({
+        //   title: `All (${all.length})`,
+        //   start: date,
+        //   allDay: true,
+        //   backgroundColor: '#404040',
+        //   borderColor: '#0369a1',
+        //   textColor: 'white',
+        //   extendedProps: {
+        //     jobs: all,
+        //     type: 'viewAll',
+        //   },
+        // });
 
         return result;
       });
@@ -210,8 +210,8 @@ useEffect(() => {
   return (
     <FullCalendar
       ref={calendarRef}
-      plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
-      initialView={currentViewProp}
+      plugins={[listPlugin, interactionPlugin]}  //{[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
+      initialView="listMonth" //{currentViewProp}
       events={events}
       datesSet={(arg: DatesSetArg) => {
         onDatesSet?.(arg);
@@ -221,7 +221,7 @@ useEffect(() => {
       aspectRatio={1.7}
       headerToolbar={{
         start: 'title',
-        center: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth',
+        center: '', //'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
         end: 'today prev,next',
       }}
       editable={false}

@@ -39,6 +39,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 exports.__esModule = true;
 var navigation_1 = require("next/navigation");
 var react_1 = require("react");
+var material_1 = require("@mui/material");
 require("./globals.css");
 function LoginPage() {
     var _this = this;
@@ -48,17 +49,29 @@ function LoginPage() {
     var _c = react_1.useState(false), rememberMe = _c[0], setRememberMe = _c[1];
     var _d = react_1.useState(""), message = _d[0], setMessage = _d[1];
     var _e = react_1.useState(false), loading = _e[0], setLoading = _e[1];
+    var _f = react_1.useState("[AS-DTGTHA]"), connection = _f[0], setConnection = _f[1]; // ค่าเริ่มต้นสำหรับการเชื่อมต่อ
+    var connectionOptions = [
+        { label: "TH", value: "[AS-DTGTHA]", name: "Thailand", flag: "🇹🇭" },
+        { label: "MY", value: "[AS-DTGKUL]", name: "Malaysia", flag: "🇲🇾" },
+        { label: "SL", value: "[AS-DTGSLK]", name: "Sri Lanka", flag: "🇱🇰" },
+        { label: "SG", value: "[AS-DTGSIN]", name: "Singapore", flag: "🇸🇬" },
+        { label: "VN", value: "[AS-DTGVNM]", name: "Vietnam", flag: "🇻🇳" },
+    ];
     react_1.useEffect(function () {
         var savedUsername = localStorage.getItem("savedUsername") || "";
         var savedPassword = localStorage.getItem("savedPassword") || "";
+        var savedConnection = localStorage.getItem("savedConnection") || "";
         if (savedUsername && savedPassword) {
             setUsername(savedUsername);
             setPassword(savedPassword);
             setRememberMe(true);
         }
+        if (savedConnection) {
+            setConnection(savedConnection);
+        }
     }, []);
     var handleSubmit = function (e) { return __awaiter(_this, void 0, void 0, function () {
-        var validPattern, res, data, endOfMonth, err_1;
+        var validPattern, selectedOption, selectedLabel, asmdbValue, res, data, err_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -73,17 +86,20 @@ function LoginPage() {
                         setMessage("Password must contain only letters or numbers.");
                         return [2 /*return*/];
                     }
+                    selectedOption = connectionOptions.find(function (opt) { return opt.value === connection; });
+                    selectedLabel = (selectedOption === null || selectedOption === void 0 ? void 0 : selectedOption.label) || "TH";
+                    asmdbValue = "Assignment_" + selectedLabel;
                     _a.label = 1;
                 case 1:
-                    _a.trys.push([1, 7, , 8]);
+                    _a.trys.push([1, 4, , 5]);
                     return [4 /*yield*/, fetch("https://operation.dth.travel:7082/api/guide/login", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({
                                 Username: username,
                                 Password: password,
-                                asmdb: "Assignment_TH",
-                                connection: "[AS-DTGTHA]"
+                                asmdb: asmdbValue,
+                                connection: connection
                             })
                         })];
                 case 2:
@@ -91,39 +107,34 @@ function LoginPage() {
                     return [4 /*yield*/, res.json()];
                 case 3:
                     data = _a.sent();
-                    if (!(data.status && data.token)) return [3 /*break*/, 5];
-                    setMessage("Login successful!");
-                    // เก็บ token ลง localStorage
-                    localStorage.setItem("token", data.token);
-                    if (rememberMe) {
-                        localStorage.setItem("savedUsername", username);
-                        localStorage.setItem("savedPassword", password);
+                    // Show result from API to user
+                    if (data.status && data.token) {
+                        setMessage("Login successful!");
+                        // เก็บ token ลง localStorage
+                        localStorage.setItem("token", data.token);
+                        if (rememberMe) {
+                            localStorage.setItem("savedUsername", username);
+                            localStorage.setItem("savedPassword", password);
+                            localStorage.setItem("savedConnection", connection); // ✅ เพิ่มตรงนี้
+                        }
+                        else {
+                            localStorage.removeItem("savedUsername");
+                            localStorage.removeItem("savedPassword");
+                            localStorage.removeItem("savedConnection"); // ✅ ลบเมื่อไม่ remember
+                        }
+                        // เก็บ token ไว้ใน localStorage หรือ sessionStorage ถ้าต้องการ
+                        localStorage.setItem("token", data.token);
+                        router.push("/home");
                     }
                     else {
-                        localStorage.removeItem("savedUsername");
-                        localStorage.removeItem("savedPassword");
+                        setMessage("Incorrect username or password.");
                     }
-                    // ✅ เพิ่ม logic นี้: reset วันที่เป็นวันปัจจุบันหลัง login
-                    localStorage.setItem("startDate", new Date().toISOString().slice(0, 10));
-                    endOfMonth = new Date(new Date().setMonth(new Date().getMonth() + 1, 0)).toISOString().slice(0, 10);
-                    localStorage.setItem("endDate", endOfMonth);
-                    localStorage.setItem("justLoggedIn", "true");
-                    // ✅ แก้จุดนี้: เพิ่ม delay เล็กน้อย
-                    return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(resolve, 100); })];
+                    return [3 /*break*/, 5];
                 case 4:
-                    // ✅ แก้จุดนี้: เพิ่ม delay เล็กน้อย
-                    _a.sent();
-                    router.push("/home");
-                    return [3 /*break*/, 6];
-                case 5:
-                    setMessage("Incorrect username or password.");
-                    _a.label = 6;
-                case 6: return [3 /*break*/, 8];
-                case 7:
                     err_1 = _a.sent();
                     setMessage("Failed to connect to the server.");
-                    return [3 /*break*/, 8];
-                case 8: return [2 /*return*/];
+                    return [3 /*break*/, 5];
+                case 5: return [2 /*return*/];
             }
         });
     }); };
@@ -162,7 +173,7 @@ function LoginPage() {
                             React.createElement("g", null,
                                 React.createElement("path", { d: "M86.7,118.2h9.1c1.5,0,2.7,0.2,3.7,0.7c1.9,0.9,2.8,2.4,2.8,4.7c0,1.2-0.2,2.2-0.7,3c-0.5,0.8-1.2,1.4-2.1,1.8c0.8,0.3,1.4,0.7,1.8,1.3s0.6,1.4,0.7,2.5l0.1,2.7c0,0.8,0.1,1.3,0.2,1.7c0.2,0.6,0.5,1,0.9,1.2v0.5h-3.3c-0.1-0.2-0.2-0.4-0.2-0.7s-0.1-0.8-0.1-1.6l-0.2-3.3c-0.1-1.3-0.5-2.2-1.4-2.6c-0.5-0.2-1.3-0.4-2.4-0.4h-6v8.6h-2.7V118.2z M95.5,127.4c1.2,0,2.2-0.3,2.9-0.8c0.7-0.5,1.1-1.4,1.1-2.8c0-1.4-0.5-2.4-1.5-2.9c-0.5-0.3-1.3-0.4-2.2-0.4h-6.5v6.9H95.5z", fill: "#95c941", stroke: "#95c941", strokeWidth: "0.8" })),
                             React.createElement("g", null,
-                                React.createElement("path", { d: "M111.9,118.2h3.1l7.3,20.1h-3m-2-6h-7.9l-2.2,6h-2.8L111.9,118.2z M116.4,130.1l-3-8.9l-3.2,8.9H116.4z", fill: "#95c941", stroke: "#95c941", strokeWidth: "0.8" })),
+                                React.createElement("path", { d: "M111.9,118.2h3.1l7.3,20.1h-3l-2-6h-7.9l-2.2,6h-2.8L111.9,118.2z M116.4,130.1l-3-8.9l-3.2,8.9H116.4z", fill: "#95c941", stroke: "#95c941", strokeWidth: "0.8" })),
                             React.createElement("g", null,
                                 React.createElement("path", { d: "M123.5,118.2l5.8,17.1l5.7-17.1h3l-7.3,20.1h-2.9l-7.3-20.1H123.5z", fill: "#95c941", stroke: "#95c941", strokeWidth: "0.8" })),
                             React.createElement("g", null,
@@ -170,6 +181,16 @@ function LoginPage() {
                             React.createElement("g", null,
                                 React.createElement("path", { d: "M156.9,118.2h2.7v17.7h10.1v2.4h-12.8V118.2z", fill: "#95c941", stroke: "#95c941", strokeWidth: "0.8" }))))),
                 React.createElement("form", { onSubmit: handleSubmit, className: "space-y-5" },
+                    React.createElement("div", { className: "flex justify-end mt-2" },
+                        React.createElement(material_1.FormControl, { size: "small", variant: "standard", className: "w-fit" },
+                            React.createElement(material_1.InputLabel, { htmlFor: "connectionSelect" }, "Connection"),
+                            React.createElement(material_1.NativeSelect, { id: "connectionSelect", value: connection, onChange: function (e) { return setConnection(e.target.value); }, inputProps: {
+                                    name: "connection",
+                                    id: "connectionSelect"
+                                } }, connectionOptions.map(function (option) { return (React.createElement("option", { key: option.label, value: option.value },
+                                option.flag,
+                                " ",
+                                option.name)); })))),
                     React.createElement("div", null,
                         React.createElement("label", { htmlFor: "username", className: "block text-base font-bold mb-1 text-gray-800" }, "Username"),
                         React.createElement("input", { id: "username", type: "text", value: username, onChange: function (e) { return setUsername(e.target.value); }, className: "input input-bordered w-full text-base", required: true })),

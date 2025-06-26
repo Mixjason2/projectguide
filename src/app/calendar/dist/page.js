@@ -63,10 +63,12 @@ function Page() {
     var _a = react_1.useState([]), jobs = _a[0], setJobs = _a[1];
     var _b = react_1.useState(false), loading = _b[0], setLoading = _b[1];
     var _c = react_1.useState(null), error = _c[0], setError = _c[1];
+    // ✅ ตอนแรก: เริ่มวันนี้
     var _d = react_1.useState(function () {
-        var d = addMonths(new Date(), -2);
-        return formatISO(d);
+        var today = new Date();
+        return formatISO(today);
     }), dataStartDate = _d[0], setDataStartDate = _d[1];
+    // ✅ ตอนแรก: โหลดล่วงหน้า 2 เดือน
     var _e = react_1.useState(function () {
         var d = addMonths(new Date(), 2);
         return formatISO(d);
@@ -123,26 +125,27 @@ function Page() {
             setError(err.message || 'Failed to fetch');
         })["finally"](function () { return setLoading(false); });
     };
+    // ✅ ดึงแค่ช่วงปัจจุบันถึง 2 เดือนข้างหน้า
     react_1.useEffect(function () {
         fetchJobs(dataStartDate, dataEndDate);
     }, []);
     var handleDatesSet = function (arg) {
-        // เช็คก่อน setCurrentView ว่าต่างจากเดิมไหม
         if (arg.view.type !== currentView) {
             setCurrentView(arg.view.type);
         }
-        // เช็คก่อน setCurrentCenterDate ว่าต่างจากเดิมไหม (เทียบด้วยเวลา)
         if (!currentCenterDate ||
             arg.view.currentStart.getTime() !== currentCenterDate.getTime()) {
             setCurrentCenterDate(arg.view.currentStart);
         }
         var viewStart = formatISO(arg.start);
         var viewEnd = formatISO(arg.end);
+        // ✅ โหลด "เพิ่ม" ล่วงหน้า
         if (viewEnd > dataEndDate) {
             var newEndDate = formatISO(addMonths(new Date(dataEndDate), 3));
             setDataEndDate(newEndDate);
             fetchJobs(dataEndDate, newEndDate);
         }
+        // ✅ โหลด "ย้อนหลัง" เมื่อผู้ใช้เลื่อนย้อน
         if (viewStart < dataStartDate) {
             var newStartDate = formatISO(addMonths(new Date(dataStartDate), -3));
             setDataStartDate(newStartDate);

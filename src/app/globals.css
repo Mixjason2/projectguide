@@ -10,6 +10,9 @@ body {
   background: #f6f8fa;
   margin: 0;
   padding: 0;
+
+  font-family: 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', 'Apple Color Emoji', system-ui, sans-serif;
+
 }
 
 /* กล่อง login */

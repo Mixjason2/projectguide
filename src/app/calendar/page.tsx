@@ -23,11 +23,13 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // ✅ ตอนแรก: เริ่มวันนี้
   const [dataStartDate, setDataStartDate] = useState(() => {
-    const d = addMonths(new Date(), -2);
-    return formatISO(d);
+    const today = new Date();
+    return formatISO(today);
   });
 
+  // ✅ ตอนแรก: โหลดล่วงหน้า 2 เดือน
   const [dataEndDate, setDataEndDate] = useState(() => {
     const d = addMonths(new Date(), 2);
     return formatISO(d);
@@ -84,17 +86,16 @@ export default function Page() {
       .finally(() => setLoading(false));
   };
 
+  // ✅ ดึงแค่ช่วงปัจจุบันถึง 2 เดือนข้างหน้า
   useEffect(() => {
     fetchJobs(dataStartDate, dataEndDate);
   }, []);
 
   const handleDatesSet = (arg: any) => {
-    // เช็คก่อน setCurrentView ว่าต่างจากเดิมไหม
     if (arg.view.type !== currentView) {
       setCurrentView(arg.view.type);
     }
 
-    // เช็คก่อน setCurrentCenterDate ว่าต่างจากเดิมไหม (เทียบด้วยเวลา)
     if (
       !currentCenterDate ||
       arg.view.currentStart.getTime() !== currentCenterDate.getTime()
@@ -105,12 +106,14 @@ export default function Page() {
     const viewStart = formatISO(arg.start);
     const viewEnd = formatISO(arg.end);
 
+    // ✅ โหลด "เพิ่ม" ล่วงหน้า
     if (viewEnd > dataEndDate) {
       const newEndDate = formatISO(addMonths(new Date(dataEndDate), 3));
       setDataEndDate(newEndDate);
       fetchJobs(dataEndDate, newEndDate);
     }
 
+    // ✅ โหลด "ย้อนหลัง" เมื่อผู้ใช้เลื่อนย้อน
     if (viewStart < dataStartDate) {
       const newStartDate = formatISO(addMonths(new Date(dataStartDate), -3));
       setDataStartDate(newStartDate);
@@ -131,23 +134,23 @@ export default function Page() {
           currentViewProp={currentView}
           onDatesSet={handleDatesSet}
         />
-{loading && (
-  <div
-    className="flex items-center justify-center bg-white bg-opacity-80 rounded-lg shadow-md p-4"
-    style={{
-      position: 'absolute',
-      top: '50%',
-      left: '50%',
-      transform: 'translate(-50%, -50%)',
-      zIndex: 9999,
-      pointerEvents: 'none',
-    }}
-  >
-    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-green-500" />
-    <span className="ml-2 text-black-600 text-sm">Loading more data...</span>
-  </div>
-)}
 
+        {loading && (
+          <div
+            className="flex items-center justify-center bg-white bg-opacity-80 rounded-lg shadow-md p-4"
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              zIndex: 9999,
+              pointerEvents: 'none',
+            }}
+          >
+            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-green-500" />
+            <span className="ml-2 text-black-600 text-sm">Loading more data...</span>
+          </div>
+        )}
 
         {error && <p className="text-red-600">{error}</p>}
       </div>
