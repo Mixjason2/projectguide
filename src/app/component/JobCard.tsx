@@ -95,6 +95,7 @@ const JobCard: React.FC<JobCardProps> = ({
         {job.PNR}
       </h2>
     </div>
+    
     <ExpandedJobDetail
       job={job}
       jobs={jobs}

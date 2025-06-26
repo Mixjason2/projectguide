@@ -1,6 +1,8 @@
 import React from "react";
 import { ExpandedJobDetailProps } from "@/app/types/job"; // ปรับ path ตามโครงสร้างของคุณ
 
+
+
 const formatDateTime = (input: string | string[]): string => {
   const format = (dateStr: string) => {
     const d = new Date(dateStr);

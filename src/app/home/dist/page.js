@@ -52,7 +52,6 @@ var react_1 = require("react");
 var cssguide_1 = require("../cssguide");
 var axios_1 = require("axios");
 var StatusMessage_1 = require("@/app/component/StatusMessage");
-var ConfirmedFilter_1 = require("@/app/component/ConfirmedFilter");
 var JobsSummary_1 = require("@/app/component/JobsSummary");
 var JobCard_1 = require("@/app/component/JobCard");
 var AllJobDetailsModal_1 = require("@/app/component/AllJobDetailsModal");
@@ -104,6 +103,32 @@ var get30DaysAgo = function () {
     date.setDate(date.getDate() - 30);
     return date.toISOString().slice(0, 10);
 };
+var renderPlaceDate = function (pickupDate) {
+    return (React.createElement("div", { className: "mb-2" },
+        React.createElement("span", { className: "text-gray-500 ml-2" },
+            "(",
+            pickupDate,
+            ")")));
+};
+var formatDateTime = function (input) {
+    var format = function (dateStr) {
+        var d = new Date(dateStr);
+        if (isNaN(d.getTime())) {
+            return dateStr; // คืนค่ากลับไปหากไม่ใช่วัน
+        }
+        // แสดงผลวันที่ที่ถูกต้องในรูปแบบที่ต้องการ
+        var formattedDate = d.toLocaleString("en-GB", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit"
+        });
+        return formattedDate;
+    };
+    if (Array.isArray(input)) {
+        return input.map(format).join(", ");
+    }
+    return format(input);
+};
 var getEndOfLastMonth = function () {
     var date = new Date();
     date.setDate(0); // วันที่ 0 ของเดือนปัจจุบัน = วันสุดท้ายของเดือนก่อนหน้า
@@ -120,54 +145,13 @@ function JobsList() {
     var _g = react_1.useState(1), page = _g[0], setPage = _g[1];
     var _h = react_1.useState({}), expandedPNRs = _h[0], setExpandedPNRs = _h[1];
     var _j = react_1.useState(false), showConfirmedOnly = _j[0], setShowConfirmedOnly = _j[1];
+    var _k = react_1.useState(false), showPendingOnly = _k[0], setShowPendingOnly = _k[1];
     var pageSize = 6;
     react_1.useEffect(function () {
         var token = localStorage.getItem('token') || '';
         setLoading(true);
-        fetch('https://operation.dth.travel:7082/api/guide/job', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                token: token,
-                startdate: startDate,
-                enddate: endDate
-            })
-        })
-            .then(function (res) { return __awaiter(_this, void 0, void 0, function () {
-            var text;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (!!res.ok) return [3 /*break*/, 2];
-                        return [4 /*yield*/, res.text()];
-                    case 1:
-                        text = _a.sent();
-                        throw new Error(text);
-                    case 2: return [2 /*return*/, res.json()]; // ✅ แปลงเป็น JSON
-                }
-            });
-        }); })
-            .then(function (data) {
-            // console.log("Job data:", data);
-            setJobs(data); // ✅ เซ็ตข้อมูลให้ state
-        })["catch"](function (err) {
-            // console.error("Fetch error:", err);
-            setError(err.message);
-        })["finally"](function () {
-            setLoading(false);
-        });
-    }, [startDate, endDate]);
-    var filteredByDate = jobs.filter(function (job) {
-        var pickup = job.PickupDate, dropoff = job.DropoffDate;
-        return (!startDate && !endDate) || (startDate && pickup >= startDate) || (endDate && dropoff <= endDate);
-    });
-    var filteredJobs = showConfirmedOnly
-        ? filteredByDate.filter(function (job) { return job.IsConfirmed === true; })
-        : filteredByDate;
-    var mergedJobs = mergeJobsByPNR(filteredJobs);
-    var totalPages = Math.ceil(mergedJobs.length / pageSize);
-    var pagedJobs = mergedJobs.slice((page - 1) * pageSize, page * pageSize);
-    // console.log("Merged Jobs:", pagedJobs);
+        fetchJobs(token, startDate, endDate);
+    }, []); // เรียกครั้งเดียวเมื่อ component โหลด
     var fetchJobs = function (token, startDate, endDate) { return __awaiter(_this, void 0, void 0, function () {
         var res, err_1;
         return __generator(this, function (_a) {
@@ -194,6 +178,22 @@ function JobsList() {
             }
         });
     }); };
+    var filteredByDate = jobs.filter(function (job) {
+        var pickup = job.PickupDate, dropoff = job.DropoffDate;
+        return (!startDate && !endDate) || (startDate && pickup >= startDate) || (endDate && dropoff <= endDate);
+    });
+    var filteredJobs = filteredByDate
+        .filter(function (job) {
+        if (showConfirmedOnly)
+            return job.IsConfirmed === true;
+        if (showPendingOnly)
+            return job.IsConfirmed === false && job.IsCancel === false;
+        return true;
+    })
+        .sort(function (a, b) { return new Date(a.PickupDate).getTime() - new Date(b.PickupDate).getTime(); });
+    var mergedJobs = mergeJobsByPNR(filteredJobs);
+    var totalPages = Math.ceil(mergedJobs.length / pageSize);
+    var pagedJobs = mergedJobs.slice((page - 1) * pageSize, page * pageSize);
     return (React.createElement(cssguide_1["default"], null,
         React.createElement("div", { className: "flex flex-col items-center py-8 min-h-screen bg-base-200 relative bg-[#9EE4F6]" },
             React.createElement(JobsSummary_1["default"], { filteredByDate: filteredByDate }),
@@ -209,12 +209,27 @@ function JobsList() {
                                     fetchJobs(localStorage.getItem('token') || '', i === 0 ? newDate : startDate, i === 0 ? endDate : newDate);
                                 }, className: "input input-bordered w-full" }))); })),
                         React.createElement("span", { className: "mt-2 text-xs text-gray-400 text-center px-2" }, "Please select a date range to filter the desired tasks.")),
-                    React.createElement(ConfirmedFilter_1["default"], { showConfirmedOnly: showConfirmedOnly, onChange: setShowConfirmedOnly }),
+                    React.createElement("div", { className: "px-4 mb-4" },
+                        React.createElement("label", { className: "block mb-1 font-medium text-gray-700" }, "Filter by Status"),
+                        React.createElement("select", { className: "w-full md:w-60 border rounded-lg p-2 focus:outline-none focus:ring focus:border-blue-300", value: showConfirmedOnly ? "confirmed" :
+                                showPendingOnly ? "pending" :
+                                    "all", onChange: function (e) {
+                                var value = e.target.value;
+                                setShowConfirmedOnly(value === "confirmed");
+                                setShowPendingOnly(value === "pending");
+                            } },
+                            React.createElement("option", { value: "all" }, "\uD83D\uDFE1 All Jobs"),
+                            React.createElement("option", { value: "confirmed" }, "\u2705 Confirmed Only"),
+                            React.createElement("option", { value: "pending" }, "\uD83D\uDD52 Pending Only"))),
                     React.createElement(StatusMessage_1["default"], { loading: loading, error: error, filteredJobsLength: filteredByDate.length }),
-                    !loading && !error && filteredByDate.length > 0 && (
-                    // render list jobs
-                    React.createElement(React.Fragment, null,
-                        React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" }, pagedJobs.map(function (job) { return (React.createElement(JobCard_1["default"], { key: job.PNR, job: job, expandedPNRs: expandedPNRs, setExpandedPNRs: setExpandedPNRs, setDetailJobs: setDetailJobs, jobs: jobs, setJobs: setJobs })); })),
+                    !loading && !error && filteredByDate.length > 0 && (React.createElement(React.Fragment, null,
+                        React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" }, pagedJobs.map(function (job) { return (React.createElement("div", { key: job.PNR, className: "border rounded-lg p-4 shadow bg-white" },
+                            React.createElement("div", { className: "text-sm text-gray-600 mb-2" }, job.all
+                                .sort(function (a, b) { return new Date(a.PickupDate).getTime() - new Date(b.PickupDate).getTime(); })
+                                .map(function (j, index) {
+                                return (React.createElement("div", { key: index, className: "mb-2" }, renderPlaceDate(formatDateTime(job.PickupDate))));
+                            })),
+                            React.createElement(JobCard_1["default"], { job: job, expandedPNRs: expandedPNRs, setExpandedPNRs: setExpandedPNRs, setDetailJobs: setDetailJobs, jobs: jobs, setJobs: setJobs }))); })),
                         React.createElement("div", { className: "w-full flex justify-center mt-6" },
                             React.createElement("div", { className: "inline-flex items-center gap-2 bg-base-100 border border-base-300 rounded-full shadow px-4 py-2" },
                                 React.createElement("button", { className: "btn btn-outline btn-sm rounded-full min-w-[64px]", disabled: page === 1, onClick: function () { return setPage(page - 1); } }, "Prev"),
