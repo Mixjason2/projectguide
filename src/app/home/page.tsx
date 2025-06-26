@@ -65,6 +65,38 @@ const get30DaysAgo = () => {
   return date.toISOString().slice(0, 10);
 };
 
+const renderPlaceDate = (label: string, pickupDate: string) => {
+  return (
+    <div className="mb-2 text-center font-sans text-xl text-gray-500">
+      <span>{label}: </span>
+      <span>{pickupDate}</span>
+    </div>
+  );
+};
+
+const formatDateTime = (input: string | string[]): string => {
+  const format = (dateStr: string) => {
+    const d = new Date(dateStr);
+
+    if (isNaN(d.getTime())) {
+      return dateStr;
+    }
+
+    return d.toLocaleString("en-GB", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  };
+
+  if (Array.isArray(input)) {
+    return input.map(format).join(",");
+  }
+
+  return format(input); // ✅ ต้องมี return ตรงนี้
+};
+
+
 const getEndOfLastMonth = () => {
   const date = new Date();
   date.setDate(0); // วันที่ 0 ของเดือนปัจจุบัน = วันสุดท้ายของเดือนก่อนหน้า
@@ -175,6 +207,20 @@ export default function JobsList() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {pagedJobs.map((job) => (
                     <div key={job.PNR} className="border rounded-lg p-4 shadow bg-white">
+                      {job.all
+                        .sort((a, b) => new Date(a.PickupDate).getTime() - new Date(b.PickupDate).getTime())
+                        .map((j, index) => {
+                          return (
+                            <div key={index} className="border rounded-lg p-4 shadow bg-white relative">
+                              <div className="text-center mb-2 font-sans text-xl text-gray-500">
+                                {renderPlaceDate(
+                                  "Date",
+                                  formatDateTime(job.PickupDate),
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
                       {/* Job card component */}
                       <JobCard
                         job={job}

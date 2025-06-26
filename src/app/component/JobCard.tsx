@@ -2,40 +2,13 @@ import ExpandedJobDetail from '@/app/component/ExpandedJobDetail';
 import JobAction from '@/app/component/JobAction';
 import { JobCardProps } from "@/app/types/job"; // ปรับ path ตามโครงสร้างของคุณ
 
-const renderPlaceDate = (pickupDate: string) => {
-  return (
-    <div className="mb-2">
-      <span className="text-gray-500 ml-2">
-        ({pickupDate})
-      </span>
+const renderPlaceDate = (place: string, date: string, label: string) => (
+  place || date ? (
+    <div>
+      <span className="font-Arial">{label}:</span> {place}{place && date ? ' - ' : ''}{date}
     </div>
-  );
-};
-
-const formatDateTime = (input: string | string[]): string => {
-  const format = (dateStr: string) => {
-    const d = new Date(dateStr);
-
-    if (isNaN(d.getTime())) {
-      return dateStr; // คืนค่ากลับไปหากไม่ใช่วัน
-    }
-
-    // แสดงผลวันที่ที่ถูกต้องในรูปแบบที่ต้องการ
-    const formattedDate = d.toLocaleString("en-GB", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-
-    return formattedDate;
-  };
-
-  if (Array.isArray(input)) {
-    return input.map(format).join(", ");
-  }
-
-  return format(input);
-};
+  ) : null
+);
 
 const renderField = (label: string, value: any) => (
   Array.isArray(value) ? (
@@ -119,18 +92,7 @@ const JobCard: React.FC<JobCardProps> = ({
         className="font-Arial mt-0 mb-0 underline underline-offset-4"
         style={{ color: "#2D3E92", fontSize: "28px" }}
       >
-        {job.PNR} 
-        {job.all
-        .sort((a, b) => new Date(a.PickupDate).getTime() - new Date(b.PickupDate).getTime())
-        .map((j, index) => {
-          return (
-            <div key={index} className="mb-2">
-              {renderPlaceDate(
-                formatDateTime(job.PickupDate),
-              )}
-            </div>
-          );
-        })}
+        {job.PNR}
       </h2>
     </div>
 
