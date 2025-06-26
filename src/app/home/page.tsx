@@ -87,34 +87,22 @@ export default function JobsList() {
   useEffect(() => {
     const token = localStorage.getItem('token') || '';
     setLoading(true);
-    fetch('https://operation.dth.travel:7082/api/guide/job', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        token: token, // ✅ ใช้ token จาก localStorage
-        startdate: startDate,
-        enddate: endDate
-      }),
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const text = await res.text(); // แปลง error เป็นข้อความ
-          throw new Error(text);
-        }
-        return res.json(); // ✅ แปลงเป็น JSON
-      })
-      .then((data) => {
-        // console.log("Job data:", data);
-        setJobs(data); // ✅ เซ็ตข้อมูลให้ state
-      })
-      .catch((err) => {
-        // console.error("Fetch error:", err);
-        setError(err.message);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, [startDate, endDate]);
+    // ทำการ fetch ข้อมูลที่ต้องการแค่ครั้งเดียว
+    fetchJobs(token, startDate, endDate);
+  }, []); // เรียกครั้งเดียวเมื่อ component โหลด
+
+  const fetchJobs = async (token: string, startDate: string, endDate: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await axios.post('https://operation.dth.travel:7082/api/guide/job', { token, startdate: startDate, enddate: endDate });
+      setJobs(res.data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredByDate = jobs.filter(job => {
     const pickup = job.PickupDate, dropoff = job.DropoffDate;
@@ -127,27 +115,12 @@ export default function JobsList() {
     return true; // แสดงทั้งหมด
   });
 
-
-
   const mergedJobs = mergeJobsByPNR(filteredJobs);
 
   const totalPages = Math.ceil(mergedJobs.length / pageSize);
 
   const pagedJobs = mergedJobs.slice((page - 1) * pageSize, page * pageSize);
   // console.log("Merged Jobs:", pagedJobs);
-  const fetchJobs = async (token: string, startDate: string, endDate: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await axios.post('https://operation.dth.travel:7082/api/guide/job', { token, startdate: startDate, enddate: endDate });
-      setJobs(res.data);
-
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
   return (
     <CssgGuide>
       <div className="flex flex-col items-center py-8 min-h-screen bg-base-200 relative bg-[#9EE4F6]">
