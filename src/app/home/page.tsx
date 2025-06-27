@@ -13,34 +13,42 @@ import AllJobDetailsModal from "@/app/component/AllJobDetailsModal";
 import PendingFilter from "@/app/component/PendingFilter";
 
 // Merge jobs by PNR, combine fields that are different into arrays
-function mergeJobsByPNR(jobs: Job[]): MergedJob[] {
+// แก้ชื่อฟังก์ชันเพื่อความเข้าใจ และใช้ PNRDate เป็นตัว merge
+function mergeJobsByPNRDate(jobs: Job[]): MergedJob[] {
   const map: Record<string, { merged: MergedJob; all: Job[] }> = {};
 
   for (const job of jobs) {
-    if (!map[job.PNR]) {
-      map[job.PNR] = {
-        merged: { ...job, keys: [job.key], all: [job] },
+    if (!map[job.PNRDate]) {
+      map[job.PNRDate] = {
+        merged: {
+          ...job,
+          keys: [job.key],
+          all: [job],
+          PNR: [job.PNR],
+          allByPNR: { [job.PNR]: [job] },  // เริ่มต้นด้วยการเพิ่ม allByPNR ตาม PNR
+        },
         all: [job],
       };
     } else {
-      map[job.PNR].merged.keys.push(job.key);
-      map[job.PNR].all.push(job);
+      map[job.PNRDate].merged.keys.push(job.key);
+      map[job.PNRDate].all.push(job);
 
+      // เพิ่ม allByPNR สำหรับ PNR ที่ตรงกัน
+      if (map[job.PNRDate].merged.allByPNR[job.PNR]) {
+        map[job.PNRDate].merged.allByPNR[job.PNR].push(job);
+      } else {
+        map[job.PNRDate].merged.allByPNR[job.PNR] = [job];
+      }
+
+      // ตัวอย่าง merge field อื่น ๆ
       for (const k of Object.keys(job) as (keyof Job)[]) {
         if (k === "key" || k === "Photo" || k === "Remark") continue;
 
-        const prev = map[job.PNR].merged[k];
+        const prev = map[job.PNRDate].merged[k];
         const curr = job[k];
 
-        if (k === "IsConfirmed") {
-          const mergedVal = Boolean(prev) || Boolean(curr);
-          map[job.PNR].merged[k] = mergedVal;
-          continue;
-        }
-
-        if (k === "IsCancel") {
-          const mergedVal = Boolean(prev) || Boolean(curr);
-          map[job.PNR].merged[k] = mergedVal;
+        if (k === "IsConfirmed" || k === "IsCancel") {
+          map[job.PNRDate].merged[k] = Boolean(prev) || Boolean(curr);
           continue;
         }
 
@@ -49,15 +57,18 @@ function mergeJobsByPNR(jobs: Job[]): MergedJob[] {
             (prev as any[]).push(curr);
           }
         } else if (prev !== curr) {
-          (map[job.PNR].merged as any)[k] = [prev, curr].filter(
+          (map[job.PNRDate].merged as any)[k] = [prev, curr].filter(
             (v, i, arr) => arr.indexOf(v) === i
           );
         }
       }
     }
   }
+
   return Object.values(map).map((entry) => entry.merged);
 }
+
+
 
 const get30DaysAgo = () => {
   const date = new Date();
@@ -65,36 +76,36 @@ const get30DaysAgo = () => {
   return date.toISOString().slice(0, 10);
 };
 
-const renderPlaceDate = (label: string, pickupDate: string) => {
-  return (
-    <div className="mb-2 text-center font-sans text-xl text-gray-500">
-      <span>{label}: </span>
-      <span>{pickupDate}</span>
-    </div>
-  );
-};
+// const renderPlaceDate = (label: string, pickupDate: string) => {
+//   return (
+//     <div className="mb-2 text-center font-sans text-xl text-gray-500">
+//       <span>{label}: </span>
+//       <span>{pickupDate}</span>
+//     </div>
+//   );
+// };
 
-const formatDateTime = (input: string | string[]): string => {
-  const format = (dateStr: string) => {
-    const d = new Date(dateStr);
+// const formatDateTime = (input: string | string[]): string => {
+//   const format = (dateStr: string) => {
+//     const d = new Date(dateStr);
 
-    if (isNaN(d.getTime())) {
-      return dateStr;
-    }
+//     if (isNaN(d.getTime())) {
+//       return dateStr;
+//     }
 
-    return d.toLocaleString("en-GB", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-  };
+//     return d.toLocaleString("en-GB", {
+//       year: "numeric",
+//       month: "2-digit",
+//       day: "2-digit",
+//     });
+//   };
 
-  if (Array.isArray(input)) {
-    return input.map(format).join(",");
-  }
+//   if (Array.isArray(input)) {
+//     return input.map(format).join(",");
+//   }
 
-  return format(input); // ✅ ต้องมี return ตรงนี้
-};
+//   return format(input); // ✅ ต้องมี return ตรงนี้
+// };
 
 
 const getEndOfLastMonth = () => {
@@ -114,6 +125,7 @@ export default function JobsList() {
   const [expandedPNRs, setExpandedPNRs] = useState<{ [pnr: string]: boolean }>({});
   const [showConfirmedOnly, setShowConfirmedOnly] = useState(false);
   const [showPendingOnly, setShowPendingOnly] = useState(false);
+  const [mergedJob, setMergedJob] = useState<MergedJob | null>(null);
   const pageSize = 6;
 
   useEffect(() => {
@@ -148,7 +160,7 @@ export default function JobsList() {
     })
     .sort((a, b) => new Date(a.PickupDate).getTime() - new Date(b.PickupDate).getTime());
 
-  const mergedJobs = mergeJobsByPNR(filteredJobs);
+  const mergedJobs = mergeJobsByPNRDate(filteredJobs);
   const totalPages = Math.ceil(mergedJobs.length / pageSize);
   const pagedJobs = mergedJobs.slice((page - 1) * pageSize, page * pageSize);
 
@@ -206,8 +218,8 @@ export default function JobsList() {
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {pagedJobs.map((job) => (
-                    <div key={job.PNR} className="w-full border rounded-lg p-4 shadow bg-white">
-                      {job.all
+                    <div key={job.PNRDate} className="w-full border rounded-lg p-4 shadow bg-white">
+                      {/* {job.all
                         .sort((a, b) => new Date(a.PickupDate).getTime() - new Date(b.PickupDate).getTime())
                         .map((j, index) => {
                           return (
@@ -220,7 +232,7 @@ export default function JobsList() {
                               </div>
                             </div>
                           );
-                        })}
+                        })} */}
                       {/* Job card component */}
                       <JobCard
                         job={job}
@@ -241,7 +253,13 @@ export default function JobsList() {
                     <button className="btn btn-outline btn-sm rounded-full min-w-[64px]" disabled={page === totalPages} onClick={() => setPage(page + 1)}>Next</button>
                   </div>
                 </div>
-                <AllJobDetailsModal detailJobs={detailJobs} setDetailJobs={setDetailJobs} />
+                {mergedJob && (
+                  <AllJobDetailsModal
+                    detailJobs={detailJobs}
+                    mergedJob={mergedJob}  // Only passes mergedJob if it's not null
+                    setDetailJobs={setDetailJobs}
+                  />
+                )}
               </>
             )}
           </div>

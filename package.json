@@ -10,7 +10,7 @@
     "dependencies": {
         "@angular/material": "^20.0.3",
         "@emotion/react": "^11.14.0",
-        "@emotion/styled": "^11.14.0",
+        "@emotion/styled": "^11.14.1",
         "@fullcalendar/core": "^6.1.17",
         "@fullcalendar/daygrid": "^6.1.17",
         "@fullcalendar/icalendar": "^6.1.17",
