@@ -171,42 +171,57 @@ const ExpandedJobDetail: React.FC<ExpandedJobDetailProps> = ({
   }));
 
   return (
-    <div className="p-6 pt-0 flex-1 flex flex-col">
-      <div className="text-sm text-gray-600 space-y-2 mb-4">
-        {/* แสดงข้อมูล PNR แยกกันโดยใช้ job.PNR */}
-        <div className="bg-gray-100 p-4 rounded-lg mb-4">
-          <h3 className="font-bold text-lg text-blue-800">PNR: {job.PNR}</h3>
+   <div className="bg-gray-100 p-4 rounded-lg">
+  {/* หัวเรื่อง PNR */}
+  <h2 className="text-lg font-bold text-blue-800 mb-2">PNR: {job.PNR}</h2>
 
-          {/* ✅ Pickup List */}
-          {pickupItems.map((item, idx) => (
-            <div key={`pickup-${idx}`}>
-              {renderPlaceDate(item.place, customFormatDate(item.date), `Pickup ${pickupItems.length > 1 ? idx + 1 : ""}`)}
-            </div>
-          ))}
-
-          {/* ✅ Dropoff List */}
-          {dropoffItems.map((item: { place: string; date: string }, idx: number) => (
-            <div key={`dropoff-${idx}`}>
-              {renderPlaceDate(item.place, customFormatDate(item.date), `Dropoff ${dropoffItems.length > 1 ? idx + 1 : ""}`)}
-            </div>
-          ))}
-
-          {/* ✅ Pax List */}
-          {paxItems.map((pax, idx) => (
-            <div key={`pax-${idx}`}>
-              {renderField(
-                `Pax ${paxItems.length > 1 ? idx + 1 : ""}`,
-                pax.adult + pax.child + pax.childShare + pax.infant
-              )}
-            </div>
-          ))}
+  {/* Pickup + Dropoff + Pax + ปุ่ม */}
+  <div className="text-sm text-gray-700">
+    {/* Pickup */}
+    <div className="mb-2">
+      <h4 className="text-sm font-semibold text-gray-800 mb-1">Pickup</h4>
+      {pickupItems.map((item, idx) => (
+        <div key={`pickup-${idx}`} className="mb-1">
+          {renderPlaceDate(item.place, customFormatDate(item.date), `Pickup ${pickupItems.length > 1 ? idx + 1 : ""}`)}
         </div>
-
-        {/* ส่วนของการกระทำ */}
-        <JobAction job={job} setJobs={setJobs} />
-      </div>
+      ))}
     </div>
-  );
+
+    {/* Dropoff */}
+    <div className="mb-2">
+      <h4 className="text-sm font-semibold text-gray-800 mb-1">Dropoff</h4>
+      {dropoffItems.map((item, idx) => (
+        <div key={`dropoff-${idx}`} className="mb-1">
+          {renderPlaceDate(item.place, customFormatDate(item.date), `Dropoff ${dropoffItems.length > 1 ? idx + 1 : ""}`)}
+        </div>
+      ))}
+    </div>
+
+    {/* Pax */}
+    <div className="mb-2">
+      <h4 className="text-sm font-semibold text-gray-800 mb-1">Pax</h4>
+      {paxItems.map((pax, idx) => (
+        <div key={`pax-${idx}`} className="mb-1">
+          {renderField(
+            `Pax ${paxItems.length > 1 ? idx + 1 : ""}`,
+            pax.adult + pax.child + pax.childShare + pax.infant
+          )}
+        </div>
+      ))}
+    </div>
+
+    {/* ปุ่ม */}
+    <div className="pt-1">
+      <JobAction job={job} setJobs={setJobs} />
+    </div>
+  </div>
+</div>
+      );
 };
 
+<<<<<<< HEAD
 export default ExpandedJobDetail;
+=======
+      export default ExpandedJobDetail;
+
+>>>>>>> 9859a365f1891a7f86ce73bcf2c5e0e5147b7a56

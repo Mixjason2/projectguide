@@ -222,7 +222,7 @@ function JobsList() {
                                 setShowConfirmedOnly(value === "confirmed");
                                 setShowPendingOnly(value === "pending");
                             } },
-                            React.createElement("option", { value: "all" }, "\uD83D\uDFE1 All Jobs"),
+                            React.createElement("option", { value: "all" }, "\u26AB\uFE0F All Jobs"),
                             React.createElement("option", { value: "confirmed" }, "\u2705 Confirmed Only"),
                             React.createElement("option", { value: "pending" }, "\uD83D\uDD52 Pending Only"))),
                     React.createElement(StatusMessage_1["default"], { loading: loading, error: error, filteredJobsLength: filteredByDate.length }),
