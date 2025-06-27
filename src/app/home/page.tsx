@@ -207,11 +207,13 @@ export default function JobsList() {
                   setShowPendingOnly(value === "pending");
                 }}
               >
-                <option value="all">🟡 All Jobs</option>
+                <option value="all">⚫️ All Jobs</option>
                 <option value="confirmed">✅ Confirmed Only</option>
                 <option value="pending">🕒 Pending Only</option>
               </select>
             </div>
+
+            
 
             <StatusMessage loading={loading} error={error} filteredJobsLength={filteredByDate.length} />
             {!loading && !error && filteredByDate.length > 0 && (
