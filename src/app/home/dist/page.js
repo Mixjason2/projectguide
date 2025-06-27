@@ -56,33 +56,37 @@ var JobsSummary_1 = require("@/app/component/JobsSummary");
 var JobCard_1 = require("@/app/component/JobCard");
 var AllJobDetailsModal_1 = require("@/app/component/AllJobDetailsModal");
 // Merge jobs by PNR, combine fields that are different into arrays
-function mergeJobsByPNR(jobs) {
+// แก้ชื่อฟังก์ชันเพื่อความเข้าใจ และใช้ PNRDate เป็นตัว merge
+function mergeJobsByPNRDate(jobs) {
+    var _a;
     var map = {};
     for (var _i = 0, jobs_1 = jobs; _i < jobs_1.length; _i++) {
         var job = jobs_1[_i];
-        if (!map[job.PNR]) {
-            map[job.PNR] = {
-                merged: __assign(__assign({}, job), { keys: [job.key], all: [job] }),
+        if (!map[job.PNRDate]) {
+            map[job.PNRDate] = {
+                merged: __assign(__assign({}, job), { keys: [job.key], all: [job], PNR: [job.PNR], allByPNR: (_a = {}, _a[job.PNR] = [job], _a) }),
                 all: [job]
             };
         }
         else {
-            map[job.PNR].merged.keys.push(job.key);
-            map[job.PNR].all.push(job);
-            for (var _a = 0, _b = Object.keys(job); _a < _b.length; _a++) {
-                var k = _b[_a];
+            map[job.PNRDate].merged.keys.push(job.key);
+            map[job.PNRDate].all.push(job);
+            // เพิ่ม allByPNR สำหรับ PNR ที่ตรงกัน
+            if (map[job.PNRDate].merged.allByPNR[job.PNR]) {
+                map[job.PNRDate].merged.allByPNR[job.PNR].push(job);
+            }
+            else {
+                map[job.PNRDate].merged.allByPNR[job.PNR] = [job];
+            }
+            // ตัวอย่าง merge field อื่น ๆ
+            for (var _b = 0, _c = Object.keys(job); _b < _c.length; _b++) {
+                var k = _c[_b];
                 if (k === "key" || k === "Photo" || k === "Remark")
                     continue;
-                var prev = map[job.PNR].merged[k];
+                var prev = map[job.PNRDate].merged[k];
                 var curr = job[k];
-                if (k === "IsConfirmed") {
-                    var mergedVal = Boolean(prev) || Boolean(curr);
-                    map[job.PNR].merged[k] = mergedVal;
-                    continue;
-                }
-                if (k === "IsCancel") {
-                    var mergedVal = Boolean(prev) || Boolean(curr);
-                    map[job.PNR].merged[k] = mergedVal;
+                if (k === "IsConfirmed" || k === "IsCancel") {
+                    map[job.PNRDate].merged[k] = Boolean(prev) || Boolean(curr);
                     continue;
                 }
                 if (Array.isArray(prev)) {
@@ -91,7 +95,7 @@ function mergeJobsByPNR(jobs) {
                     }
                 }
                 else if (prev !== curr) {
-                    map[job.PNR].merged[k] = [prev, curr].filter(function (v, i, arr) { return arr.indexOf(v) === i; });
+                    map[job.PNRDate].merged[k] = [prev, curr].filter(function (v, i, arr) { return arr.indexOf(v) === i; });
                 }
             }
         }
@@ -103,6 +107,31 @@ var get30DaysAgo = function () {
     date.setDate(date.getDate() - 30);
     return date.toISOString().slice(0, 10);
 };
+// const renderPlaceDate = (label: string, pickupDate: string) => {
+//   return (
+//     <div className="mb-2 text-center font-sans text-xl text-gray-500">
+//       <span>{label}: </span>
+//       <span>{pickupDate}</span>
+//     </div>
+//   );
+// };
+// const formatDateTime = (input: string | string[]): string => {
+//   const format = (dateStr: string) => {
+//     const d = new Date(dateStr);
+//     if (isNaN(d.getTime())) {
+//       return dateStr;
+//     }
+//     return d.toLocaleString("en-GB", {
+//       year: "numeric",
+//       month: "2-digit",
+//       day: "2-digit",
+//     });
+//   };
+//   if (Array.isArray(input)) {
+//     return input.map(format).join(",");
+//   }
+//   return format(input); // ✅ ต้องมี return ตรงนี้
+// };
 var getEndOfLastMonth = function () {
     var date = new Date();
     date.setDate(0); // วันที่ 0 ของเดือนปัจจุบัน = วันสุดท้ายของเดือนก่อนหน้า
@@ -120,6 +149,7 @@ function JobsList() {
     var _h = react_1.useState({}), expandedPNRs = _h[0], setExpandedPNRs = _h[1];
     var _j = react_1.useState(false), showConfirmedOnly = _j[0], setShowConfirmedOnly = _j[1];
     var _k = react_1.useState(false), showPendingOnly = _k[0], setShowPendingOnly = _k[1];
+    var _l = react_1.useState(null), mergedJob = _l[0], setMergedJob = _l[1];
     var pageSize = 6;
     react_1.useEffect(function () {
         var token = localStorage.getItem('token') || '';
@@ -165,7 +195,7 @@ function JobsList() {
         return true;
     })
         .sort(function (a, b) { return new Date(a.PickupDate).getTime() - new Date(b.PickupDate).getTime(); });
-    var mergedJobs = mergeJobsByPNR(filteredJobs);
+    var mergedJobs = mergeJobsByPNRDate(filteredJobs);
     var totalPages = Math.ceil(mergedJobs.length / pageSize);
     var pagedJobs = mergedJobs.slice((page - 1) * pageSize, page * pageSize);
     return (React.createElement(cssguide_1["default"], null,
@@ -197,7 +227,7 @@ function JobsList() {
                             React.createElement("option", { value: "pending" }, "\uD83D\uDD52 Pending Only"))),
                     React.createElement(StatusMessage_1["default"], { loading: loading, error: error, filteredJobsLength: filteredByDate.length }),
                     !loading && !error && filteredByDate.length > 0 && (React.createElement(React.Fragment, null,
-                        React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" }, pagedJobs.map(function (job) { return (React.createElement("div", { key: job.PNR, className: "border rounded-lg p-4 shadow bg-white" },
+                        React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" }, pagedJobs.map(function (job) { return (React.createElement("div", { key: job.PNRDate, className: "w-full border rounded-lg p-4 shadow bg-white" },
                             React.createElement(JobCard_1["default"], { job: job, expandedPNRs: expandedPNRs, setExpandedPNRs: setExpandedPNRs, setDetailJobs: setDetailJobs, jobs: jobs, setJobs: setJobs }))); })),
                         React.createElement("div", { className: "w-full flex justify-center mt-6" },
                             React.createElement("div", { className: "inline-flex items-center gap-2 bg-base-100 border border-base-300 rounded-full shadow px-4 py-2 " },
@@ -209,6 +239,6 @@ function JobsList() {
                                     " ",
                                     totalPages),
                                 React.createElement("button", { className: "btn btn-outline btn-sm rounded-full min-w-[64px]", disabled: page === totalPages, onClick: function () { return setPage(page + 1); } }, "Next"))),
-                        React.createElement(AllJobDetailsModal_1["default"], { detailJobs: detailJobs, setDetailJobs: setDetailJobs }))))))));
+                        mergedJob && (React.createElement(AllJobDetailsModal_1["default"], { detailJobs: detailJobs, mergedJob: mergedJob, setDetailJobs: setDetailJobs })))))))));
 }
 exports["default"] = JobsList;

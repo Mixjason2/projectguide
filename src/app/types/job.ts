@@ -37,13 +37,16 @@ export type Job = {
   Remark?: string;
 };
 
-export type MergedJob = Job & {
-  keys: number[]; // ถูกเซ็ตไว้ในฟังก์ชันแล้ว
-  all: Job[];     // เก็บ job ทุกตัวที่รวมกันด้วย PNR เดียวกัน
+export type MergedJob = Omit<Job, 'PNR'> & {
+  PNR: string[];          // เปลี่ยนจาก string เป็น array ของ PNR
+  keys: number[];         // Array ของ key เพื่อเก็บงานทั้งหมดใน PNRDate
+  all: Job[];             // เก็บ job ทั้งหมดที่รวมกันใน PNRDate
+  allByPNR: Record<string, Job[]>;  // เก็บ job แยกตาม PNR (คือออบเจ็กต์ที่มี PNR เป็น key และ array ของ Job เป็น value)
 };
 
+
 export type ExpandedJobDetailProps = {
-  job: Job;
+  job: MergedJob;
   jobs: Job[];
   expandedPNRs: Record<string, boolean>;
   renderPlaceDate: (place: string, date: string, label: string) => ReactNode;
@@ -57,6 +60,7 @@ export type FetchStatusProps = {
 };
 
 export type JobDetailsProps = {
+  job: MergedJob;
   jobs: Job[];
   formatDate: (dateStr: string) => string;
 };
