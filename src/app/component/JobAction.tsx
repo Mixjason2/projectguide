@@ -1,15 +1,11 @@
 import React, { useState } from "react";
 import axios from "axios";
-import FileToBase64 from "@/app/component/FileToBase64";
+import UploadImagesWithRemark from "@/app/component/FileToBase64"; // แก้ import ให้ถูกต้อง
 import { JobActionProps } from "@/app/types/job";
-import UploadImagesWithRemark from "@/app/component/FileToBase64";
-import {Job} from "@/app/types/job";
-const JobAction: React.FC<JobActionProps> = ({ job, setJobs }) => {
-  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
-  const [uploadedRemark, setUploadedRemark] = useState<string>("");
 
-  // เพิ่ม state สำหรับสถานะการส่งอีเมล
-  const [emailStatus, setEmailStatus] = useState<string | null>(null);
+const JobAction: React.FC<JobActionProps> = ({ job, setJobs }) => {
+  const [accepted, setAccepted] = useState(job.IsConfirmed); // ใช้สถานะจาก job เริ่มต้น
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
 
   const sendEmail = async ({
@@ -30,11 +26,10 @@ const JobAction: React.FC<JobActionProps> = ({ job, setJobs }) => {
         subject,
         body,
       });
-      // axios จะ throw error เองถ้า status ไม่ใช่ 2xx
-      alert("Email sent successfully!"); // แจ้งผลสำเร็จ
+      alert("Email sent successfully!");
       return response.data;
     } catch (error) {
-      alert("Failed to send email."); // แจ้งล้มเหลว
+      alert("Failed to send email.");
       console.error(error);
       throw error;
     }
@@ -42,10 +37,10 @@ const JobAction: React.FC<JobActionProps> = ({ job, setJobs }) => {
 
   const handleAccept = async () => {
     try {
-      setEmailStatus(null); // รีเซ็ตสถานะก่อนเริ่ม
+      setStatusMessage("");
       const token = localStorage.getItem("token") || "";
       const response = await axios.post(
-        `https://operation.dth.travel:7082/api/guide/job/${job.keys}/update`,
+        `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
         {
           token,
           data: { isConfirmed: true },
@@ -54,10 +49,10 @@ const JobAction: React.FC<JobActionProps> = ({ job, setJobs }) => {
       const result = response.data;
       if (result.success) {
         alert("Job successfully accepted.");
+        setAccepted(true); // เปลี่ยนสถานะ accepted
+
         setJobs((prevJobs) =>
-          prevJobs.map((j) =>
-            job.all.some((orig: { key: any }) => orig.key === j.key) ? { ...j, IsConfirmed: true } : j
-          )
+          prevJobs.map((j) => (j.key === job.key ? { ...j, IsConfirmed: true } : j))
         );
 
         await sendEmail({
@@ -80,10 +75,10 @@ If you have any questions or require further details, please feel free to contac
 
   const handleReject = async () => {
     try {
-      setEmailStatus(null); // รีเซ็ตสถานะก่อนเริ่ม
+      setStatusMessage("");
       const token = localStorage.getItem("token") || "";
       const response = await axios.post(
-        `https://operation.dth.travel:7082/api/guide/job/${job.keys}/update`,
+        `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
         {
           token,
           data: { isCancel: true },
@@ -93,19 +88,8 @@ If you have any questions or require further details, please feel free to contac
       if (result.success) {
         alert("Job successfully canceled.");
         setJobs((prevJobs) =>
-          prevJobs.map((j) =>
-            job.all.some((orig: { key: any }) => orig.key === j.key) ? { ...j, IsCancel: true } : j
-          )
+          prevJobs.map((j) => (j.key === job.key ? { ...j, IsCancel: true } : j))
         );
-
-        await sendEmail({
-          emails: ["veeratha.p@dth.travel"],
-          emails_CC: "",
-          subject: `Job Canceled: PNR ${job.PNR}`,
-          body: `The job associated with PNR ${job.PNR} and the service "${job.serviceProductName}" has been canceled.
-
-If you have any questions or need further assistance, please do not hesitate to contact us.`,
-        });
       } else {
         alert("Failed to cancel the job: " + (result?.error || "Unknown error"));
       }
@@ -114,22 +98,47 @@ If you have any questions or need further assistance, please do not hesitate to 
     }
   };
 
-  const handleBase64ListReady = (base64List: string[], remark: string) => {
-    setUploadedFiles(base64List);
-    setUploadedRemark(remark);
-    console.log("Received base64 list:", base64List);
-    console.log("Received remark:", remark);
-  };
-
   return (
     <div className="relative border rounded-xl p-4 shadow bg-white">
-      {job.IsCancel ? null : job.IsConfirmed ? (
-        <UploadImagesWithRemark
-          token={localStorage.getItem("token") || ""}
-          keyValue={job.key}
-          job={job} // ✅ ส่ง job เข้าไป
-        />
+      {/* ถ้า job ถูก cancel ไม่แสดงอะไร */}
+      {job.IsCancel ? null : accepted ? (
+        <>
+          <div className="flex justify-center">
+            <button
+              onClick={() => setShowUploadModal(true)}
+              className="w-12 h-12 rounded-full bg-white border-2 border-[#2D3E92] shadow hover:shadow-md flex items-center justify-center text-2xl"
+              title="Upload Documents"
+            >
+              📄
+            </button>
+          </div>
 
+          {showUploadModal && (
+            <div
+              className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center"
+              onClick={() => setShowUploadModal(false)}
+            >
+              <div
+                className="bg-white rounded-2xl shadow-lg p-6 relative max-w-3xl w-full"
+                onClick={(e) => e.stopPropagation()} // กันคลิกหลุด modal
+              >
+                <button
+                  onClick={() => setShowUploadModal(false)}
+                  className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-xl font-bold"
+                  aria-label="Close modal"
+                >
+                  ×
+                </button>
+
+                <UploadImagesWithRemark
+                  token={localStorage.getItem("token") || ""}
+                  keyValue={job.key}
+                  job={job}
+                />
+              </div>
+            </div>
+          )}
+        </>
       ) : (
         <>
           <div className="flex gap-3">
@@ -147,7 +156,6 @@ If you have any questions or need further assistance, please do not hesitate to 
             </button>
           </div>
 
-          {/* กรอบแสดงสถานะส่งอีเมล */}
           {statusMessage && <p>{statusMessage}</p>}
         </>
       )}
