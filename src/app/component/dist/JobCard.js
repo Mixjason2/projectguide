@@ -82,7 +82,8 @@ var JobCard = function (_a) {
                     return (__assign(__assign({}, prev), (_a = {}, _a[job.PNRDate] = !expandedPNRs[job.PNRDate], _a)));
                 });
             } },
-            React.createElement("h2", { className: "font-Arial mt-0 mb-0 text-[24px]", style: { color: "#2D3E92" } }, job.PNR)),
+            React.createElement("h2", { className: "font-Arial mt-0 mb-0 text-[24px]", style: { color: "#2D3E92" } },
+                React.createElement("span", { className: "underline underline-offset-4" }, formatDate(job.PNRDate)))),
         React.createElement(ExpandedJobDetail_1["default"], { job: job, jobs: jobs, expandedPNRs: expandedPNRs, renderPlaceDate: renderPlaceDate, renderField: renderField }),
         React.createElement(JobAction_1["default"], { job: job, setJobs: setJobs })));
 };

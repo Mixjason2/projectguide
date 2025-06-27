@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useRef, useEffect } from 'react';
+import React, { useMemo, useRef, useEffect, useState } from 'react'; // ✅ เพิ่ม useState
 import FullCalendar from '@fullcalendar/react';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -79,19 +79,26 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   currentViewProp = 'dayGridMonth',
 }) => {
   const calendarRef = useRef<FullCalendar>(null);
+  const [icsFilename, setIcsFilename] = useState('dth-calendar.ics'); // ✅ เพิ่ม state
 
-  // ✅ อยู่ข้างใน CalendarView และใช้ jobs ได้
   const handleDownloadICS = () => {
-    const confirmedJobs = jobs.filter((j: Job) => j.IsConfirmed); // ✅ no more error
-    const now = new Date();
-    const filename = `dth-calendar-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}.ics`;
+    const calendarApi = calendarRef.current?.getApi();
+    if (!calendarApi) return;
+
+    const viewStart = calendarApi.view.currentStart;
+    const viewEnd = calendarApi.view.currentEnd;
+
+    const confirmedJobs = jobs.filter((job: Job) => {
+      const pickupDate = new Date(job.PickupDate);
+      return job.IsConfirmed && pickupDate >= viewStart && pickupDate < viewEnd;
+    });
 
     const icsContent = generateICS(confirmedJobs);
     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = filename;
+    link.download = icsFilename; // ✅ ใช้ filename จาก state
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -180,55 +187,53 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     }
   };
 
-  // ฟังก์ชันสร้าง ICS สำหรับ event เดียว
-const generateSingleICS = (job: Job): string => {
-  const pad = (n: number) => String(n).padStart(2, '0');
+  const generateSingleICS = (job: Job): string => {
+    const pad = (n: number) => String(n).padStart(2, '0');
 
-  const formatDateTime = (date: Date) => {
-    return (
-      date.getFullYear() +
-      pad(date.getMonth() + 1) +
-      pad(date.getDate()) +
-      'T' +
-      pad(date.getHours()) +
-      pad(date.getMinutes()) +
-      pad(date.getSeconds())
-    );
+    const formatDateTime = (date: Date) => {
+      return (
+        date.getFullYear() +
+        pad(date.getMonth() + 1) +
+        pad(date.getDate()) +
+        'T' +
+        pad(date.getHours()) +
+        pad(date.getMinutes()) +
+        pad(date.getSeconds())
+      );
+    };
+
+    const start = new Date(job.PickupDate);
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+
+    let ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'CALSCALE:GREGORIAN',
+      'PRODID:-//Test Calendar//EN',
+      'BEGIN:VTIMEZONE',
+      'TZID:Asia/Bangkok',
+      'X-LIC-LOCATION:Asia/Bangkok',
+      'BEGIN:STANDARD',
+      'TZOFFSETFROM:+0700',
+      'TZOFFSETTO:+0700',
+      'TZNAME:ICT',
+      'DTSTART:19700101T000000',
+      'END:STANDARD',
+      'END:VTIMEZONE',
+      'BEGIN:VEVENT',
+      `UID:${job.key}@example.com`,
+      `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,
+      `DTSTART;TZID=Asia/Bangkok:${formatDateTime(start)}`,
+      `DTEND;TZID=Asia/Bangkok:${formatDateTime(end)}`,
+      `SUMMARY:${job.serviceProductName}`,
+      `DESCRIPTION:${job.PNR ? `PNR: ${job.PNR}, ` : ''}Pickup: ${job.Pickup}`,
+      `LOCATION:${job.Pickup}`,
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n') + '\r\n';
+
+    return ics;
   };
-
-  const start = new Date(job.PickupDate);
-  const end = new Date(start.getTime() + 60 * 60 * 1000);
-
-  let ics = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'CALSCALE:GREGORIAN',
-    'PRODID:-//Test Calendar//EN',
-    'BEGIN:VTIMEZONE',
-    'TZID:Asia/Bangkok',
-    'X-LIC-LOCATION:Asia/Bangkok',
-    'BEGIN:STANDARD',
-    'TZOFFSETFROM:+0700',
-    'TZOFFSETTO:+0700',
-    'TZNAME:ICT',
-    'DTSTART:19700101T000000',
-    'END:STANDARD',
-    'END:VTIMEZONE',
-    'BEGIN:VEVENT',
-    `UID:${job.key}@example.com`,
-    `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,
-    `DTSTART;TZID=Asia/Bangkok:${formatDateTime(start)}`,
-    `DTEND;TZID=Asia/Bangkok:${formatDateTime(end)}`,
-    `SUMMARY:${job.serviceProductName}`,
-    `DESCRIPTION:${job.PNR ? `PNR: ${job.PNR}, ` : ''}Pickup: ${job.Pickup}`,
-    `LOCATION:${job.Pickup}`,
-    'END:VEVENT',
-    'END:VCALENDAR'
-  ].join('\r\n') + '\r\n';
-
-  return ics;
-};
-
 
   const handleDownloadSingleICS = (job: Job) => {
     const icsContent = generateSingleICS(job);
@@ -244,81 +249,81 @@ const generateSingleICS = (job: Job): string => {
     URL.revokeObjectURL(url);
   };
 
-const renderEventContent = (arg: any) => {
-  const job = arg.event.extendedProps?.job;
-  const jobs: Job[] = arg.event.extendedProps?.jobs;
-  const statusDots = getStatusDots(job ?? jobs ?? []);
+  const renderEventContent = (arg: any) => {
+    const job = arg.event.extendedProps?.job;
+    const jobs: Job[] = arg.event.extendedProps?.jobs;
+    const statusDots = getStatusDots(job ?? jobs ?? []);
 
-  return (
-    <div
-      className="fc-event-main"
-      style={{
-        backgroundColor: '#95c941',
-        color: 'white',
-        border: '1px solid #0369a1',
-        borderRadius: 6,
-        padding: '4px 6px',
-        display: 'flex',
-        alignItems: 'center',
-        width: '100%',
-        fontSize: '0.65rem',
-        lineHeight: 1.5,
-        overflow: 'hidden',
-        gap: 6,
-        justifyContent: 'space-between',
-      }}
-    >
+    return (
       <div
+        className="fc-event-main"
         style={{
+          backgroundColor: '#95c941',
+          color: 'white',
+          border: '1px solid #0369a1',
+          borderRadius: 6,
+          padding: '4px 6px',
           display: 'flex',
-          gap: 4,
           alignItems: 'center',
-          flexShrink: 1,
-          minWidth: 0,
+          width: '100%',
+          fontSize: '0.65rem',
+          lineHeight: 1.5,
+          overflow: 'hidden',
+          gap: 6,
+          justifyContent: 'space-between',
         }}
       >
-        {statusDots.map(({ color, label }, index) => (
-          <span
-            key={index}
-            title={label}
-            style={{
-              backgroundColor: color,
-              width: 10,
-              height: 10,
-              borderRadius: '50%',
-              border: '1px solid white',
-              flexShrink: 0,
-            }}
-          />
-        ))}
+        <div
+          style={{
+            display: 'flex',
+            gap: 4,
+            alignItems: 'center',
+            flexShrink: 1,
+            minWidth: 0,
+          }}
+        >
+          {statusDots.map(({ color, label }, index) => (
+            <span
+              key={index}
+              title={label}
+              style={{
+                backgroundColor: color,
+                width: 10,
+                height: 10,
+                borderRadius: '50%',
+                border: '1px solid white',
+                flexShrink: 0,
+              }}
+            />
+          ))}
           <span style={{ flexShrink: 1, minWidth: 0 }}>{arg.event.title}</span>
         </div>
         {job && (
-<button
-  onClick={(e) => {
-    e.stopPropagation();
-    handleDownloadSingleICS(job);
-  }}
-  style={{
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    border: 'none',
-    borderRadius: 5,
-    color: 'white',
-    cursor: 'pointer',
-    fontSize: '0.75rem',
-    padding: '4px 6px',
-    lineHeight: 1,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'background-color 0.2s ease',
-  }}
-  title="Download ICS for this event"
-  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.4)')}
-  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.25)')}
->
-  📥
-</button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDownloadSingleICS(job);
+            }}
+            style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.25)',
+              border: 'none',
+              borderRadius: 5,
+              color: 'white',
+              cursor: 'pointer',
+              fontSize: '0.90rem',
+              padding: '4px 6px',
+              lineHeight: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'background-color 0.2s ease',
+            }}
+            title="Download ICS for this event"
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.4)')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.25)')}
+          >
+            📥
+          </button>
         )}
       </div>
     );
@@ -331,7 +336,7 @@ const renderEventContent = (arg: any) => {
           onClick={handleDownloadICS}
           className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
-          📥 Download ICS
+          📥 Download ({icsFilename})
         </button>
       </div>
 
@@ -341,6 +346,9 @@ const renderEventContent = (arg: any) => {
         initialView="listMonth"
         events={events}
         datesSet={(arg: DatesSetArg) => {
+          const year = arg.start.getFullYear();
+          const month = String(arg.start.getMonth() + 1).padStart(2, '0');
+          setIcsFilename(`dth-calendar-${year}-${month}.ics`);
           onDatesSet?.(arg);
         }}
         height="auto"

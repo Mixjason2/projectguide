@@ -8,7 +8,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
     return r;
 };
 exports.__esModule = true;
-var react_1 = require("react");
+var react_1 = require("react"); // ✅ เพิ่ม useState
 var types_1 = require("./types");
 function getStatusDots(input) {
     if (input === 'all')
@@ -60,17 +60,24 @@ function generateICS(jobs) {
 var CalendarView = function (_a) {
     var jobs = _a.jobs, onDatesSet = _a.onDatesSet, gotoDate = _a.gotoDate, _b = _a.currentViewProp, currentViewProp = _b === void 0 ? 'dayGridMonth' : _b;
     var calendarRef = react_1.useRef(null);
-    // ✅ อยู่ข้างใน CalendarView และใช้ jobs ได้
+    var _c = react_1.useState('dth-calendar.ics'), icsFilename = _c[0], setIcsFilename = _c[1]; // ✅ เพิ่ม state
     var handleDownloadICS = function () {
-        var confirmedJobs = jobs.filter(function (j) { return j.IsConfirmed; }); // ✅ no more error
-        var now = new Date();
-        var filename = "dth-calendar-" + now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0') + ".ics";
+        var _a;
+        var calendarApi = (_a = calendarRef.current) === null || _a === void 0 ? void 0 : _a.getApi();
+        if (!calendarApi)
+            return;
+        var viewStart = calendarApi.view.currentStart;
+        var viewEnd = calendarApi.view.currentEnd;
+        var confirmedJobs = jobs.filter(function (job) {
+            var pickupDate = new Date(job.PickupDate);
+            return job.IsConfirmed && pickupDate >= viewStart && pickupDate < viewEnd;
+        });
         var icsContent = generateICS(confirmedJobs);
         var blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
         var url = URL.createObjectURL(blob);
         var link = document.createElement('a');
         link.href = url;
-        link.download = filename;
+        link.download = icsFilename; // ✅ ใช้ filename จาก state
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -157,7 +164,6 @@ var handleEventClick = function (info) {
         alert("\uD83C\uDFAB PNR: " + job.PNR + "\n\uD83D\uDD52 Pickup: " + pickupTime + "\n\uD83D\uDCCD Location: " + job.Pickup + "\n\uD83D\uDC64 Pax: " + totalPax + " (Adult: " + job.AdultQty + ", Child: " + job.ChildQty + ", Share: " + job.ChildShareQty + ", Infant: " + job.InfantQty + ")\n\uD83D\uDC64 Name: " + job.pax_name);
     }
 };
-// ฟังก์ชันสร้าง ICS สำหรับ event เดียว
 var generateSingleICS = function (job) {
     var pad = function (n) { return String(n).padStart(2, '0'); };
     var formatDateTime = function (date) {
@@ -261,7 +267,7 @@ var renderEventContent = function (arg) {
                 borderRadius: 5,
                 color: 'white',
                 cursor: 'pointer',
-                fontSize: '0.75rem',
+                fontSize: '0.90rem',
                 padding: '4px 6px',
                 lineHeight: 1,
                 display: 'flex',
@@ -272,8 +278,14 @@ var renderEventContent = function (arg) {
 };
 return (react_1["default"].createElement(react_1["default"].Fragment, null,
     react_1["default"].createElement("div", { className: "mb-2" },
-        react_1["default"].createElement("button", { onClick: handleDownloadICS, className: "px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700" }, "\uD83D\uDCE5 Download ICS")),
+        react_1["default"].createElement("button", { onClick: handleDownloadICS, className: "px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700" },
+            "\uD83D\uDCE5 Download (",
+            icsFilename,
+            ")")),
     react_1["default"].createElement(react_2["default"], { ref: calendarRef, plugins: [list_1["default"], interaction_1["default"]], initialView: "listMonth", events: events, datesSet: function (arg) {
+            var year = arg.start.getFullYear();
+            var month = String(arg.start.getMonth() + 1).padStart(2, '0');
+            setIcsFilename("dth-calendar-" + year + "-" + month + ".ics");
             onDatesSet === null || onDatesSet === void 0 ? void 0 : onDatesSet(arg);
         }, height: "auto", contentHeight: "auto", aspectRatio: 1.7, headerToolbar: {
             start: 'title',

@@ -110,20 +110,20 @@ const [detailJobs, setLocalDetailJobs] = useState<Job[] | null>(null); // เพ
         />
       )}
 
-    <div
-      className="inline-block p-6 pb-0 cursor-pointer mx-auto items-center gap-3"
-      onClick={() =>
-        setExpandedPNRs((prev) => ({ ...prev, [job.PNRDate]: !expandedPNRs[job.PNRDate] }))
-      }
-    >
-      {/* ✅ บรรทัดนี้แสดง PNR และวันที่ Pickup/Dropoff */}
-      <h2
-        className="font-Arial mt-0 mb-0 text-[24px]"
-        style={{ color: "#2D3E92" }}
+      <div
+        className="inline-block p-6 pb-0 cursor-pointer mx-auto items-center gap-3"
+        onClick={() =>
+          setExpandedPNRs((prev) => ({ ...prev, [job.PNRDate]: !expandedPNRs[job.PNRDate] }))
+        }
       >
-        {job.PNR}
-      </h2>
-    </div>
+        {/* ✅ บรรทัดนี้แสดง PNR และวันที่ Pickup/Dropoff */}
+        <h2
+          className="font-Arial mt-0 mb-0 text-[24px]"
+          style={{ color: "#2D3E92" }}
+        >
+          <span className="underline underline-offset-4">{formatDate(job.PNRDate)}</span>
+        </h2>
+      </div>
 
       <ExpandedJobDetail
         job={job}
