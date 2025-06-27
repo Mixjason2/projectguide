@@ -103,14 +103,7 @@ const JobCard: React.FC<JobCardProps> = ({
         className="font-Arial mt-0 mb-0 text-[24px]"
         style={{ color: "#2D3E92" }}
       >
-<<<<<<< HEAD
-        <span className="underline underline-offset-4">{job.PNR}</span>
-        <div style={{ fontSize: '16px', color: '#374151', marginTop: '4px' }}>
-          Pickup: {formatDate(job.PickupDate)} | Dropoff: {formatDate(job.DropoffDate)}
-        </div>
-=======
         {job.PNR}
->>>>>>> 300207119b179d2b39468cb6d9cecfa523d50db7
       </h2>
     </div>
 

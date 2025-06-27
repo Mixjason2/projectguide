@@ -21,9 +21,61 @@ function getStatusDots(input) {
     }
     return [{ color: '#404040', label: 'Normal' }];
 }
+function generateICS(jobs) {
+    var pad = function (n) { return String(n).padStart(2, '0'); };
+    var formatDateTime = function (date) {
+        return (date.getFullYear() +
+            pad(date.getMonth() + 1) +
+            pad(date.getDate()) +
+            'T' +
+            pad(date.getHours()) +
+            pad(date.getMinutes()) +
+            pad(date.getSeconds()));
+    };
+    var ics = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'CALSCALE:GREGORIAN',
+        'PRODID:-//Test Calendar//EN',
+    ].join('\r\n') + '\r\n';
+    for (var _i = 0, jobs_1 = jobs; _i < jobs_1.length; _i++) {
+        var job = jobs_1[_i];
+        var start = new Date(job.PickupDate);
+        var end = new Date(start.getTime() + 60 * 60 * 1000);
+        ics += [
+            'BEGIN:VEVENT',
+            "UID:" + job.key + "@example.com",
+            "DTSTAMP:" + new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + "Z",
+            "DTSTART;TZID=Asia/Bangkok:" + formatDateTime(start),
+            "DTEND;TZID=Asia/Bangkok:" + formatDateTime(end),
+            "SUMMARY:" + job.serviceProductName,
+            "DESCRIPTION:" + (job.PNR ? "PNR: " + job.PNR + ", " : '') + "Pickup: " + job.Pickup,
+            "LOCATION:" + job.Pickup,
+            'END:VEVENT',
+        ].join('\r\n') + '\r\n';
+    }
+    ics += 'END:VCALENDAR\r\n';
+    return ics;
+}
 var CalendarView = function (_a) {
     var jobs = _a.jobs, onDatesSet = _a.onDatesSet, gotoDate = _a.gotoDate, _b = _a.currentViewProp, currentViewProp = _b === void 0 ? 'dayGridMonth' : _b;
     var calendarRef = react_1.useRef(null);
+    // ✅ อยู่ข้างใน CalendarView และใช้ jobs ได้
+    var handleDownloadICS = function () {
+        var confirmedJobs = jobs.filter(function (j) { return j.IsConfirmed; }); // ✅ no more error
+        var now = new Date();
+        var filename = "dth-calendar-" + now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0') + ".ics";
+        var icsContent = generateICS(confirmedJobs);
+        var blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
     react_1.useEffect(function () {
         var timeout = setTimeout(function () {
             var calendarEl = calendarRef.current;
@@ -40,55 +92,43 @@ var CalendarView = function (_a) {
         return function () { return clearTimeout(timeout); };
     }, [currentViewProp, gotoDate]);
     var events = react_1.useMemo(function () {
-        var _a;
         var confirmedJobs = jobs.filter(function (job) { return job.IsConfirmed; });
         if (currentViewProp === 'dayGridMonth') {
-            var allJobsGrouped_1 = {};
-            var groupedConfirmed = {};
+            var grouped_1 = {};
             jobs.forEach(function (job) {
                 var _a;
                 if (!job.PickupDate)
                     return;
                 var date = job.PickupDate.split('T')[0];
-                ((_a = allJobsGrouped_1[date]) !== null && _a !== void 0 ? _a : ) = [];
+                ((_a = grouped_1[date]) !== null && _a !== void 0 ? _a : ) = [];
             }).push(job);
-            if (job.IsConfirmed)
-                ((_a = groupedConfirmed[date]) !== null && _a !== void 0 ? _a : ) = [];
         }
-    }).push(job);
-};
-var allDates = Array.from(new Set(__spreadArrays(Object.keys(allJobsGrouped), Object.keys(groupedConfirmed))));
-return allDates.flatMap(function (date) {
-    var confirmed = groupedConfirmed[date] || [];
-    var all = allJobsGrouped[date] || [];
-    var result = [];
-    if (confirmed.length > 0) {
-        result.push({
-            title: "(" + confirmed.length + ") job",
+    });
+    return Object.entries(grouped).map(function (_a) {
+        var date = _a[0], jobsOnDate = _a[1];
+        return ({
+            title: "(" + jobsOnDate.length + ") job",
             start: date,
             allDay: true,
             backgroundColor: '#95c941',
             borderColor: '#0369a1',
             textColor: 'white',
             extendedProps: {
-                jobs: confirmed,
+                jobs: jobsOnDate,
                 type: 'confirmed'
             }
         });
-    }
-    return result;
-});
-{
-    return confirmedJobs.map(function (job) { return ({
-        id: "job-" + job.key,
-        title: "" + job.serviceProductName,
-        start: job.PickupDate,
-        backgroundColor: '#95c941',
-        borderColor: '#0369a1',
-        textColor: 'white',
-        extendedProps: { job: job }
-    }); });
-}
+    });
+};
+return confirmedJobs.map(function (job) { return ({
+    id: "job-" + job.key,
+    title: "" + job.serviceProductName,
+    start: job.PickupDate,
+    backgroundColor: '#95c941',
+    borderColor: '#0369a1',
+    textColor: 'white',
+    extendedProps: { job: job }
+}); });
 [jobs, currentViewProp];
 ;
 var handleEventClick = function (info) {
@@ -117,57 +157,123 @@ var handleEventClick = function (info) {
         alert("\uD83C\uDFAB PNR: " + job.PNR + "\n\uD83D\uDD52 Pickup: " + pickupTime + "\n\uD83D\uDCCD Location: " + job.Pickup + "\n\uD83D\uDC64 Pax: " + totalPax + " (Adult: " + job.AdultQty + ", Child: " + job.ChildQty + ", Share: " + job.ChildShareQty + ", Infant: " + job.InfantQty + ")\n\uD83D\uDC64 Name: " + job.pax_name);
     }
 };
+// ฟังก์ชันสร้าง ICS สำหรับ event เดียว
+var generateSingleICS = function (job) {
+    var pad = function (n) { return String(n).padStart(2, '0'); };
+    var formatDateTime = function (date) {
+        return (date.getFullYear() +
+            pad(date.getMonth() + 1) +
+            pad(date.getDate()) +
+            'T' +
+            pad(date.getHours()) +
+            pad(date.getMinutes()) +
+            pad(date.getSeconds()));
+    };
+    var start = new Date(job.PickupDate);
+    var end = new Date(start.getTime() + 60 * 60 * 1000);
+    var ics = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'CALSCALE:GREGORIAN',
+        'PRODID:-//Test Calendar//EN',
+        'BEGIN:VTIMEZONE',
+        'TZID:Asia/Bangkok',
+        'X-LIC-LOCATION:Asia/Bangkok',
+        'BEGIN:STANDARD',
+        'TZOFFSETFROM:+0700',
+        'TZOFFSETTO:+0700',
+        'TZNAME:ICT',
+        'DTSTART:19700101T000000',
+        'END:STANDARD',
+        'END:VTIMEZONE',
+        'BEGIN:VEVENT',
+        "UID:" + job.key + "@example.com",
+        "DTSTAMP:" + new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + "Z",
+        "DTSTART;TZID=Asia/Bangkok:" + formatDateTime(start),
+        "DTEND;TZID=Asia/Bangkok:" + formatDateTime(end),
+        "SUMMARY:" + job.serviceProductName,
+        "DESCRIPTION:" + (job.PNR ? "PNR: " + job.PNR + ", " : '') + "Pickup: " + job.Pickup,
+        "LOCATION:" + job.Pickup,
+        'END:VEVENT',
+        'END:VCALENDAR'
+    ].join('\r\n') + '\r\n';
+    return ics;
+};
+var handleDownloadSingleICS = function (job) {
+    var _a;
+    var icsContent = generateSingleICS(job);
+    var blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement('a');
+    link.href = url;
+    var dateStr = job.PickupDate.split('T')[0];
+    link.download = ((_a = job.PNR) !== null && _a !== void 0 ? _a : job.key) + "-" + dateStr + ".ics";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+};
 var renderEventContent = function (arg) {
-    var _a, _b, _c, _d;
-    var type = (_a = arg.event.extendedProps) === null || _a === void 0 ? void 0 : _a.type;
-    var job = (_b = arg.event.extendedProps) === null || _b === void 0 ? void 0 : _b.job;
-    var jobs = (_c = arg.event.extendedProps) === null || _c === void 0 ? void 0 : _c.jobs;
-    var statusDots = getStatusDots(type === 'viewAll' ? 'all' : (_d = job !== null && job !== void 0 ? job : jobs) !== null && _d !== void 0 ? _d : []);
-    var backgroundColor = type === 'viewAll' ? '#404040' : '#95c941';
+    var _a, _b, _c;
+    var job = (_a = arg.event.extendedProps) === null || _a === void 0 ? void 0 : _a.job;
+    var jobs = (_b = arg.event.extendedProps) === null || _b === void 0 ? void 0 : _b.jobs;
+    var statusDots = getStatusDots((_c = job !== null && job !== void 0 ? job : jobs) !== null && _c !== void 0 ? _c : []);
     return (react_1["default"].createElement("div", { className: "fc-event-main", style: {
-            backgroundColor: backgroundColor,
+            backgroundColor: '#95c941',
             color: 'white',
-            borderColor: '#0369a1',
-            borderRadius: 4,
-            padding: '2px 0px',
+            border: '1px solid #0369a1',
+            borderRadius: 6,
+            padding: '4px 6px',
             display: 'flex',
             alignItems: 'center',
-            boxSizing: 'border-box',
             width: '100%',
-            fontSize: '0.52rem',
-            lineHeight: 1.4,
-            whiteSpace: 'nowrap',
+            fontSize: '0.65rem',
+            lineHeight: 1.5,
             overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            minWidth: 0,
-            minHeight: 24,
-            gap: 2
+            gap: 6,
+            justifyContent: 'space-between'
         } },
-        react_1["default"].createElement("div", { style: { display: 'flex', flexShrink: 0, gap: 1 } }, statusDots.map(function (_a, index) {
-            var color = _a.color, label = _a.label;
-            return (react_1["default"].createElement("span", { key: index, title: label, style: {
-                    backgroundColor: color,
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    border: '1px solid white',
-                    flexShrink: 0,
-                    display: 'inline-block'
-                } }));
-        })),
-        react_1["default"].createElement("span", { style: { flexShrink: 1, minWidth: 0 } }, arg.event.title)));
-};
-// สร้าง URL ดาวน์โหลด .ics สำหรับเดือนปัจจุบัน (สมมติ backend รองรับ query param)
-var getCurrentMonthICSUrl = function () {
-    var today = new Date();
-    var yearMonth = today.toISOString().slice(0, 7); // 'yyyy-mm'
-    return "https://mywebsite.com/icalendar-feed.ics?month=" + yearMonth;
+        react_1["default"].createElement("div", { style: {
+                display: 'flex',
+                gap: 4,
+                alignItems: 'center',
+                flexShrink: 1,
+                minWidth: 0
+            } },
+            statusDots.map(function (_a, index) {
+                var color = _a.color, label = _a.label;
+                return (react_1["default"].createElement("span", { key: index, title: label, style: {
+                        backgroundColor: color,
+                        width: 10,
+                        height: 10,
+                        borderRadius: '50%',
+                        border: '1px solid white',
+                        flexShrink: 0
+                    } }));
+            }),
+            react_1["default"].createElement("span", { style: { flexShrink: 1, minWidth: 0 } }, arg.event.title)),
+        job && (react_1["default"].createElement("button", { onClick: function (e) {
+                e.stopPropagation();
+                handleDownloadSingleICS(job);
+            }, style: {
+                backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                border: 'none',
+                borderRadius: 5,
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '0.75rem',
+                padding: '4px 6px',
+                lineHeight: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'background-color 0.2s ease'
+            }, title: "Download ICS for this event", onMouseEnter: function (e) { return (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.4)'); }, onMouseLeave: function (e) { return (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.25)'); } }, "\uD83D\uDCE5"))));
 };
 return (react_1["default"].createElement(react_1["default"].Fragment, null,
-    react_1["default"].createElement("div", { style: { marginBottom: 8 } },
-        react_1["default"].createElement("a", { href: getCurrentMonthICSUrl(), download: true, className: "px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700", target: "_blank", rel: "noopener noreferrer" }, "Download ICS for This Month")),
-    react_1["default"].createElement(react_2["default"], { ref: calendarRef, plugins: [list_1["default"], interaction_1["default"]], initialView: "listMonth" // {currentViewProp}
-        , events: events, datesSet: function (arg) {
+    react_1["default"].createElement("div", { className: "mb-2" },
+        react_1["default"].createElement("button", { onClick: handleDownloadICS, className: "px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700" }, "\uD83D\uDCE5 Download ICS")),
+    react_1["default"].createElement(react_2["default"], { ref: calendarRef, plugins: [list_1["default"], interaction_1["default"]], initialView: "listMonth", events: events, datesSet: function (arg) {
             onDatesSet === null || onDatesSet === void 0 ? void 0 : onDatesSet(arg);
         }, height: "auto", contentHeight: "auto", aspectRatio: 1.7, headerToolbar: {
             start: 'title',

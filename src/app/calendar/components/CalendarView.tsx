@@ -28,6 +28,50 @@ function getStatusDots(input: Job | Job[] | 'all'): { color: string; label: stri
   return [{ color: '#404040', label: 'Normal' }];
 }
 
+function generateICS(jobs: Job[]): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+
+  const formatDateTime = (date: Date) => {
+    return (
+      date.getFullYear() +
+      pad(date.getMonth() + 1) +
+      pad(date.getDate()) +
+      'T' +
+      pad(date.getHours()) +
+      pad(date.getMinutes()) +
+      pad(date.getSeconds())
+    );
+  };
+
+  let ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'CALSCALE:GREGORIAN',
+    'PRODID:-//Test Calendar//EN',
+  ].join('\r\n') + '\r\n';
+
+  for (const job of jobs) {
+    const start = new Date(job.PickupDate);
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+
+    ics += [
+      'BEGIN:VEVENT',
+      `UID:${job.key}@example.com`,
+      `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,
+      `DTSTART;TZID=Asia/Bangkok:${formatDateTime(start)}`,
+      `DTEND;TZID=Asia/Bangkok:${formatDateTime(end)}`,
+      `SUMMARY:${job.serviceProductName}`,
+      `DESCRIPTION:${job.PNR ? `PNR: ${job.PNR}, ` : ''}Pickup: ${job.Pickup}`,
+      `LOCATION:${job.Pickup}`,
+      'END:VEVENT',
+    ].join('\r\n') + '\r\n';
+  }
+
+  ics += 'END:VCALENDAR\r\n';
+
+  return ics;
+}
+
 const CalendarView: React.FC<CalendarViewProps> = ({
   jobs,
   onDatesSet,
@@ -36,16 +80,32 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 }) => {
   const calendarRef = useRef<FullCalendar>(null);
 
+  // ✅ อยู่ข้างใน CalendarView และใช้ jobs ได้
+  const handleDownloadICS = () => {
+    const confirmedJobs = jobs.filter((j: Job) => j.IsConfirmed); // ✅ no more error
+    const now = new Date();
+    const filename = `dth-calendar-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}.ics`;
+
+    const icsContent = generateICS(confirmedJobs);
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   useEffect(() => {
     const timeout = setTimeout(() => {
       const calendarEl = calendarRef.current;
       if (calendarEl) {
         const calendarApi = calendarEl.getApi();
-
         if (calendarApi.view.type !== currentViewProp) {
           calendarApi.changeView(currentViewProp);
         }
-
         if (gotoDate) {
           calendarApi.gotoDate(gotoDate);
         }
@@ -57,56 +117,37 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 
   const events = useMemo(() => {
     const confirmedJobs = jobs.filter(job => job.IsConfirmed);
-
     if (currentViewProp === 'dayGridMonth') {
-      const allJobsGrouped: Record<string, Job[]> = {};
-      const groupedConfirmed: Record<string, Job[]> = {};
-
+      const grouped: Record<string, Job[]> = {};
       jobs.forEach(job => {
         if (!job.PickupDate) return;
         const date = job.PickupDate.split('T')[0];
-        (allJobsGrouped[date] ??= []).push(job);
-        if (job.IsConfirmed) (groupedConfirmed[date] ??= []).push(job);
+        (grouped[date] ??= []).push(job);
       });
 
-      const allDates = Array.from(
-        new Set([...Object.keys(allJobsGrouped), ...Object.keys(groupedConfirmed)])
-      );
-
-      return allDates.flatMap(date => {
-        const confirmed = groupedConfirmed[date] || [];
-        const all = allJobsGrouped[date] || [];
-
-        const result = [];
-
-        if (confirmed.length > 0) {
-          result.push({
-            title: `(${confirmed.length}) job`,
-            start: date,
-            allDay: true,
-            backgroundColor: '#95c941',
-            borderColor: '#0369a1',
-            textColor: 'white',
-            extendedProps: {
-              jobs: confirmed,
-              type: 'confirmed',
-            },
-          });
-        }
-
-        return result;
-      });
-    } else {
-      return confirmedJobs.map(job => ({
-        id: `job-${job.key}`,
-        title: `${job.serviceProductName}`,
-        start: job.PickupDate,
+      return Object.entries(grouped).map(([date, jobsOnDate]) => ({
+        title: `(${jobsOnDate.length}) job`,
+        start: date,
+        allDay: true,
         backgroundColor: '#95c941',
         borderColor: '#0369a1',
         textColor: 'white',
-        extendedProps: { job },
+        extendedProps: {
+          jobs: jobsOnDate,
+          type: 'confirmed',
+        },
       }));
     }
+
+    return confirmedJobs.map(job => ({
+      id: `job-${job.key}`,
+      title: `${job.serviceProductName}`,
+      start: job.PickupDate,
+      backgroundColor: '#95c941',
+      borderColor: '#0369a1',
+      textColor: 'white',
+      extendedProps: { job },
+    }));
   }, [jobs, currentViewProp]);
 
   const handleEventClick = (info: any) => {
@@ -139,85 +180,165 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     }
   };
 
-  const renderEventContent = (arg: any) => {
-    const type = arg.event.extendedProps?.type;
-    const job = arg.event.extendedProps?.job;
-    const jobs: Job[] = arg.event.extendedProps?.jobs;
+  // ฟังก์ชันสร้าง ICS สำหรับ event เดียว
+const generateSingleICS = (job: Job): string => {
+  const pad = (n: number) => String(n).padStart(2, '0');
 
-    const statusDots = getStatusDots(type === 'viewAll' ? 'all' : job ?? jobs ?? []);
-    const backgroundColor = type === 'viewAll' ? '#404040' : '#95c941';
-
+  const formatDateTime = (date: Date) => {
     return (
+      date.getFullYear() +
+      pad(date.getMonth() + 1) +
+      pad(date.getDate()) +
+      'T' +
+      pad(date.getHours()) +
+      pad(date.getMinutes()) +
+      pad(date.getSeconds())
+    );
+  };
+
+  const start = new Date(job.PickupDate);
+  const end = new Date(start.getTime() + 60 * 60 * 1000);
+
+  let ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'CALSCALE:GREGORIAN',
+    'PRODID:-//Test Calendar//EN',
+    'BEGIN:VTIMEZONE',
+    'TZID:Asia/Bangkok',
+    'X-LIC-LOCATION:Asia/Bangkok',
+    'BEGIN:STANDARD',
+    'TZOFFSETFROM:+0700',
+    'TZOFFSETTO:+0700',
+    'TZNAME:ICT',
+    'DTSTART:19700101T000000',
+    'END:STANDARD',
+    'END:VTIMEZONE',
+    'BEGIN:VEVENT',
+    `UID:${job.key}@example.com`,
+    `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,
+    `DTSTART;TZID=Asia/Bangkok:${formatDateTime(start)}`,
+    `DTEND;TZID=Asia/Bangkok:${formatDateTime(end)}`,
+    `SUMMARY:${job.serviceProductName}`,
+    `DESCRIPTION:${job.PNR ? `PNR: ${job.PNR}, ` : ''}Pickup: ${job.Pickup}`,
+    `LOCATION:${job.Pickup}`,
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\r\n') + '\r\n';
+
+  return ics;
+};
+
+
+  const handleDownloadSingleICS = (job: Job) => {
+    const icsContent = generateSingleICS(job);
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const dateStr = job.PickupDate.split('T')[0];
+    link.download = `${job.PNR ?? job.key}-${dateStr}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+const renderEventContent = (arg: any) => {
+  const job = arg.event.extendedProps?.job;
+  const jobs: Job[] = arg.event.extendedProps?.jobs;
+  const statusDots = getStatusDots(job ?? jobs ?? []);
+
+  return (
+    <div
+      className="fc-event-main"
+      style={{
+        backgroundColor: '#95c941',
+        color: 'white',
+        border: '1px solid #0369a1',
+        borderRadius: 6,
+        padding: '4px 6px',
+        display: 'flex',
+        alignItems: 'center',
+        width: '100%',
+        fontSize: '0.65rem',
+        lineHeight: 1.5,
+        overflow: 'hidden',
+        gap: 6,
+        justifyContent: 'space-between',
+      }}
+    >
       <div
-        className="fc-event-main"
         style={{
-          backgroundColor,
-          color: 'white',
-          borderColor: '#0369a1',
-          borderRadius: 4,
-          padding: '2px 0px',
           display: 'flex',
+          gap: 4,
           alignItems: 'center',
-          boxSizing: 'border-box',
-          width: '100%',
-          fontSize: '0.52rem',
-          lineHeight: 1.4,
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
+          flexShrink: 1,
           minWidth: 0,
-          minHeight: 24,
-          gap: 2,
         }}
       >
-        <div style={{ display: 'flex', flexShrink: 0, gap: 1 }}>
-          {statusDots.map(({ color, label }, index) => (
-            <span
-              key={index}
-              title={label}
-              style={{
-                backgroundColor: color,
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                border: '1px solid white',
-                flexShrink: 0,
-                display: 'inline-block',
-              }}
-            />
-          ))}
+        {statusDots.map(({ color, label }, index) => (
+          <span
+            key={index}
+            title={label}
+            style={{
+              backgroundColor: color,
+              width: 10,
+              height: 10,
+              borderRadius: '50%',
+              border: '1px solid white',
+              flexShrink: 0,
+            }}
+          />
+        ))}
+          <span style={{ flexShrink: 1, minWidth: 0 }}>{arg.event.title}</span>
         </div>
-        <span style={{ flexShrink: 1, minWidth: 0 }}>{arg.event.title}</span>
+        {job && (
+<button
+  onClick={(e) => {
+    e.stopPropagation();
+    handleDownloadSingleICS(job);
+  }}
+  style={{
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    border: 'none',
+    borderRadius: 5,
+    color: 'white',
+    cursor: 'pointer',
+    fontSize: '0.75rem',
+    padding: '4px 6px',
+    lineHeight: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'background-color 0.2s ease',
+  }}
+  title="Download ICS for this event"
+  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.4)')}
+  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.25)')}
+>
+  📥
+</button>
+        )}
       </div>
     );
   };
 
-  // สร้าง URL ดาวน์โหลด .ics สำหรับเดือนปัจจุบัน (สมมติ backend รองรับ query param)
-  const getCurrentMonthICSUrl = () => {
-    const today = new Date();
-    const yearMonth = today.toISOString().slice(0, 7); // 'yyyy-mm'
-    return `https://mywebsite.com/icalendar-feed.ics?month=${yearMonth}`;
-  };
-
   return (
     <>
-      {/* ปุ่มดาวน์โหลด .ics สำหรับเดือนนี้ */}
-      <div style={{ marginBottom: 8 }}>
-        <a
-          href={getCurrentMonthICSUrl()}
-          download
+      <div className="mb-2">
+        <button
+          onClick={handleDownloadICS}
           className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-          target="_blank"
-          rel="noopener noreferrer"
         >
-          Download ICS for This Month
-        </a>
+          📥 Download ICS
+        </button>
       </div>
 
       <FullCalendar
         ref={calendarRef}
-        plugins={[listPlugin, interactionPlugin]} // {[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
-        initialView="listMonth" // {currentViewProp}
+        plugins={[listPlugin, interactionPlugin]}
+        initialView="listMonth"
         events={events}
         datesSet={(arg: DatesSetArg) => {
           onDatesSet?.(arg);
@@ -227,7 +348,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         aspectRatio={1.7}
         headerToolbar={{
           start: 'title',
-          center: '', //'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
+          center: '',
           end: 'today prev,next',
         }}
         editable={false}
