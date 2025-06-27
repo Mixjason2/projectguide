@@ -37,7 +37,7 @@ var CalendarView = function (_a) {
                 }
             }
         }, 0);
-        return function () { return clearTimeout(timeout); }; // cleanup
+        return function () { return clearTimeout(timeout); };
     }, [currentViewProp, gotoDate]);
     var events = react_1.useMemo(function () {
         var _a;
@@ -76,18 +76,6 @@ return allDates.flatMap(function (date) {
             }
         });
     }
-    // result.push({
-    //   title: `All (${all.length})`,
-    //   start: date,
-    //   allDay: true,
-    //   backgroundColor: '#404040',
-    //   borderColor: '#0369a1',
-    //   textColor: 'white',
-    //   extendedProps: {
-    //     jobs: all,
-    //     type: 'viewAll',
-    //   },
-    // });
     return result;
 });
 {
@@ -169,25 +157,34 @@ var renderEventContent = function (arg) {
         })),
         react_1["default"].createElement("span", { style: { flexShrink: 1, minWidth: 0 } }, arg.event.title)));
 };
-return (react_1["default"].createElement(react_2["default"], { ref: calendarRef, plugins: [list_1["default"], interaction_1["default"]], initialView: "listMonth" //{currentViewProp}
-    , events: events, datesSet: function (arg) {
-        onDatesSet === null || onDatesSet === void 0 ? void 0 : onDatesSet(arg);
-    }, height: "auto", contentHeight: "auto", aspectRatio: 1.7, headerToolbar: {
-        start: 'title',
-        center: '',
-        end: 'today prev,next'
-    }, editable: false, selectable: true, expandRows: true, eventClick: handleEventClick, eventContent: renderEventContent, slotLabelFormat: { hour: '2-digit', minute: '2-digit', meridiem: false }, dayHeaderFormat: { weekday: 'short' }, views: {
-        timeGridWeek: {
-            slotLabelFormat: {
-                hour: '2-digit',
-                minute: '2-digit',
-                meridiem: false
-            },
-            dayHeaderFormat: {
-                weekday: 'short',
-                day: 'numeric'
+// สร้าง URL ดาวน์โหลด .ics สำหรับเดือนปัจจุบัน (สมมติ backend รองรับ query param)
+var getCurrentMonthICSUrl = function () {
+    var today = new Date();
+    var yearMonth = today.toISOString().slice(0, 7); // 'yyyy-mm'
+    return "https://mywebsite.com/icalendar-feed.ics?month=" + yearMonth;
+};
+return (react_1["default"].createElement(react_1["default"].Fragment, null,
+    react_1["default"].createElement("div", { style: { marginBottom: 8 } },
+        react_1["default"].createElement("a", { href: getCurrentMonthICSUrl(), download: true, className: "px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700", target: "_blank", rel: "noopener noreferrer" }, "Download ICS for This Month")),
+    react_1["default"].createElement(react_2["default"], { ref: calendarRef, plugins: [list_1["default"], interaction_1["default"]], initialView: "listMonth" // {currentViewProp}
+        , events: events, datesSet: function (arg) {
+            onDatesSet === null || onDatesSet === void 0 ? void 0 : onDatesSet(arg);
+        }, height: "auto", contentHeight: "auto", aspectRatio: 1.7, headerToolbar: {
+            start: 'title',
+            center: '',
+            end: 'today prev,next'
+        }, editable: false, selectable: true, expandRows: true, eventClick: handleEventClick, eventContent: renderEventContent, slotLabelFormat: { hour: '2-digit', minute: '2-digit', meridiem: false }, dayHeaderFormat: { weekday: 'short' }, views: {
+            timeGridWeek: {
+                slotLabelFormat: {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    meridiem: false
+                },
+                dayHeaderFormat: {
+                    weekday: 'short',
+                    day: 'numeric'
+                }
             }
-        }
-    } }));
+        } })));
 ;
 exports["default"] = CalendarView;

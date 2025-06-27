@@ -2,8 +2,6 @@
 
 import React, { useMemo, useRef, useEffect } from 'react';
 import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 import { DatesSetArg } from '@fullcalendar/core';
@@ -38,24 +36,24 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 }) => {
   const calendarRef = useRef<FullCalendar>(null);
 
-useEffect(() => {
-  const timeout = setTimeout(() => {
-    const calendarEl = calendarRef.current;
-    if (calendarEl) {
-      const calendarApi = calendarEl.getApi();
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const calendarEl = calendarRef.current;
+      if (calendarEl) {
+        const calendarApi = calendarEl.getApi();
 
-      if (calendarApi.view.type !== currentViewProp) {
-        calendarApi.changeView(currentViewProp);
+        if (calendarApi.view.type !== currentViewProp) {
+          calendarApi.changeView(currentViewProp);
+        }
+
+        if (gotoDate) {
+          calendarApi.gotoDate(gotoDate);
+        }
       }
+    }, 0);
 
-      if (gotoDate) {
-        calendarApi.gotoDate(gotoDate);
-      }
-    }
-  }, 0);
-
-  return () => clearTimeout(timeout); // cleanup
-}, [currentViewProp, gotoDate]);
+    return () => clearTimeout(timeout);
+  }, [currentViewProp, gotoDate]);
 
   const events = useMemo(() => {
     const confirmedJobs = jobs.filter(job => job.IsConfirmed);
@@ -95,19 +93,6 @@ useEffect(() => {
             },
           });
         }
-
-        // result.push({
-        //   title: `All (${all.length})`,
-        //   start: date,
-        //   allDay: true,
-        //   backgroundColor: '#404040',
-        //   borderColor: '#0369a1',
-        //   textColor: 'white',
-        //   extendedProps: {
-        //     jobs: all,
-        //     type: 'viewAll',
-        //   },
-        // });
 
         return result;
       });
@@ -207,44 +192,66 @@ useEffect(() => {
     );
   };
 
+  // สร้าง URL ดาวน์โหลด .ics สำหรับเดือนปัจจุบัน (สมมติ backend รองรับ query param)
+  const getCurrentMonthICSUrl = () => {
+    const today = new Date();
+    const yearMonth = today.toISOString().slice(0, 7); // 'yyyy-mm'
+    return `https://mywebsite.com/icalendar-feed.ics?month=${yearMonth}`;
+  };
+
   return (
-    <FullCalendar
-      ref={calendarRef}
-      plugins={[listPlugin, interactionPlugin]}  //{[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
-      initialView="listMonth" //{currentViewProp}
-      events={events}
-      datesSet={(arg: DatesSetArg) => {
-        onDatesSet?.(arg);
-      }}
-      height="auto"
-      contentHeight="auto"
-      aspectRatio={1.7}
-      headerToolbar={{
-        start: 'title',
-        center: '', //'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
-        end: 'today prev,next',
-      }}
-      editable={false}
-      selectable={true}
-      expandRows={true}
-      eventClick={handleEventClick}
-      eventContent={renderEventContent}
-      slotLabelFormat={{ hour: '2-digit', minute: '2-digit', meridiem: false }}
-      dayHeaderFormat={{ weekday: 'short' }}
-      views={{
-        timeGridWeek: {
-          slotLabelFormat: {
-            hour: '2-digit',
-            minute: '2-digit',
-            meridiem: false,
+    <>
+      {/* ปุ่มดาวน์โหลด .ics สำหรับเดือนนี้ */}
+      <div style={{ marginBottom: 8 }}>
+        <a
+          href={getCurrentMonthICSUrl()}
+          download
+          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Download ICS for This Month
+        </a>
+      </div>
+
+      <FullCalendar
+        ref={calendarRef}
+        plugins={[listPlugin, interactionPlugin]} // {[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
+        initialView="listMonth" // {currentViewProp}
+        events={events}
+        datesSet={(arg: DatesSetArg) => {
+          onDatesSet?.(arg);
+        }}
+        height="auto"
+        contentHeight="auto"
+        aspectRatio={1.7}
+        headerToolbar={{
+          start: 'title',
+          center: '', //'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
+          end: 'today prev,next',
+        }}
+        editable={false}
+        selectable={true}
+        expandRows={true}
+        eventClick={handleEventClick}
+        eventContent={renderEventContent}
+        slotLabelFormat={{ hour: '2-digit', minute: '2-digit', meridiem: false }}
+        dayHeaderFormat={{ weekday: 'short' }}
+        views={{
+          timeGridWeek: {
+            slotLabelFormat: {
+              hour: '2-digit',
+              minute: '2-digit',
+              meridiem: false,
+            },
+            dayHeaderFormat: {
+              weekday: 'short',
+              day: 'numeric',
+            },
           },
-          dayHeaderFormat: {
-            weekday: 'short',
-            day: 'numeric',
-          },
-        },
-      }}
-    />
+        }}
+      />
+    </>
   );
 };
 

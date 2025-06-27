@@ -6,7 +6,7 @@ var StatusMessage = function (_a) {
     var loading = _a.loading, error = _a.error, filteredJobsLength = _a.filteredJobsLength;
     if (loading) {
         return (react_1["default"].createElement("div", { className: "w-full py-10 flex flex-col items-center justify-center text-gray-600" },
-            react_1["default"].createElement(react_spinners_css_1.Ripple, { color: "#32cd32", size: "medium" }),
+            react_1["default"].createElement(react_spinners_css_1.Ripple, { color: "#32cd32", size: 60 }),
             react_1["default"].createElement("p", { className: "mt-4 text-lg font-medium" }, "Loading jobs, please wait...")));
     }
     if (error) {

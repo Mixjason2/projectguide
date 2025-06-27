@@ -31,6 +31,16 @@ var renderField = function (label, value) { return (Array.isArray(value) ? (Reac
         ":"),
     " ",
     String(value)))); };
+// ✅ ฟังก์ชันแปลงวันที่ให้เหลือแค่ dd-mm-yyyy
+var formatDate = function (dateStr) {
+    var d = new Date(dateStr);
+    if (isNaN(d.getTime()))
+        return '';
+    var day = String(d.getDate()).padStart(2, '0');
+    var month = String(d.getMonth() + 1).padStart(2, '0');
+    var year = d.getFullYear();
+    return day + "-" + month + "-" + year;
+};
 var JobCard = function (_a) {
     var _b;
     var job = _a.job, expandedPNRs = _a.expandedPNRs, setExpandedPNRs = _a.setExpandedPNRs, setDetailJobs = _a.setDetailJobs, jobs = _a.jobs, setJobs = _a.setJobs;
@@ -62,7 +72,13 @@ var JobCard = function (_a) {
                     return (__assign(__assign({}, prev), (_a = {}, _a[job.PNR] = !expandedPNRs[job.PNR], _a)));
                 });
             } },
-            React.createElement("h2", { className: "font-Arial mt-0 mb-0 underline underline-offset-4", style: { color: "#2D3E92", fontSize: "28px" } }, job.PNR)),
+            React.createElement("h2", { className: "font-Arial mt-0 mb-0 text-[24px]", style: { color: "#2D3E92" } },
+                React.createElement("span", { className: "underline underline-offset-4" }, job.PNR),
+                React.createElement("div", { style: { fontSize: '16px', color: '#374151', marginTop: '4px' } },
+                    "Pickup: ",
+                    formatDate(job.PickupDate),
+                    " | Dropoff: ",
+                    formatDate(job.DropoffDate)))),
         React.createElement(ExpandedJobDetail_1["default"], { job: job, jobs: jobs, expandedPNRs: expandedPNRs, renderPlaceDate: renderPlaceDate, renderField: renderField }),
         React.createElement(JobAction_1["default"], { job: job, setJobs: setJobs })));
 };

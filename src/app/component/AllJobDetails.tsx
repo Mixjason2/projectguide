@@ -97,7 +97,13 @@ const AllJobDetails: React.FC<JobDetailsProps> = ({ jobs, formatDate }) => {
             <div className="flex items-start">
               <span className="font-bold text-gray-600 w-24 shrink-0">Consultant:</span>
               <span className="text-gray-800 break-words">
-                {jobs[0].Booking_Consultant}{jobs[0].Booking_Consultant && jobs[0].Phone ? ", " : ""}{jobs[0].Phone}
+                {jobs[0].Booking_Consultant}
+                {jobs[0].Booking_Consultant && jobs[0].Phone ? ", " : ""}
+                {jobs[0].Phone && (
+                  <a href={`tel:${jobs[0].Phone}`} className="text-blue-600 underline">
+                    {jobs[0].Phone}
+                  </a>
+                )}
               </span>
             </div>
 

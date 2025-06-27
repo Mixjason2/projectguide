@@ -6,7 +6,7 @@ const StatusMessage: React.FC<FetchStatusProps> = ({ loading, error, filteredJob
   if (loading) {
     return (
       <div className="w-full py-10 flex flex-col items-center justify-center text-gray-600">
-        <Ripple color="#32cd32" size="medium" />
+        <Ripple color="#32cd32" size={60} />
         <p className="mt-4 text-lg font-medium">Loading jobs, please wait...</p>
       </div>
     );

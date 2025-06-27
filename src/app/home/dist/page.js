@@ -103,32 +103,6 @@ var get30DaysAgo = function () {
     date.setDate(date.getDate() - 30);
     return date.toISOString().slice(0, 10);
 };
-var renderPlaceDate = function (pickupDate) {
-    return (React.createElement("div", { className: "mb-2" },
-        React.createElement("span", { className: "text-gray-500 ml-2" },
-            "(",
-            pickupDate,
-            ")")));
-};
-var formatDateTime = function (input) {
-    var format = function (dateStr) {
-        var d = new Date(dateStr);
-        if (isNaN(d.getTime())) {
-            return dateStr; // คืนค่ากลับไปหากไม่ใช่วัน
-        }
-        // แสดงผลวันที่ที่ถูกต้องในรูปแบบที่ต้องการ
-        var formattedDate = d.toLocaleString("en-GB", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit"
-        });
-        return formattedDate;
-    };
-    if (Array.isArray(input)) {
-        return input.map(format).join(", ");
-    }
-    return format(input);
-};
 var getEndOfLastMonth = function () {
     var date = new Date();
     date.setDate(0); // วันที่ 0 ของเดือนปัจจุบัน = วันสุดท้ายของเดือนก่อนหน้า
@@ -200,7 +174,7 @@ function JobsList() {
             React.createElement("div", { className: "bg-[#F9FAFB] rounded-3xl shadow-lg border border-gray-300 w-full max-w-7xl p-6" },
                 React.createElement("div", { className: "p-4 w-full overflow-auto bg-[#F9FAFB]" },
                     React.createElement("h1", { className: "text-2xl font-Arial mb-4" }, "Jobs List"),
-                    React.createElement("div", { className: "mb-6 flex flex-col items-center w-full px-4" },
+                    React.createElement("div", { className: "mb-6 flex flex-col items-center w-full px-4 " },
                         React.createElement("div", { className: "w-full rounded-xl shadow-md px-4 py-4 flex flex-row items-center justify-between gap-2", style: { backgroundColor: '#E6F0FA', border: '1px solid #2D3E92' } }, ['Start date', 'End date'].map(function (label, i) { return (React.createElement("div", { key: i, className: "flex flex-col w-[48%]" },
                             React.createElement("label", { htmlFor: "" + label.toLowerCase().replace(' ', '-'), className: "mb-1 text-xs text-gray-500 font-Arial" }, label),
                             React.createElement("input", { id: "" + label.toLowerCase().replace(' ', '-'), type: "date", value: i === 0 ? startDate : endDate, onChange: function (e) {
@@ -224,14 +198,9 @@ function JobsList() {
                     React.createElement(StatusMessage_1["default"], { loading: loading, error: error, filteredJobsLength: filteredByDate.length }),
                     !loading && !error && filteredByDate.length > 0 && (React.createElement(React.Fragment, null,
                         React.createElement("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" }, pagedJobs.map(function (job) { return (React.createElement("div", { key: job.PNR, className: "border rounded-lg p-4 shadow bg-white" },
-                            React.createElement("div", { className: "text-sm text-gray-600 mb-2" }, job.all
-                                .sort(function (a, b) { return new Date(a.PickupDate).getTime() - new Date(b.PickupDate).getTime(); })
-                                .map(function (j, index) {
-                                return (React.createElement("div", { key: index, className: "mb-2" }, renderPlaceDate(formatDateTime(job.PickupDate))));
-                            })),
                             React.createElement(JobCard_1["default"], { job: job, expandedPNRs: expandedPNRs, setExpandedPNRs: setExpandedPNRs, setDetailJobs: setDetailJobs, jobs: jobs, setJobs: setJobs }))); })),
                         React.createElement("div", { className: "w-full flex justify-center mt-6" },
-                            React.createElement("div", { className: "inline-flex items-center gap-2 bg-base-100 border border-base-300 rounded-full shadow px-4 py-2" },
+                            React.createElement("div", { className: "inline-flex items-center gap-2 bg-base-100 border border-base-300 rounded-full shadow px-4 py-2 " },
                                 React.createElement("button", { className: "btn btn-outline btn-sm rounded-full min-w-[64px]", disabled: page === 1, onClick: function () { return setPage(page - 1); } }, "Prev"),
                                 React.createElement("span", { className: "px-2 py-1 font-Arial text-base-content" },
                                     page,

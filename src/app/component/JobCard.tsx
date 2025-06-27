@@ -1,6 +1,6 @@
 import ExpandedJobDetail from '@/app/component/ExpandedJobDetail';
 import JobAction from '@/app/component/JobAction';
-import { JobCardProps } from "@/app/types/job"; // ปรับ path ตามโครงสร้างของคุณ
+import { JobCardProps } from "@/app/types/job";
 
 const renderPlaceDate = (place: string, date: string, label: string) => (
   place || date ? (
@@ -22,6 +22,16 @@ const renderField = (label: string, value: any) => (
     </div>
   )
 );
+
+// ✅ ฟังก์ชันแปลงวันที่ให้เหลือแค่ dd-mm-yyyy
+const formatDate = (dateStr: string): string => {
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '';
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}-${month}-${year}`;
+};
 
 const JobCard: React.FC<JobCardProps> = ({
   job,
@@ -88,14 +98,18 @@ const JobCard: React.FC<JobCardProps> = ({
         setExpandedPNRs((prev) => ({ ...prev, [job.PNR]: !expandedPNRs[job.PNR] }))
       }
     >
+      {/* ✅ บรรทัดนี้แสดง PNR และวันที่ Pickup/Dropoff */}
       <h2
-        className="font-Arial mt-0 mb-0 underline underline-offset-4"
-        style={{ color: "#2D3E92", fontSize: "28px" }}
+        className="font-Arial mt-0 mb-0 text-[24px]"
+        style={{ color: "#2D3E92" }}
       >
-        {job.PNR}
+        <span className="underline underline-offset-4">{job.PNR}</span>
+        <div style={{ fontSize: '16px', color: '#374151', marginTop: '4px' }}>
+          Pickup: {formatDate(job.PickupDate)} | Dropoff: {formatDate(job.DropoffDate)}
+        </div>
       </h2>
     </div>
-    
+
     <ExpandedJobDetail
       job={job}
       jobs={jobs}
@@ -106,4 +120,5 @@ const JobCard: React.FC<JobCardProps> = ({
     <JobAction job={job} setJobs={setJobs} />
   </div>
 );
+
 export default JobCard;
