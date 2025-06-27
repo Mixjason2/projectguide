@@ -206,12 +206,12 @@ export default function JobsList() {
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {pagedJobs.map((job) => (
-                    <div key={job.PNR} className="border rounded-lg p-4 shadow bg-white">
+                    <div key={job.PNR} className="w-full border rounded-lg p-4 shadow bg-white">
                       {job.all
                         .sort((a, b) => new Date(a.PickupDate).getTime() - new Date(b.PickupDate).getTime())
                         .map((j, index) => {
                           return (
-                            <div key={index} className="border rounded-lg p-4 shadow bg-white relative">
+                            <div key={index} className="w-full border rounded-lg p-4 shadow bg-white">
                               <div className="text-center mb-2 font-sans text-xl text-gray-500">
                                 {renderPlaceDate(
                                   "Date",
