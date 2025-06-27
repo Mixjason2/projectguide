@@ -51,6 +51,7 @@ export type ExpandedJobDetailProps = {
   expandedPNRs: Record<string, boolean>;
   renderPlaceDate: (place: string, date: string, label: string) => ReactNode;
   renderField: (label: string, value: any) => ReactNode;
+  setJobs: React.Dispatch<React.SetStateAction<Job[]>>; // เพิ่ม prop นี้เพื่อส่งไปอัปเดต jobs
 };
 
 export type FetchStatusProps = {

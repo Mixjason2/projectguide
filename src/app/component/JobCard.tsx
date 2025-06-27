@@ -1,5 +1,4 @@
 import ExpandedJobDetail from '@/app/component/ExpandedJobDetail';
-import JobAction from '@/app/component/JobAction';
 import { Job, JobCardProps } from "@/app/types/job";
 import AllJobDetailsModal from '@/app/component/AllJobDetailsModal';
 import { useState } from 'react';
@@ -26,12 +25,14 @@ const renderField = (label: string, value: any) => (
 );
 
 // ✅ ฟังก์ชันแปลงวันที่ให้เหลือแค่ dd-mm-yyyy
-const formatDate = (dateStr: string): string => {
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return '';
-  const day = String(d.getDate()).padStart(2, '0');
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const year = d.getFullYear();
+const customFormatDate = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
+
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = date.toLocaleString('default', { month: 'short' });
+  const year = date.getFullYear();
+
   return `${day}-${month}-${year}`;
 };
 
@@ -111,7 +112,7 @@ const [detailJobs, setLocalDetailJobs] = useState<Job[] | null>(null); // เพ
       )}
 
       <div
-        className="inline-block p-6 pb-0 cursor-pointer mx-auto items-center gap-3"
+        className="inline-block p-6 pb-0 cursor-pointer mx-auto items-center gap-3 text-center"
         onClick={() =>
           setExpandedPNRs((prev) => ({ ...prev, [job.PNRDate]: !expandedPNRs[job.PNRDate] }))
         }
@@ -119,9 +120,9 @@ const [detailJobs, setLocalDetailJobs] = useState<Job[] | null>(null); // เพ
         {/* ✅ บรรทัดนี้แสดง PNR และวันที่ Pickup/Dropoff */}
         <h2
           className="font-Arial mt-0 mb-0 text-[24px]"
-          style={{ color: "#2D3E92" }}
+          style={{ color: "#2D3E92", textDecoration: "none" }} // เอาขีดเส้นออก
         >
-          <span className="underline underline-offset-4">{formatDate(job.PNRDate)}</span>
+          {customFormatDate(job.PNRDate)} {/* แสดงวันที่ไม่ต้องมีขีดเส้น */}
         </h2>
       </div>
 
@@ -131,8 +132,8 @@ const [detailJobs, setLocalDetailJobs] = useState<Job[] | null>(null); // เพ
         expandedPNRs={expandedPNRs}
         renderPlaceDate={renderPlaceDate}
         renderField={renderField}
+        setJobs={setJobs}
       />
-      <JobAction job={job} setJobs={setJobs} />
     </div>
   );
 };
