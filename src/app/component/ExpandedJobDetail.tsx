@@ -33,11 +33,11 @@ const customFormatDate = (dateStr: string): string => {
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) return '';
 
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = date.toLocaleString('default', { month: 'short' });
-  const year = date.getFullYear();
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const month = date.toLocaleString('default', { month: 'short', timeZone: 'UTC' });
+  const year = date.getUTCFullYear();
+  const hours = String(date.getUTCHours()).padStart(2, '0');
+  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
 
   return `${day}-${month}-${year} ${hours}:${minutes}`;
 };
@@ -49,7 +49,6 @@ const JobAction: React.FC<JobActionProps> = ({ job, setJobs }) => {
 
   const handleAccept = async () => {
     try {
-      setStatusMessage("");
       const token = localStorage.getItem("token") || "";
       const response = await axios.post(
         `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
@@ -59,22 +58,32 @@ const JobAction: React.FC<JobActionProps> = ({ job, setJobs }) => {
       if (result.success) {
         alert("Job successfully accepted.");
         setAccepted(true);
-        setShowUploadModal(true); // เปิด modal เมื่อ job ถูก accept
-        setJobs((prevJobs) =>
-          prevJobs.map((j) => (j.key === job.key ? { ...j, IsConfirmed: true } : j))
+        setShowUploadModal(true);
+
+        // ✅ อัปเดตค่าลง jobs ทั้งชุด (fullJob)
+        setJobs(prev =>
+          prev.map(j => {
+            if (job.fullJob && j.key === job.fullJob.key) {
+              // คัดลอก job.all แล้วอัปเดต index ที่ต้องการ
+              const updatedAll = j.all.map((original: any, idx: any) =>
+                idx === job.indexInGroup ? { ...original, IsConfirmed: true } : original
+              );
+              return {
+                ...j,
+                IsConfirmed: true, // รวมของ merged job
+                all: updatedAll
+              };
+            }
+            return j;
+          })
         );
 
-        // ส่ง Email หลังจาก accept
         await sendEmail({
           emails: ["veeratha.p@dth.travel"],
           emails_CC: "",
           subject: `Job Accepted: ${job.key}`,
-          body: `The job with reference number ${job.PNR} has been accepted by the assigned guide.
-
-Please proceed with the necessary arrangements or check the system for details.`,
+          body: `The job with reference number ${job.PNR} has been accepted.`,
         });
-      } else {
-        alert("Failed to accept the job: " + (result?.error || "Unknown error"));
       }
     } catch (error) {
       alert("Error: " + String(error));
@@ -83,7 +92,6 @@ Please proceed with the necessary arrangements or check the system for details.`
 
   const handleReject = async () => {
     try {
-      setStatusMessage("");
       const token = localStorage.getItem("token") || "";
       const response = await axios.post(
         `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
@@ -92,20 +100,31 @@ Please proceed with the necessary arrangements or check the system for details.`
       const result = response.data;
       if (result.success) {
         alert("Job successfully canceled.");
-        setShowUploadModal(false); // ซ่อน modal เมื่อ job ถูก reject
-        setJobs((prevJobs) =>
-          prevJobs.map((j) => (j.key === job.key ? { ...j, IsCancel: true } : j))
+        setShowUploadModal(false);
+
+        // ✅ อัปเดต jobs
+        setJobs(prev =>
+          prev.map(j => {
+            if (job.fullJob && j.key === job.fullJob.key) {
+              const updatedAll = j.all.map((original: any, idx: any) =>
+                idx === job.indexInGroup ? { ...original, IsCancel: true } : original
+              );
+              return {
+                ...j,
+                IsCancel: true,
+                all: updatedAll
+              };
+            }
+            return j;
+          })
         );
+
         await sendEmail({
           emails: ["veeratha.p@dth.travel"],
           emails_CC: "",
-          subject: `Job Accepted: ${job.key}`,
-          body: `The job with reference number ${job.PNR} has been rejected by the assigned guide.
-
-Please proceed with the necessary arrangements or check the system for details.`,
+          subject: `Job Rejected: ${job.key}`,
+          body: `The job with reference number ${job.PNR} has been rejected.`,
         });
-      } else {
-        alert("Failed to cancel the job: " + (result?.error || "Unknown error"));
       }
     } catch (error) {
       alert("Error: " + String(error));
