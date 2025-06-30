@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import CssgGuide from '../cssguide';
 import axios from 'axios';
 import { Job } from "@/app/types/job";
@@ -12,8 +12,7 @@ import JobCard from '@/app/component/JobCard';
 import AllJobDetailsModal from "@/app/component/AllJobDetailsModal";
 import PendingFilter from "@/app/component/PendingFilter";
 
-// Merge jobs by PNR, combine fields that are different into arrays
-// แก้ชื่อฟังก์ชันเพื่อความเข้าใจ และใช้ PNRDate เป็นตัว merge
+// Merge jobs by PNRDate, combine fields that are different into arrays
 function mergeJobsByPNRDate(jobs: Job[]): MergedJob[] {
   const map: Record<string, { merged: MergedJob; all: Job[] }> = {};
 
@@ -25,7 +24,7 @@ function mergeJobsByPNRDate(jobs: Job[]): MergedJob[] {
           keys: [job.key],
           all: [job],
           PNR: [job.PNR],
-          allByPNR: { [job.PNR]: [job] },  // เริ่มต้นด้วยการเพิ่ม allByPNR ตาม PNR
+          allByPNR: { [job.PNR]: [job] },
         },
         all: [job],
       };
@@ -33,14 +32,12 @@ function mergeJobsByPNRDate(jobs: Job[]): MergedJob[] {
       map[job.PNRDate].merged.keys.push(job.key);
       map[job.PNRDate].all.push(job);
 
-      // เพิ่ม allByPNR สำหรับ PNR ที่ตรงกัน
       if (map[job.PNRDate].merged.allByPNR[job.PNR]) {
         map[job.PNRDate].merged.allByPNR[job.PNR].push(job);
       } else {
         map[job.PNRDate].merged.allByPNR[job.PNR] = [job];
       }
 
-      // ตัวอย่าง merge field อื่น ๆ
       for (const k of Object.keys(job) as (keyof Job)[]) {
         if (k === "key" || k === "Photo" || k === "Remark") continue;
 
@@ -68,7 +65,10 @@ function mergeJobsByPNRDate(jobs: Job[]): MergedJob[] {
   return Object.values(map).map((entry) => entry.merged);
 }
 
-
+// Demerge MergedJob[] กลับเป็น Job[]
+function demergeJobs(mergedJobs: MergedJob[]): Job[] {
+  return mergedJobs.flatMap(mj => mj.all);
+}
 
 const get30DaysAgo = () => {
   const date = new Date();
@@ -76,41 +76,9 @@ const get30DaysAgo = () => {
   return date.toISOString().slice(0, 10);
 };
 
-// const renderPlaceDate = (label: string, pickupDate: string) => {
-//   return (
-//     <div className="mb-2 text-center font-sans text-xl text-gray-500">
-//       <span>{label}: </span>
-//       <span>{pickupDate}</span>
-//     </div>
-//   );
-// };
-
-// const formatDateTime = (input: string | string[]): string => {
-//   const format = (dateStr: string) => {
-//     const d = new Date(dateStr);
-
-//     if (isNaN(d.getTime())) {
-//       return dateStr;
-//     }
-
-//     return d.toLocaleString("en-GB", {
-//       year: "numeric",
-//       month: "2-digit",
-//       day: "2-digit",
-//     });
-//   };
-
-//   if (Array.isArray(input)) {
-//     return input.map(format).join(",");
-//   }
-
-//   return format(input); // ✅ ต้องมี return ตรงนี้
-// };
-
-
 const getEndOfLastMonth = () => {
   const date = new Date();
-  date.setDate(0); // วันที่ 0 ของเดือนปัจจุบัน = วันสุดท้ายของเดือนก่อนหน้า
+  date.setDate(0);
   return date.toISOString().slice(0, 10);
 };
 
@@ -126,13 +94,14 @@ export default function JobsList() {
   const [showConfirmedOnly, setShowConfirmedOnly] = useState(false);
   const [showPendingOnly, setShowPendingOnly] = useState(false);
   const [mergedJob, setMergedJob] = useState<MergedJob | null>(null);
+  const [demergedJobs, setDemergedJobs] = useState<Job[]>([]);
   const pageSize = 6;
 
   useEffect(() => {
     const token = localStorage.getItem('token') || '';
     setLoading(true);
     fetchJobs(token, startDate, endDate);
-  }, []); // เรียกครั้งเดียวเมื่อ component โหลด
+  }, [startDate, endDate]); // โหลดครั้งแรก
 
   const fetchJobs = async (token: string, startDate: string, endDate: string) => {
     setLoading(true);
@@ -147,22 +116,35 @@ export default function JobsList() {
     }
   };
 
-  const filteredByDate = jobs.filter(job => {
+  // กรองตามวันที่
+  const filteredByDate = useMemo(() => {
+  return jobs.filter(job => {
     const pickup = job.PickupDate, dropoff = job.DropoffDate;
     return (!startDate && !endDate) || (startDate && pickup >= startDate) || (endDate && dropoff <= endDate);
   });
+}, [jobs, startDate, endDate]);
 
-  const filteredJobs = filteredByDate
-    .filter(job => {
-      if (showConfirmedOnly) return job.IsConfirmed === true;
-      if (showPendingOnly) return job.IsConfirmed === false && job.IsCancel === false;
-      return true;
-    })
-    .sort((a, b) => new Date(a.PickupDate).getTime() - new Date(b.PickupDate).getTime());
+const mergedJobs = useMemo(() => {
+  return mergeJobsByPNRDate(filteredByDate);
+}, [filteredByDate]);
 
-  const mergedJobs = mergeJobsByPNRDate(filteredJobs);
-  const totalPages = Math.ceil(mergedJobs.length / pageSize);
-  const pagedJobs = mergedJobs.slice((page - 1) * pageSize, page * pageSize);
+const filteredMergedJobs = useMemo(() => {
+  return mergedJobs.filter(mergedJob => {
+    if (showConfirmedOnly) {
+      return mergedJob.all.some(job => job.IsConfirmed === true);
+    }
+    if (showPendingOnly) {
+      return mergedJob.all.some(job => job.IsConfirmed === false && job.IsCancel === false);
+    }
+    return true;
+  }).sort((a, b) => new Date(a.PickupDate as string).getTime() - new Date(b.PickupDate as string).getTime());
+}, [mergedJobs, showConfirmedOnly, showPendingOnly]);
+
+
+
+  const totalPages = Math.ceil(filteredMergedJobs.length / pageSize);
+  const pagedJobs = filteredMergedJobs.slice((page - 1) * pageSize, page * pageSize);
+
 
   return (
     <CssgGuide>
@@ -181,10 +163,13 @@ export default function JobsList() {
                       type="date"
                       value={i === 0 ? startDate : endDate}
                       onChange={(e) => {
-                        const newDate = e.target.value;
-                        i === 0 ? setStartDate(newDate) : setEndDate(newDate);
-                        fetchJobs(localStorage.getItem('token') || '', i === 0 ? newDate : startDate, i === 0 ? endDate : newDate);
-                      }}
+    const newDate = e.target.value;
+    if (i === 0) {
+      setStartDate(newDate);
+    } else {
+      setEndDate(newDate);
+    }
+  }}
                       className="input input-bordered w-full"
                     />
                   </div>
@@ -213,29 +198,12 @@ export default function JobsList() {
               </select>
             </div>
 
-            
-
             <StatusMessage loading={loading} error={error} filteredJobsLength={filteredByDate.length} />
             {!loading && !error && filteredByDate.length > 0 && (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {pagedJobs.map((job) => (
                     <div key={job.PNRDate} className="w-full border rounded-lg p-4 shadow bg-white">
-                      {/* {job.all
-                        .sort((a, b) => new Date(a.PickupDate).getTime() - new Date(b.PickupDate).getTime())
-                        .map((j, index) => {
-                          return (
-                            <div key={index} className="w-full border rounded-lg p-4 shadow bg-white">
-                              <div className="text-center mb-2 font-sans text-xl text-gray-500">
-                                {renderPlaceDate(
-                                  "Date",
-                                  formatDateTime(job.PickupDate),
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })} */}
-                      {/* Job card component */}
                       <JobCard
                         job={job}
                         expandedPNRs={expandedPNRs}
@@ -246,8 +214,8 @@ export default function JobsList() {
                       />
                     </div>
                   ))}
-
                 </div>
+
                 <div className="w-full flex justify-center mt-6">
                   <div className="inline-flex items-center gap-2 bg-base-100 border border-base-300 rounded-full shadow px-4 py-2 ">
                     <button className="btn btn-outline btn-sm rounded-full min-w-[64px]" disabled={page === 1} onClick={() => setPage(page - 1)}>Prev</button>
@@ -255,10 +223,11 @@ export default function JobsList() {
                     <button className="btn btn-outline btn-sm rounded-full min-w-[64px]" disabled={page === totalPages} onClick={() => setPage(page + 1)}>Next</button>
                   </div>
                 </div>
+
                 {mergedJob && (
                   <AllJobDetailsModal
                     detailJobs={detailJobs}
-                    mergedJob={mergedJob}  // Only passes mergedJob if it's not null
+                    mergedJob={mergedJob}
                     setDetailJobs={setDetailJobs}
                   />
                 )}
