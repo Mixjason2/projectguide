@@ -49,6 +49,35 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 exports.__esModule = true;
 var react_1 = require("react");
 var axios_1 = require("axios");
+var solid_1 = require("@heroicons/react/24/solid");
+var sendEmail = function (_a) {
+    var emails = _a.emails, emails_CC = _a.emails_CC, subject = _a.subject, body = _a.body;
+    return __awaiter(void 0, void 0, void 0, function () {
+        var res, error_1;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0:
+                    _b.trys.push([0, 2, , 3]);
+                    return [4 /*yield*/, axios_1["default"].post("https://onlinedt.diethelmtravel.com:5281/api/EmailSender", {
+                            emails: emails,
+                            emails_CC: emails_CC,
+                            subject: subject,
+                            body: body
+                        })];
+                case 1:
+                    res = _b.sent();
+                    alert("📧 Email sent successfully!");
+                    return [2 /*return*/, res.data];
+                case 2:
+                    error_1 = _b.sent();
+                    console.error("❌ Failed to send email", error_1);
+                    alert("❌ Failed to send email");
+                    return [3 /*break*/, 3];
+                case 3: return [2 /*return*/];
+            }
+        });
+    });
+};
 var customFormatDate = function (dateStr) {
     var date = new Date(dateStr);
     if (isNaN(date.getTime()))
@@ -63,35 +92,8 @@ var customFormatDate = function (dateStr) {
 var JobAction = function (_a) {
     var job = _a.job, setJobs = _a.setJobs;
     var _b = react_1.useState(job.IsConfirmed), accepted = _b[0], setAccepted = _b[1];
-    var _c = react_1.useState(""), statusMessage = _c[0], setStatusMessage = _c[1];
-    var sendEmail = function (_a) {
-        var emails = _a.emails, emails_CC = _a.emails_CC, subject = _a.subject, body = _a.body;
-        return __awaiter(void 0, void 0, void 0, function () {
-            var response, error_1;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _b.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, axios_1["default"].post("https://onlinedt.diethelmtravel.com:5281/api/EmailSender", {
-                                emails: emails,
-                                emails_CC: emails_CC,
-                                subject: subject,
-                                body: body
-                            })];
-                    case 1:
-                        response = _b.sent();
-                        alert("Email sent successfully!");
-                        return [2 /*return*/, response.data];
-                    case 2:
-                        error_1 = _b.sent();
-                        alert("Failed to send email.");
-                        console.error(error_1);
-                        throw error_1;
-                    case 3: return [2 /*return*/];
-                }
-            });
-        });
-    };
+    var _c = react_1.useState(false), showUploadModal = _c[0], setShowUploadModal = _c[1]; // ใช้สำหรับเปิดปิด modal
+    var _d = react_1.useState(""), statusMessage = _d[0], setStatusMessage = _d[1];
     var handleAccept = function () { return __awaiter(void 0, void 0, void 0, function () {
         var token, response, result, error_2;
         return __generator(this, function (_a) {
@@ -107,16 +109,19 @@ var JobAction = function (_a) {
                     if (!result.success) return [3 /*break*/, 3];
                     alert("Job successfully accepted.");
                     setAccepted(true);
+                    setShowUploadModal(true); // เปิด modal เมื่อ job ถูก accept
                     setJobs(function (prevJobs) {
                         return prevJobs.map(function (j) { return (j.key === job.key ? __assign(__assign({}, j), { IsConfirmed: true }) : j); });
                     });
+                    // ส่ง Email หลังจาก accept
                     return [4 /*yield*/, sendEmail({
-                            emails: ["fomexii@hotmail.com"],
+                            emails: ["veeratha.p@dth.travel"],
                             emails_CC: "",
-                            subject: "Job Accepted: " + job.PNR,
-                            body: "The job for service " + job.serviceProductName + " has been successfully accepted.\nPlease note that this confirmation is part of the scheduled PNR: " + job.PNR + "."
+                            subject: "Job Accepted: " + job.key,
+                            body: "The job with reference number " + job.PNR + " has been accepted by the assigned guide.\n \nPlease proceed with the necessary arrangements or check the system for details."
                         })];
                 case 2:
+                    // ส่ง Email หลังจาก accept
                     _a.sent();
                     return [3 /*break*/, 4];
                 case 3:
@@ -136,77 +141,104 @@ var JobAction = function (_a) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    _a.trys.push([0, 2, , 3]);
+                    _a.trys.push([0, 5, , 6]);
                     setStatusMessage("");
                     token = localStorage.getItem("token") || "";
                     return [4 /*yield*/, axios_1["default"].post("https://operation.dth.travel:7082/api/guide/job/" + job.key + "/update", { token: token, data: { isCancel: true } })];
                 case 1:
                     response = _a.sent();
                     result = response.data;
-                    if (result.success) {
-                        alert("Job successfully canceled.");
-                        setJobs(function (prevJobs) {
-                            return prevJobs.map(function (j) { return (j.key === job.key ? __assign(__assign({}, j), { IsCancel: true }) : j); });
-                        });
-                    }
-                    else {
-                        alert("Failed to cancel the job: " + ((result === null || result === void 0 ? void 0 : result.error) || "Unknown error"));
-                    }
-                    return [3 /*break*/, 3];
+                    if (!result.success) return [3 /*break*/, 3];
+                    alert("Job successfully canceled.");
+                    setShowUploadModal(false); // ซ่อน modal เมื่อ job ถูก reject
+                    setJobs(function (prevJobs) {
+                        return prevJobs.map(function (j) { return (j.key === job.key ? __assign(__assign({}, j), { IsCancel: true }) : j); });
+                    });
+                    return [4 /*yield*/, sendEmail({
+                            emails: ["veeratha.p@dth.travel"],
+                            emails_CC: "",
+                            subject: "Job Accepted: " + job.key,
+                            body: "The job with reference number " + job.PNR + " has been rejected by the assigned guide.\n \nPlease proceed with the necessary arrangements or check the system for details."
+                        })];
                 case 2:
+                    _a.sent();
+                    return [3 /*break*/, 4];
+                case 3:
+                    alert("Failed to cancel the job: " + ((result === null || result === void 0 ? void 0 : result.error) || "Unknown error"));
+                    _a.label = 4;
+                case 4: return [3 /*break*/, 6];
+                case 5:
                     error_3 = _a.sent();
                     alert("Error: " + String(error_3));
-                    return [3 /*break*/, 3];
-                case 3: return [2 /*return*/];
+                    return [3 /*break*/, 6];
+                case 6: return [2 /*return*/];
             }
         });
     }); };
-    return (react_1["default"].createElement("div", { className: "flex gap-3 mt-4" },
-        react_1["default"].createElement("button", { className: "btn flex-1 py-2 rounded-full shadow text-white bg-[#95c941] hover:opacity-90", onClick: handleAccept }, "Accept"),
-        react_1["default"].createElement("button", { className: "btn flex-1 py-2 rounded-full shadow text-white bg-[#ef4444] hover:opacity-90", onClick: handleReject }, "Reject")));
+    return (react_1["default"].createElement("div", { className: "w-full border rounded-xl p-2 shadow bg-white" }, job.IsCancel ? null : accepted ? (react_1["default"].createElement(react_1["default"].Fragment, null,
+        react_1["default"].createElement("button", { onClick: function () { return setShowUploadModal(true); }, className: "w-full py-2 rounded-lg text-blue-700 hover:bg-gray-100 flex items-center justify-center transition", title: "Upload Documents" },
+            react_1["default"].createElement(solid_1.ArrowUpTrayIcon, { className: "w-6 h-6" })))) : (react_1["default"].createElement(react_1["default"].Fragment, null,
+        react_1["default"].createElement("div", { className: "flex gap-2 w-full" },
+            react_1["default"].createElement("button", { className: "flex-1 py-2 rounded-lg bg-[#95c941] hover:opacity-90 flex items-center justify-center transition", onClick: handleAccept, title: "Accept" },
+                react_1["default"].createElement(solid_1.CheckCircleIcon, { className: "w-6 h-6 text-white" })),
+            react_1["default"].createElement("button", { className: "flex-1 py-2 rounded-lg bg-[#ef4444] hover:opacity-90 flex items-center justify-center transition", onClick: handleReject, title: "Reject" },
+                react_1["default"].createElement(solid_1.XCircleIcon, { className: "w-6 h-6 text-white" })))))));
 };
 var ExpandedJobDetail = function (_a) {
     var job = _a.job, expandedPNRs = _a.expandedPNRs, renderPlaceDate = _a.renderPlaceDate, renderField = _a.renderField, setJobs = _a.setJobs;
-    // ถ้าข้อมูล PNRDate ไม่แสดงผล ก็คือไม่ต้องแสดงบล็อกนี้
     if (!expandedPNRs[job.PNRDate])
         return null;
-    // ✅ สร้างรายการ Pickup + Date
     function toArray(value) {
         return Array.isArray(value) ? value : [value];
     }
-    var pickupItems = toArray(job.Pickup).map(function (pickup, index) { return ({
-        place: pickup,
-        date: Array.isArray(job.PickupDate) ? job.PickupDate[index] || "" : job.PickupDate
-    }); });
-    var dropoffItems = toArray(job.Dropoff).map(function (dropoff, index) { return ({
-        place: dropoff,
-        date: Array.isArray(job.DropoffDate) ? job.DropoffDate[index] || "" : job.DropoffDate
-    }); });
+    var pnrArr = toArray(job.PNR);
+    var pickupArr = toArray(job.Pickup);
+    var pickupDateArr = toArray(job.PickupDate);
+    var dropoffArr = toArray(job.Dropoff);
+    var dropoffDateArr = toArray(job.DropoffDate);
     var adultArr = toArray(job.AdultQty);
     var childArr = toArray(job.ChildQty);
     var childShareArr = toArray(job.ChildShareQty);
     var infantArr = toArray(job.InfantQty);
-    var paxItems = adultArr.map(function (_, index) { return ({
+    var combinedItems = pnrArr.map(function (pnr, index) { return ({
+        pnr: pnr,
+        pickup: pickupArr[index] || "",
+        pickupDate: pickupDateArr[index] || "",
+        dropoff: dropoffArr[index] || "",
+        dropoffDate: dropoffDateArr[index] || "",
         adult: adultArr[index] || 0,
         child: childArr[index] || 0,
         childShare: childShareArr[index] || 0,
-        infant: infantArr[index] || 0
+        infant: infantArr[index] || 0,
+        key: job.key + "-" + index,
+        IsConfirmed: Array.isArray(job.IsConfirmed) ? job.IsConfirmed[index] : job.IsConfirmed,
+        IsCancel: Array.isArray(job.IsCancel) ? job.IsCancel[index] : job.IsCancel,
+        fullJob: job,
+        indexInGroup: index
     }); });
-    return (react_1["default"].createElement("div", { className: "bg-gray-100 p-4 rounded-lg" },
-        react_1["default"].createElement("h2", { className: "text-lg font-bold text-blue-800 mb-2" },
-            "PNR: ",
-            job.PNR),
-        react_1["default"].createElement("div", { className: "text-sm text-gray-700" },
-            react_1["default"].createElement("div", { className: "mb-2" },
-                react_1["default"].createElement("h4", { className: "text-sm font-semibold text-gray-800 mb-1" }, "Pickup"),
-                pickupItems.map(function (item, idx) { return (react_1["default"].createElement("div", { key: "pickup-" + idx, className: "mb-1" }, renderPlaceDate(item.place, customFormatDate(item.date), "Pickup " + (pickupItems.length > 1 ? idx + 1 : "")))); })),
-            react_1["default"].createElement("div", { className: "mb-2" },
-                react_1["default"].createElement("h4", { className: "text-sm font-semibold text-gray-800 mb-1" }, "Dropoff"),
-                dropoffItems.map(function (item, idx) { return (react_1["default"].createElement("div", { key: "dropoff-" + idx, className: "mb-1" }, renderPlaceDate(item.place, customFormatDate(item.date), "Dropoff " + (dropoffItems.length > 1 ? idx + 1 : "")))); })),
-            react_1["default"].createElement("div", { className: "mb-2" },
-                react_1["default"].createElement("h4", { className: "text-sm font-semibold text-gray-800 mb-1" }, "Pax"),
-                paxItems.map(function (pax, idx) { return (react_1["default"].createElement("div", { key: "pax-" + idx, className: "mb-1" }, renderField("Pax " + (paxItems.length > 1 ? idx + 1 : ""), pax.adult + pax.child + pax.childShare + pax.infant))); })),
-            react_1["default"].createElement("div", { className: "pt-1" },
-                react_1["default"].createElement(JobAction, { job: job, setJobs: setJobs })))));
+    var groupedByPNR = {};
+    combinedItems.forEach(function (item) {
+        if (!groupedByPNR[item.pnr]) {
+            groupedByPNR[item.pnr] = [];
+        }
+        groupedByPNR[item.pnr].push(item);
+    });
+    return (react_1["default"].createElement("div", { className: "p-6 pt-0 flex-1 flex flex-col" },
+        react_1["default"].createElement("div", { className: "text-sm text-gray-00 space-y-4 mb-4" }, Object.entries(groupedByPNR).map(function (_a) {
+            var pnr = _a[0], items = _a[1];
+            var firstItem = items[0]; // ใช้ item แรกในการสร้าง miniJob
+            var miniJob = __assign(__assign({}, job), { PNR: firstItem.pnr, Pickup: firstItem.pickup, PickupDate: firstItem.pickupDate, Dropoff: firstItem.dropoff, DropoffDate: firstItem.dropoffDate, AdultQty: firstItem.adult, ChildQty: firstItem.child, ChildShareQty: firstItem.childShare, InfantQty: firstItem.infant, key: firstItem.key, IsConfirmed: firstItem.IsConfirmed, IsCancel: firstItem.IsCancel });
+            return (react_1["default"].createElement("div", { key: pnr, className: "rounded-xl bg-white border border-gray-300 p-6 shadow-sm max-w-xs mx-auto" },
+                react_1["default"].createElement("div", { className: "bg-gray-50 border border-gray-200 rounded-t-lg p-4 space-y-3 break-words" },
+                    react_1["default"].createElement("h3", { className: "font-bold text-blue-800 text-lg leading-tight" },
+                        "PNR: ",
+                        pnr),
+                    items.map(function (item) { return (react_1["default"].createElement("div", { key: item.key, className: "text-gray-700 text-sm leading-relaxed whitespace-pre-line" },
+                        renderPlaceDate(item.pickup, customFormatDate(item.pickupDate), "Pickup"),
+                        renderPlaceDate(item.dropoff, customFormatDate(item.dropoffDate), "Dropoff"),
+                        renderField("Pax", item.adult + item.child + item.childShare + item.infant))); })),
+                react_1["default"].createElement("div", { className: "bg-white border border-t-0 border-gray-200 rounded-b-lg p-0 flex justify-center w-auto" },
+                    react_1["default"].createElement(JobAction, { job: miniJob, setJobs: setJobs }))));
+        }))));
 };
 exports["default"] = ExpandedJobDetail;

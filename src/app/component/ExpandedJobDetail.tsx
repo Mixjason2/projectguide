@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ExpandedJobDetailProps, JobActionProps } from "@/app/types/job";
 import axios from "axios";
+import { CheckCircleIcon, XCircleIcon, DocumentIcon, ArrowUpTrayIcon } from '@heroicons/react/24/solid'
 import UploadImagesWithRemark from "./FileToBase64";
 
 const sendEmail = async ({
@@ -70,7 +71,7 @@ const JobAction: React.FC<JobActionProps> = ({ job, setJobs }) => {
           emails_CC: "",
           subject: `Job Accepted: ${job.key}`,
           body: `The job with reference number ${job.PNR} has been accepted by the assigned guide.
-
+ 
 Please proceed with the necessary arrangements or check the system for details.`,
         });
       } else {
@@ -101,7 +102,7 @@ Please proceed with the necessary arrangements or check the system for details.`
           emails_CC: "",
           subject: `Job Accepted: ${job.key}`,
           body: `The job with reference number ${job.PNR} has been rejected by the assigned guide.
-
+ 
 Please proceed with the necessary arrangements or check the system for details.`,
         });
       } else {
@@ -113,67 +114,44 @@ Please proceed with the necessary arrangements or check the system for details.`
   };
 
   return (
-    <div className="relative border rounded-xl p-4 shadow bg-white">
-      {/* ถ้า job ถูก cancel ไม่แสดงอะไร */}
-      {job.IsCancel ? null : accepted ? (
-        <>
-          <div className="flex justify-center">
-            <button
-              onClick={() => setShowUploadModal(true)}
-              className="w-12 h-12 rounded-full bg-white border-2 border-[#2D3E92] shadow hover:shadow-md flex items-center justify-center text-2xl"
-              title="Upload Documents"
-            >
-              📄
-            </button>
-          </div>
+<div className="w-full border rounded-xl p-2 shadow bg-white">
+  {job.IsCancel ? null : accepted ? (
+    <>
+      <button
+        onClick={() => setShowUploadModal(true)}
+        className="w-full py-2 rounded-lg text-blue-700 hover:bg-gray-100 flex items-center justify-center transition"
+        title="Upload Documents"
+      >
+        <ArrowUpTrayIcon className="w-6 h-6" />
+      </button>
+    </>
+  ) : (
+    <>
+      <div className="flex gap-2 w-full">
+        <button
+          className="flex-1 py-2 rounded-lg bg-[#95c941] hover:opacity-90 flex items-center justify-center transition"
+          onClick={handleAccept}
+          title="Accept"
+        >
+          <CheckCircleIcon className="w-6 h-6 text-white" />
+        </button>
+        <button
+          className="flex-1 py-2 rounded-lg bg-[#ef4444] hover:opacity-90 flex items-center justify-center transition"
+          onClick={handleReject}
+          title="Reject"
+        >
+          <XCircleIcon className="w-6 h-6 text-white" />
+        </button>
+      </div>
+    </>
+  )}
+</div>
 
-          {/* Modal สำหรับการอัปโหลด */}
-          {showUploadModal && (
-            <div
-              className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center"
-              onClick={() => setShowUploadModal(false)} // คลิกที่พื้นหลังจะปิด modal
-            >
-              <div
-                className="bg-white rounded-2xl shadow-lg p-6 relative max-w-3xl w-full"
-                onClick={(e) => e.stopPropagation()} // กันคลิกหลุดจาก modal
-              >
-                <button
-                  onClick={() => setShowUploadModal(false)}
-                  className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-xl font-bold"
-                  aria-label="Close modal"
-                >
-                  ×
-                </button>
 
-                {/* เรียกใช้ UploadImagesWithRemark เพื่อแสดงฟอร์มการอัปโหลด */}
-                <UploadImagesWithRemark
-                  token={localStorage.getItem("token") || ""}
-                  keyValue={job.key}
-                  job={job}
-                />
-              </div>
-            </div>
-          )}
-        </>
-      ) : (
-        <>
-          <div className="flex gap-3">
-            <button
-              className="btn flex-1 py-2 rounded-full shadow text-white bg-[#95c941] hover:opacity-90"
-              onClick={handleAccept}
-            >
-              Accept
-            </button>
-            <button
-              className="btn flex-1 py-2 rounded-full shadow text-white bg-[#ef4444] hover:opacity-90"
-              onClick={handleReject}
-            >
-              Reject
-            </button>
-          </div>
-        </>
-      )}
-    </div>
+
+
+
+
   );
 };
 
@@ -227,55 +205,75 @@ const ExpandedJobDetail: React.FC<ExpandedJobDetailProps> = ({
 
   return (
     <div className="p-6 pt-0 flex-1 flex flex-col">
-      <div className="text-sm text-gray-00 space-y-2 mb-4">
-        {Object.entries(groupedByPNR).map(([pnr, items]) => (
-          <div key={pnr} className="bg-gray-200 p-4 rounded-lg mb-4">
-            <h3 className="font-bold text-lg text-blue-800">PNR: {pnr}</h3>
+      <div className="text-sm text-gray-00 space-y-4 mb-4">
+        {Object.entries(groupedByPNR).map(([pnr, items]) => {
+          const firstItem = items[0]; // ใช้ item แรกในการสร้าง miniJob
+          const miniJob = {
+            ...job,
+            PNR: firstItem.pnr,
+            Pickup: firstItem.pickup,
+            PickupDate: firstItem.pickupDate,
+            Dropoff: firstItem.dropoff,
+            DropoffDate: firstItem.dropoffDate,
+            AdultQty: firstItem.adult,
+            ChildQty: firstItem.child,
+            ChildShareQty: firstItem.childShare,
+            InfantQty: firstItem.infant,
+            key: firstItem.key,
+            IsConfirmed: firstItem.IsConfirmed,
+            IsCancel: firstItem.IsCancel,
+          };
 
-            {items.map((item, idx) => {
-              const miniJob = {
-                ...job,
-                PNR: item.pnr,
-                Pickup: item.pickup,
-                PickupDate: item.pickupDate,
-                Dropoff: item.dropoff,
-                DropoffDate: item.dropoffDate,
-                AdultQty: item.adult,
-                ChildQty: item.child,
-                ChildShareQty: item.childShare,
-                InfantQty: item.infant,
-                key: item.key,
-                IsConfirmed: item.IsConfirmed,
-                IsCancel: item.IsCancel,
-              };
+          return (
+            <div
+              key={pnr}
+              className="rounded-xl bg-white border border-gray-300 p-6 shadow-sm max-w-xs mx-auto"
+            >
+              {/* กรอบเนื้อหา */}
+              <div className="bg-gray-50 border border-gray-200 rounded-t-lg p-4 space-y-3 break-words">
+                <h3 className="font-bold text-blue-800 text-lg leading-tight">
+                  PNR: {pnr}
+                </h3>
+                {items.map((item) => (
+                  <div
+                    key={item.key}
+                    className="text-gray-700 text-sm leading-relaxed whitespace-pre-line"
+                  >
+                    {renderPlaceDate(
+                      item.pickup,
+                      customFormatDate(item.pickupDate),
+                      "Pickup"
+                    )}
+                    {renderPlaceDate(
+                      item.dropoff,
+                      customFormatDate(item.dropoffDate),
+                      "Dropoff"
+                    )}
+                    {renderField(
+                      "Pax",
+                      item.adult + item.child + item.childShare + item.infant
+                    )}
+                  </div>
+                ))}
+              </div>
 
-              return (
-                <div key={item.key} className="mb-4 border-b pb-4">
-                  {renderPlaceDate(
-                    item.pickup,
-                    customFormatDate(item.pickupDate),
-                    "Pickup"
-                  )}
-                  {renderPlaceDate(
-                    item.dropoff,
-                    customFormatDate(item.dropoffDate),
-                    "Dropoff"
-                  )}
-                  {renderField(
-                    "Pax",
-                    item.adult + item.child + item.childShare + item.infant
-                  )}
 
-                  {/* 🎯 JobAction แยกต่อ PNR */}
-                  <JobAction job={miniJob} setJobs={setJobs} />
-                </div>
-              );
-            })}
-          </div>
-        ))}
+
+              {/* กรอบปุ่ม ชิดกรอบเนื้อหา */}
+<div className="bg-white border border-t-0 border-gray-200 rounded-b-lg p-0 flex justify-center w-auto">
+  <JobAction job={miniJob} setJobs={setJobs} />
+</div>
+            </div>
+
+
+          );
+        })}
       </div>
     </div>
+
+
   );
 };
 
 export default ExpandedJobDetail;
+
