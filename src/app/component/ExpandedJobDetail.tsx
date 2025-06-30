@@ -133,38 +133,60 @@ const JobAction: React.FC<JobActionProps> = ({ job, setJobs }) => {
   };
 
   return (
-<div className="w-full border rounded-xl p-2 shadow bg-white">
-  {job.IsCancel ? null : accepted ? (
-    <>
-      <button
-        onClick={() => setShowUploadModal(true)}
-        className="w-full py-2 rounded-lg text-blue-700 hover:bg-gray-100 flex items-center justify-center transition"
-        title="Upload Documents"
-      >
-        <ArrowUpTrayIcon className="w-6 h-6" />
-      </button>
-    </>
-  ) : (
-    <>
-      <div className="flex gap-2 w-full">
-        <button
-          className="flex-1 py-2 rounded-lg bg-[#95c941] hover:opacity-90 flex items-center justify-center transition"
-          onClick={handleAccept}
-          title="Accept"
-        >
-          <CheckCircleIcon className="w-6 h-6 text-white" />
-        </button>
-        <button
-          className="flex-1 py-2 rounded-lg bg-[#ef4444] hover:opacity-90 flex items-center justify-center transition"
-          onClick={handleReject}
-          title="Reject"
-        >
-          <XCircleIcon className="w-6 h-6 text-white" />
-        </button>
-      </div>
-    </>
-  )}
-</div>
+    <div className="w-full border rounded-xl p-2 shadow bg-white">
+      {job.IsCancel ? null : accepted ? (
+        <>
+          <button
+            onClick={() => setShowUploadModal(true)}
+            className="w-full py-2 rounded-lg text-blue-700 hover:bg-gray-100 flex items-center justify-center transition"
+            title="Upload Documents"
+          >
+            <ArrowUpTrayIcon className="w-6 h-6" />
+          </button>
+          {showUploadModal && (
+            <div
+              className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center"
+              onClick={() => setShowUploadModal(false)}
+            >
+              <div
+                className="bg-white rounded-2xl shadow-lg p-6 relative max-w-3xl w-full"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={() => setShowUploadModal(false)}
+                  className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-xl font-bold"
+                >
+                  ×
+                </button>
+                <UploadImagesWithRemark
+                  token={localStorage.getItem("token") || ""}
+                  keyValue={job.key}
+                  job={job}
+                />
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        // ✅ ปุ่ม Accept / Reject ต้องอยู่ในนี้
+        <div className="flex gap-2 w-full">
+          <button
+            className="flex-1 py-2 rounded-lg bg-[#95c941] hover:opacity-90 flex items-center justify-center transition"
+            onClick={handleAccept}
+            title="Accept"
+          >
+            <CheckCircleIcon className="w-6 h-6 text-white" />
+          </button>
+          <button
+            className="flex-1 py-2 rounded-lg bg-[#ef4444] hover:opacity-90 flex items-center justify-center transition"
+            onClick={handleReject}
+            title="Reject"
+          >
+            <XCircleIcon className="w-6 h-6 text-white" />
+          </button>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -273,9 +295,9 @@ const ExpandedJobDetail: React.FC<ExpandedJobDetailProps> = ({
 
 
               {/* กรอบปุ่ม ชิดกรอบเนื้อหา */}
-<div className="bg-white border border-t-0 border-gray-200 rounded-b-lg p-0 flex justify-center w-auto">
-  <JobAction job={miniJob} setJobs={setJobs} />
-</div>
+              <div className="bg-white border border-t-0 border-gray-200 rounded-b-lg p-0 flex justify-center w-auto">
+                <JobAction job={miniJob} setJobs={setJobs} />
+              </div>
             </div>
 
 
