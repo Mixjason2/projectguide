@@ -3,7 +3,8 @@ import { JobActionProps } from "@/app/types/job";
 import axios from "axios";
 import { CheckCircleIcon, XCircleIcon, ArrowUpTrayIcon } from '@heroicons/react/24/solid';
 import UploadImagesWithRemark from "./FileToBase64";
-import toast from "react-hot-toast";  // เพิ่ม import toast
+import Swal from "sweetalert2";
+import 'sweetalert2/dist/sweetalert2.min.css';
 
 const sendEmail = async ({
   emails,
@@ -23,15 +24,39 @@ const sendEmail = async ({
       subject,
       body,
     });
-    toast.success("📧 Email sent successfully!");  // แก้ alert เป็น toast
+    await Swal.fire({
+      icon: "success",
+      title: "📧 Email sent successfully!",
+      showConfirmButton: false,
+      timer: 2000,
+      timerProgressBar: true,
+      toast: true,
+      position: "top",
+      didOpen: (toast) => {
+        toast.style.margin = '0 auto';       // ✅ จัดให้อยู่ตรงกลางแนวนอน
+        toast.style.left = '0';
+        toast.style.right = '0';
+      }
+    });
     return res.data;
   } catch (error) {
     console.error("❌ Failed to send email", error);
-    toast.error("❌ Failed to send email");  // แก้ alert เป็น toast
+    await Swal.fire({
+      icon: "error",
+      title: "❌ Failed to send email",
+      showConfirmButton: false,
+      timer: 2500,
+      toast: true,
+      position: "top",
+      didOpen: (toast) => {
+        toast.style.margin = '0 auto';       // ✅ จัดให้อยู่ตรงกลางแนวนอน
+        toast.style.left = '0';
+        toast.style.right = '0';
+      }
+    });
   }
 };
 
-// **แก้ไข** เพิ่ม props onAccept, onReject
 interface ExtendedJobActionProps extends JobActionProps {
   onAccept?: (jobKey: string) => void;
   onReject?: (jobKey: string) => void;
@@ -39,18 +64,17 @@ interface ExtendedJobActionProps extends JobActionProps {
 
 const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, onReject }) => {
   const [accepted, setAccepted] = useState(job.IsConfirmed);
-  const [showUploadModal, setShowUploadModal] = useState(false); // modal state
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
 
   const handleAccept = async () => {
-    console.log("[ACCEPT] job.key =", job.key); // ✅ log key ที่กำลังจะ accept
+    console.log("[ACCEPT] job.key =", job.key);
     if (onAccept) {
       onAccept(job.key.toString());
       setAccepted(true);
       return;
     }
 
-    // fallback ถ้าไม่ส่ง callback มาจะใช้ logic เดิม
     try {
       setStatusMessage("");
       const token = localStorage.getItem("token") || "";
@@ -63,7 +87,20 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
       );
       const result = response.data;
       if (result.success) {
-        toast.success("Job successfully accepted.");  // แก้ alert เป็น toast
+        await Swal.fire({
+          icon: "success",
+          title: "Job successfully accepted.",
+          showConfirmButton: false,
+          timer: 2500,
+          toast: true,
+          position: "top",
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.style.margin = '0 auto';       // ✅ จัดให้อยู่ตรงกลางแนวนอน
+            toast.style.left = '0';
+            toast.style.right = '0';
+          }
+        });
         setAccepted(true);
 
         setJobs((prevJobs) =>
@@ -81,10 +118,33 @@ Please note that this confirmation is part of the scheduled PNR: ${job.PNR}.
 If you have any questions or require further details, please feel free to contact us.`,
         });
       } else {
-        toast.error("Failed to accept the job: " + (result?.error || "Unknown error"));  // แก้ alert เป็น toast
+        await Swal.fire({
+          icon: "error",
+          title: "Failed to accept the job: " + (result?.error || "Unknown error"),
+          showConfirmButton: false,
+          timer: 3000,
+          toast: true,
+          position: "top", didOpen: (toast) => {
+            toast.style.margin = '0 auto';       // ✅ จัดให้อยู่ตรงกลางแนวนอน
+            toast.style.left = '0';
+            toast.style.right = '0';
+          }
+        });
       }
     } catch (error) {
-      toast.error("Error: " + String(error));  // แก้ alert เป็น toast
+      await Swal.fire({
+        icon: "error",
+        title: "Error: " + String(error),
+        showConfirmButton: false,
+        timer: 3000,
+        toast: true,
+        position: "top",
+        didOpen: (toast) => {
+          toast.style.margin = '0 auto';       // ✅ จัดให้อยู่ตรงกลางแนวนอน
+          toast.style.left = '0';
+          toast.style.right = '0';
+        }
+      });
     }
   };
 
@@ -94,7 +154,6 @@ If you have any questions or require further details, please feel free to contac
       return;
     }
 
-    // fallback ถ้าไม่ส่ง callback มาจะใช้ logic เดิม
     try {
       setStatusMessage("");
       const token = localStorage.getItem("token") || "";
@@ -107,15 +166,51 @@ If you have any questions or require further details, please feel free to contac
       );
       const result = response.data;
       if (result.success) {
-        toast.success("Job successfully canceled.");  // แก้ alert เป็น toast
+        await Swal.fire({
+          icon: "success",
+          title: "Job successfully canceled.",
+          showConfirmButton: false,
+          timer: 2500,
+          toast: true,
+          position: "top",
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.style.margin = '0 auto';       // ✅ จัดให้อยู่ตรงกลางแนวนอน
+            toast.style.left = '0';
+            toast.style.right = '0';
+          }
+        });
         setJobs((prevJobs) =>
           prevJobs.map((j) => (j.key === job.key ? { ...j, IsCancel: true } : j))
         );
       } else {
-        toast.error("Failed to cancel the job: " + (result?.error || "Unknown error"));  // แก้ alert เป็น toast
+        await Swal.fire({
+          icon: "error",
+          title: "Failed to cancel the job: " + (result?.error || "Unknown error"),
+          showConfirmButton: false,
+          timer: 3000,
+          toast: true,
+          position: "top", didOpen: (toast) => {
+            toast.style.margin = '0 auto';       // ✅ จัดให้อยู่ตรงกลางแนวนอน
+            toast.style.left = '0';
+            toast.style.right = '0';
+          }
+        });
       }
     } catch (error) {
-      toast.error("Error: " + String(error));  // แก้ alert เป็น toast
+      await Swal.fire({
+        icon: "error",
+        title: "Error: " + String(error),
+        showConfirmButton: false,
+        timer: 3000,
+        toast: true,
+        position: "top",
+        didOpen: (toast) => {
+          toast.style.margin = '0 auto';       // ✅ จัดให้อยู่ตรงกลางแนวนอน
+          toast.style.left = '0';
+          toast.style.right = '0';
+        }
+      });
     }
   };
 

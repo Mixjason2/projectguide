@@ -1,6 +1,7 @@
 import { ChangeEvent, ReactNode } from "react";
 
 export type Job = {
+  JobKey: number;
   allByPNR: {};
   all: any;
   serviceProductName: any;

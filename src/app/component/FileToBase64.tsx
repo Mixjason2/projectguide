@@ -1,6 +1,8 @@
 import React, { useState, useEffect, ChangeEvent } from "react";
 import axios from "axios";
 import { Job } from "@/app/types/job"; // แก้ path ให้ถูกต้อง
+import Swal from "sweetalert2";
+import 'sweetalert2/dist/sweetalert2.min.css';
 
 interface UploadedImage {
     ImageBase64: string;
@@ -11,7 +13,7 @@ interface UploadResponse {
     images: UploadedImage[];
 }
 
-const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number;job: Job }> = ({ token, keyValue,job }) => {
+const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number; job: Job }> = ({ token, keyValue, job }) => {
     const [remark, setRemark] = useState("");
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const [previewBase64List, setPreviewBase64List] = useState<string[]>([]);
@@ -82,11 +84,26 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number;job: Jo
                 subject,
                 body,
             });
-            alert("📧 Email sent successfully!");
+            Swal.fire({
+                icon: "success",
+                title: "📧 Email sent successfully!",
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+                toast: true,
+                position: "top-end",
+            });
             return res.data;
         } catch (error) {
             console.error("❌ Failed to send email", error);
-            alert("❌ Failed to send email");
+            Swal.fire({
+                icon: "error",
+                title: "❌ Failed to send email",
+                showConfirmButton: false,
+                timer: 2500,
+                toast: true,
+                position: "top-end",
+            });
         }
     };
 

@@ -45,7 +45,8 @@
         "react-select": "^5.10.1",
         "react-spinners": "^0.17.0",
         "react-spinners-css": "^2.0.2",
-        "spinner": "^0.3.4"
+        "spinner": "^0.3.4",
+        "sweetalert2": "^11.22.2"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^3",

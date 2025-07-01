@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import CssgGuide from '../cssguide';
 import axios from 'axios';
-import { Job, MergedJob } from "@/app/types/job";
+import { Job } from "@/app/types/job";
 import StatusMessage from "@/app/component/StatusMessage";
 import JobsSummary from '@/app/component/JobsSummary';
 import JobCard from '@/app/component/JobCard';

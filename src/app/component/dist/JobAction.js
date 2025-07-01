@@ -51,7 +51,8 @@ var react_1 = require("react");
 var axios_1 = require("axios");
 var solid_1 = require("@heroicons/react/24/solid");
 var FileToBase64_1 = require("./FileToBase64");
-var react_hot_toast_1 = require("react-hot-toast"); // เพิ่ม import toast
+var sweetalert2_1 = require("sweetalert2");
+require("sweetalert2/dist/sweetalert2.min.css");
 var sendEmail = function (_a) {
     var emails = _a.emails, emails_CC = _a.emails_CC, subject = _a.subject, body = _a.body;
     return __awaiter(void 0, void 0, void 0, function () {
@@ -59,7 +60,7 @@ var sendEmail = function (_a) {
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
-                    _b.trys.push([0, 2, , 3]);
+                    _b.trys.push([0, 3, , 5]);
                     return [4 /*yield*/, axios_1["default"].post("https://onlinedt.diethelmtravel.com:5281/api/EmailSender", {
                             emails: emails,
                             emails_CC: emails_CC,
@@ -68,14 +69,43 @@ var sendEmail = function (_a) {
                         })];
                 case 1:
                     res = _b.sent();
-                    react_hot_toast_1["default"].success("📧 Email sent successfully!"); // แก้ alert เป็น toast
-                    return [2 /*return*/, res.data];
+                    return [4 /*yield*/, sweetalert2_1["default"].fire({
+                            icon: "success",
+                            title: "📧 Email sent successfully!",
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true,
+                            toast: true,
+                            position: "top",
+                            didOpen: function (toast) {
+                                toast.style.margin = '0 auto'; // ✅ จัดให้อยู่ตรงกลางแนวนอน
+                                toast.style.left = '0';
+                                toast.style.right = '0';
+                            }
+                        })];
                 case 2:
+                    _b.sent();
+                    return [2 /*return*/, res.data];
+                case 3:
                     error_1 = _b.sent();
                     console.error("❌ Failed to send email", error_1);
-                    react_hot_toast_1["default"].error("❌ Failed to send email"); // แก้ alert เป็น toast
-                    return [3 /*break*/, 3];
-                case 3: return [2 /*return*/];
+                    return [4 /*yield*/, sweetalert2_1["default"].fire({
+                            icon: "error",
+                            title: "❌ Failed to send email",
+                            showConfirmButton: false,
+                            timer: 2500,
+                            toast: true,
+                            position: "top",
+                            didOpen: function (toast) {
+                                toast.style.margin = '0 auto'; // ✅ จัดให้อยู่ตรงกลางแนวนอน
+                                toast.style.left = '0';
+                                toast.style.right = '0';
+                            }
+                        })];
+                case 4:
+                    _b.sent();
+                    return [3 /*break*/, 5];
+                case 5: return [2 /*return*/];
             }
         });
     });
@@ -83,14 +113,14 @@ var sendEmail = function (_a) {
 var JobAction = function (_a) {
     var job = _a.job, setJobs = _a.setJobs, onAccept = _a.onAccept, onReject = _a.onReject;
     var _b = react_1.useState(job.IsConfirmed), accepted = _b[0], setAccepted = _b[1];
-    var _c = react_1.useState(false), showUploadModal = _c[0], setShowUploadModal = _c[1]; // modal state
+    var _c = react_1.useState(false), showUploadModal = _c[0], setShowUploadModal = _c[1];
     var _d = react_1.useState(""), statusMessage = _d[0], setStatusMessage = _d[1];
     var handleAccept = function () { return __awaiter(void 0, void 0, void 0, function () {
         var token, response, result, error_2;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    console.log("[ACCEPT] job.key =", job.key); // ✅ log key ที่กำลังจะ accept
+                    console.log("[ACCEPT] job.key =", job.key);
                     if (onAccept) {
                         onAccept(job.key.toString());
                         setAccepted(true);
@@ -98,7 +128,7 @@ var JobAction = function (_a) {
                     }
                     _a.label = 1;
                 case 1:
-                    _a.trys.push([1, 6, , 7]);
+                    _a.trys.push([1, 8, , 10]);
                     setStatusMessage("");
                     token = localStorage.getItem("token") || "";
                     return [4 /*yield*/, axios_1["default"].post("https://operation.dth.travel:7082/api/guide/job/" + job.key + "/update", {
@@ -108,8 +138,23 @@ var JobAction = function (_a) {
                 case 2:
                     response = _a.sent();
                     result = response.data;
-                    if (!result.success) return [3 /*break*/, 4];
-                    react_hot_toast_1["default"].success("Job successfully accepted."); // แก้ alert เป็น toast
+                    if (!result.success) return [3 /*break*/, 5];
+                    return [4 /*yield*/, sweetalert2_1["default"].fire({
+                            icon: "success",
+                            title: "Job successfully accepted.",
+                            showConfirmButton: false,
+                            timer: 2500,
+                            toast: true,
+                            position: "top",
+                            timerProgressBar: true,
+                            didOpen: function (toast) {
+                                toast.style.margin = '0 auto'; // ✅ จัดให้อยู่ตรงกลางแนวนอน
+                                toast.style.left = '0';
+                                toast.style.right = '0';
+                            }
+                        })];
+                case 3:
+                    _a.sent();
                     setAccepted(true);
                     setJobs(function (prevJobs) {
                         return prevJobs.map(function (j) { return (j.key === job.key ? __assign(__assign({}, j), { IsConfirmed: true }) : j); });
@@ -120,18 +165,45 @@ var JobAction = function (_a) {
                             subject: "Job Accepted: " + job.PNR,
                             body: "The job for service " + job.serviceProductName + " has been successfully accepted.\n\nPlease note that this confirmation is part of the scheduled PNR: " + job.PNR + ".\n\nIf you have any questions or require further details, please feel free to contact us."
                         })];
-                case 3:
-                    _a.sent();
-                    return [3 /*break*/, 5];
                 case 4:
-                    react_hot_toast_1["default"].error("Failed to accept the job: " + ((result === null || result === void 0 ? void 0 : result.error) || "Unknown error")); // แก้ alert เป็น toast
-                    _a.label = 5;
-                case 5: return [3 /*break*/, 7];
-                case 6:
-                    error_2 = _a.sent();
-                    react_hot_toast_1["default"].error("Error: " + String(error_2)); // แก้ alert เป็น toast
+                    _a.sent();
                     return [3 /*break*/, 7];
-                case 7: return [2 /*return*/];
+                case 5: return [4 /*yield*/, sweetalert2_1["default"].fire({
+                        icon: "error",
+                        title: "Failed to accept the job: " + ((result === null || result === void 0 ? void 0 : result.error) || "Unknown error"),
+                        showConfirmButton: false,
+                        timer: 3000,
+                        toast: true,
+                        position: "top",
+                        didOpen: function (toast) {
+                            toast.style.margin = '0 auto'; // ✅ จัดให้อยู่ตรงกลางแนวนอน
+                            toast.style.left = '0';
+                            toast.style.right = '0';
+                        }
+                    })];
+                case 6:
+                    _a.sent();
+                    _a.label = 7;
+                case 7: return [3 /*break*/, 10];
+                case 8:
+                    error_2 = _a.sent();
+                    return [4 /*yield*/, sweetalert2_1["default"].fire({
+                            icon: "error",
+                            title: "Error: " + String(error_2),
+                            showConfirmButton: false,
+                            timer: 3000,
+                            toast: true,
+                            position: "top",
+                            didOpen: function (toast) {
+                                toast.style.margin = '0 auto'; // ✅ จัดให้อยู่ตรงกลางแนวนอน
+                                toast.style.left = '0';
+                                toast.style.right = '0';
+                            }
+                        })];
+                case 9:
+                    _a.sent();
+                    return [3 /*break*/, 10];
+                case 10: return [2 /*return*/];
             }
         });
     }); };
@@ -146,7 +218,7 @@ var JobAction = function (_a) {
                     }
                     _a.label = 1;
                 case 1:
-                    _a.trys.push([1, 3, , 4]);
+                    _a.trys.push([1, 7, , 9]);
                     setStatusMessage("");
                     token = localStorage.getItem("token") || "";
                     return [4 /*yield*/, axios_1["default"].post("https://operation.dth.travel:7082/api/guide/job/" + job.key + "/update", {
@@ -156,21 +228,63 @@ var JobAction = function (_a) {
                 case 2:
                     response = _a.sent();
                     result = response.data;
-                    if (result.success) {
-                        react_hot_toast_1["default"].success("Job successfully canceled."); // แก้ alert เป็น toast
-                        setJobs(function (prevJobs) {
-                            return prevJobs.map(function (j) { return (j.key === job.key ? __assign(__assign({}, j), { IsCancel: true }) : j); });
-                        });
-                    }
-                    else {
-                        react_hot_toast_1["default"].error("Failed to cancel the job: " + ((result === null || result === void 0 ? void 0 : result.error) || "Unknown error")); // แก้ alert เป็น toast
-                    }
-                    return [3 /*break*/, 4];
+                    if (!result.success) return [3 /*break*/, 4];
+                    return [4 /*yield*/, sweetalert2_1["default"].fire({
+                            icon: "success",
+                            title: "Job successfully canceled.",
+                            showConfirmButton: false,
+                            timer: 2500,
+                            toast: true,
+                            position: "top",
+                            timerProgressBar: true,
+                            didOpen: function (toast) {
+                                toast.style.margin = '0 auto'; // ✅ จัดให้อยู่ตรงกลางแนวนอน
+                                toast.style.left = '0';
+                                toast.style.right = '0';
+                            }
+                        })];
                 case 3:
+                    _a.sent();
+                    setJobs(function (prevJobs) {
+                        return prevJobs.map(function (j) { return (j.key === job.key ? __assign(__assign({}, j), { IsCancel: true }) : j); });
+                    });
+                    return [3 /*break*/, 6];
+                case 4: return [4 /*yield*/, sweetalert2_1["default"].fire({
+                        icon: "error",
+                        title: "Failed to cancel the job: " + ((result === null || result === void 0 ? void 0 : result.error) || "Unknown error"),
+                        showConfirmButton: false,
+                        timer: 3000,
+                        toast: true,
+                        position: "top",
+                        didOpen: function (toast) {
+                            toast.style.margin = '0 auto'; // ✅ จัดให้อยู่ตรงกลางแนวนอน
+                            toast.style.left = '0';
+                            toast.style.right = '0';
+                        }
+                    })];
+                case 5:
+                    _a.sent();
+                    _a.label = 6;
+                case 6: return [3 /*break*/, 9];
+                case 7:
                     error_3 = _a.sent();
-                    react_hot_toast_1["default"].error("Error: " + String(error_3)); // แก้ alert เป็น toast
-                    return [3 /*break*/, 4];
-                case 4: return [2 /*return*/];
+                    return [4 /*yield*/, sweetalert2_1["default"].fire({
+                            icon: "error",
+                            title: "Error: " + String(error_3),
+                            showConfirmButton: false,
+                            timer: 3000,
+                            toast: true,
+                            position: "top",
+                            didOpen: function (toast) {
+                                toast.style.margin = '0 auto'; // ✅ จัดให้อยู่ตรงกลางแนวนอน
+                                toast.style.left = '0';
+                                toast.style.right = '0';
+                            }
+                        })];
+                case 8:
+                    _a.sent();
+                    return [3 /*break*/, 9];
+                case 9: return [2 /*return*/];
             }
         });
     }); };
