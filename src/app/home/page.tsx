@@ -68,11 +68,15 @@ export default function JobsList() {
   };
 
   const filteredByDate = useMemo(() => {
-    return jobs.filter(job => {
-      const pickup = job.PickupDate, dropoff = job.DropoffDate;
-      return (!startDate && !endDate) || (startDate && pickup >= startDate) || (endDate && dropoff <= endDate);
-    });
-  }, [jobs, startDate, endDate]);
+  return jobs.filter(job => {
+    const pickup = job.PickupDate, dropoff = job.DropoffDate;
+    // กรองงานที่ IsCancel = true ออก
+    return (!job.IsCancel) && 
+           ((!startDate && !endDate) || 
+            (startDate && pickup >= startDate) || 
+            (endDate && dropoff <= endDate));
+  });
+}, [jobs, startDate, endDate]);
 
   const groupedByPNRDate = useMemo(() => {
     const grouped = groupJobsByPNRDate(filteredByDate);

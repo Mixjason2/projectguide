@@ -6,7 +6,7 @@ import { useState } from 'react';
 const renderPlaceDate = (place: string, date: string, label: string) => (
   place || date ? (
     <div>
-      <span className="font-Arial">{label}:</span> {place}{place && date ? ' - ' : ''}{date}
+      <span className="font-Arial font-bold">{label}:</span> {place}{place && date ? ' - ' : ''}{date}
     </div>
   ) : null
 );
@@ -14,12 +14,12 @@ const renderPlaceDate = (place: string, date: string, label: string) => (
 const renderField = (label: string, value: any) => (
   Array.isArray(value) ? (
     <div>
-      <span className="font-Arial">{label}:</span>
+      <span className="font-Arial font-bold">{label}:</span>
       <ul className="list-disc ml-6">{value.map((v, i) => <li key={i}>{String(v)}</li>)}</ul>
     </div>
   ) : (
     <div>
-      <span className="font-Arial">{label}:</span> {String(value)}
+      <span className="font-Arial font-bold">{label}:</span> {String(value)}
     </div>
   )
 );
@@ -49,21 +49,21 @@ const JobCard: React.FC<JobCardProps> = ({
     >
       {/* แสดงสถานะรวมของ job[0] */}
       <div
-        className="absolute top-2 left-1 text-[#ffffff] font-Arial rounded-full px-3 py-1 text-sm shadow z-10"
-        style={{
-          backgroundColor: job[0]?.IsCancel
-            ? "#ef4444"
-            : job[0]?.IsConfirmed
-              ? "#22c55e"
-              : job[0]?.isNew
-                ? "#0891b2"
-                : job[0]?.isChange
-                  ? "#fb923c"
-                  : "#404040",
-        }}
+        className="absolute top-2 left-1 text-[#ffffff] font-Arial rounded-full px-3 py-1 text-sm shadow z-10 flex items-center"
       >
-        {job.length || 1}
+        {/* แสดงจุดตามจำนวนงาน */}
+        {job.map((_, idx) => (
+          <span
+            key={idx}
+            className="inline-block w-2.5 h-2.5 rounded-full mx-1"
+            style={{
+              backgroundColor: job[idx]?.IsConfirmed ? "#22c55e" : "#d1d5db",  // สีเขียวถ้า IsConfirmed เป็น true, สีเทาถ้า false
+              border: '2px solid #2D3E92',  // กรอบสีน้ำเงิน
+            }}
+          ></span>
+        ))}
       </div>
+
       <button
         className="absolute top-3.5 right-2 w-8 h-8 rounded-full bg-white border-2 border-[#2D3E92] shadow-[0_4px_10px_rgba(45,62,146,0.3)] hover:shadow-[0_6px_14px_rgba(45,62,146,0.4)] transition-all duration-200 flex items-center justify-center"
         title="Show all details"
