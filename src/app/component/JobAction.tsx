@@ -3,6 +3,7 @@ import { JobActionProps } from "@/app/types/job";
 import axios from "axios";
 import { CheckCircleIcon, XCircleIcon, ArrowUpTrayIcon } from '@heroicons/react/24/solid';
 import UploadImagesWithRemark from "./FileToBase64";
+import toast from "react-hot-toast";  // เพิ่ม import toast
 
 const sendEmail = async ({
   emails,
@@ -22,11 +23,11 @@ const sendEmail = async ({
       subject,
       body,
     });
-    alert("📧 Email sent successfully!");
+    toast.success("📧 Email sent successfully!");  // แก้ alert เป็น toast
     return res.data;
   } catch (error) {
     console.error("❌ Failed to send email", error);
-    alert("❌ Failed to send email");
+    toast.error("❌ Failed to send email");  // แก้ alert เป็น toast
   }
 };
 
@@ -62,7 +63,7 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
       );
       const result = response.data;
       if (result.success) {
-        alert("Job successfully accepted.");
+        toast.success("Job successfully accepted.");  // แก้ alert เป็น toast
         setAccepted(true);
 
         setJobs((prevJobs) =>
@@ -80,10 +81,10 @@ Please note that this confirmation is part of the scheduled PNR: ${job.PNR}.
 If you have any questions or require further details, please feel free to contact us.`,
         });
       } else {
-        alert("Failed to accept the job: " + (result?.error || "Unknown error"));
+        toast.error("Failed to accept the job: " + (result?.error || "Unknown error"));  // แก้ alert เป็น toast
       }
     } catch (error) {
-      alert("Error: " + String(error));
+      toast.error("Error: " + String(error));  // แก้ alert เป็น toast
     }
   };
 
@@ -106,15 +107,15 @@ If you have any questions or require further details, please feel free to contac
       );
       const result = response.data;
       if (result.success) {
-        alert("Job successfully canceled.");
+        toast.success("Job successfully canceled.");  // แก้ alert เป็น toast
         setJobs((prevJobs) =>
           prevJobs.map((j) => (j.key === job.key ? { ...j, IsCancel: true } : j))
         );
       } else {
-        alert("Failed to cancel the job: " + (result?.error || "Unknown error"));
+        toast.error("Failed to cancel the job: " + (result?.error || "Unknown error"));  // แก้ alert เป็น toast
       }
     } catch (error) {
-      alert("Error: " + String(error));
+      toast.error("Error: " + String(error));  // แก้ alert เป็น toast
     }
   };
 
