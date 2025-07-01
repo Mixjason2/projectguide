@@ -262,44 +262,38 @@ const ExpandedJobDetail: React.FC<ExpandedJobDetailProps> = ({
           return (
             <div
               key={pnr}
-              className="rounded-xl bg-white border border-gray-300 p-6 shadow-sm max-w-xs mx-auto"
+              className="rounded-xl bg-white border border-gray-300 shadow-sm w-full"
             >
               {/* กรอบเนื้อหา */}
-              <div className="bg-gray-50 border border-gray-200 rounded-t-lg p-4 space-y-3 break-words">
-                <h3 className="font-bold text-blue-800 text-lg leading-tight">
+              <div className="bg-gray-50 border-b border-gray-300 rounded-t-xl p-4 space-y-3 break-words">
+                <h3 className="font-bold text-blue-800 text-xl leading-tight">
                   PNR: {pnr}
-                </h3>
-                {items.map((item) => (
+                </h3> {/* แก้ การแสดงข้อมูล ให้ดูเรียบและสั่น*/}
+                {items.map((item) => (  
                   <div
                     key={item.key}
-                    className="text-gray-700 text-sm leading-relaxed whitespace-pre-line"
+                    className="text-gray-500 text-xs leading-snug whitespace-pre-line"
                   >
-                    {renderPlaceDate(
-                      item.pickup,
-                      customFormatDate(item.pickupDate),
-                      "Pickup"
-                    )}
-                    {renderPlaceDate(
-                      item.dropoff,
-                      customFormatDate(item.dropoffDate),
-                      "Dropoff"
-                    )}
-                    {renderField(
-                      "Pax",
-                      item.adult + item.child + item.childShare + item.infant
-                    )}
+                    {[
+                      item.pickup && `Pickup: ${item.pickup}`,
+                      item.dropoff && `Dropoff: ${item.dropoff}`,
+                      (item.pickupDate || item.dropoffDate) &&
+                      `Date: ${customFormatDate(item.pickupDate)} → ${customFormatDate(item.dropoffDate)}`,
+                      (item.adult + item.child + item.childShare + item.infant) > 0 &&
+                      `Pax: ${item.adult + item.child + item.childShare + item.infant}`,
+                    ]
+                      .filter(Boolean) // ตัดค่าที่ไม่มีออก
+                      .join('\n')}
                   </div>
                 ))}
+
               </div>
 
-
-
-              {/* กรอบปุ่ม ชิดกรอบเนื้อหา */}
-              <div className="bg-white border border-t-0 border-gray-200 rounded-b-lg p-0 flex justify-center w-auto">
+              {/* กรอบปุ่ม */}
+              <div className="bg-white border-t border-gray-300 rounded-b-xl p-2 flex justify-center w-full">
                 <JobAction job={miniJob} setJobs={setJobs} />
               </div>
             </div>
-
 
           );
         })}
