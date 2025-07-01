@@ -1,8 +1,8 @@
 import React from "react";
-import { Job, MergedJob } from "@/app/types/job";
+import { Job } from "@/app/types/job";
 import { JobDetailsProps } from "@/app/types/job";
 
-const AllJobDetails: React.FC<JobDetailsProps> = ({ job, jobs, formatDate }) => {
+const AllJobDetails: React.FC<JobDetailsProps> = ({ job, jobs }) => {
   // ฟังก์ชัน customFormatDate สำหรับการแปลงวันที่ในรูปแบบ DD-MMM-YYYY HH:mm
   const customFormatDate = (dateStr: string): string => {
   const date = new Date(dateStr);
@@ -31,14 +31,6 @@ const AllJobDetails: React.FC<JobDetailsProps> = ({ job, jobs, formatDate }) => 
 
   return (
     <div className="max-h-[60vh] overflow-auto text-xs">
-      {/* แสดงข้อมูล merged job (ตัวอย่าง) */}
-      <div className="mb-4 p-2 bg-blue-100 rounded shadow-sm">
-        <h3 className="font-bold mb-2 text-base">Summary for Merged Job</h3>
-        <div><strong>PNRs:</strong> {job.PNR.join(", ")}</div>
-        <div><strong>Keys:</strong> {job.keys.join(", ")}</div>
-        <div><strong>PNR Date:</strong> {customFormatDate(job.PNRDate)}</div> {/* เปลี่ยนเป็น customFormatDate */}
-      </div>
-
       {/* แสดงรายละเอียดแบบเดิม */}
       {Object.entries(groupedByDate).map(([pnrDate, pnrGroups]) => (
         <div key={pnrDate} className="mb-8">

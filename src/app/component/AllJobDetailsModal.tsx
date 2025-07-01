@@ -4,58 +4,57 @@ import AllJobDetails from "./AllJobDetails";
 
 interface Props {
   detailJobs: Job[] | null;
-  mergedJob: MergedJob;
   setDetailJobs: React.Dispatch<React.SetStateAction<Job[] | null>>;
 }
 
-const AllJobDetailsModal: React.FC<Props> = ({ detailJobs, mergedJob, setDetailJobs }) => {
+const AllJobDetailsModal: React.FC<Props> = ({ detailJobs, setDetailJobs}) => {
   console.log("AllJobDetailsModal is rendering...");
 
-  // ถ้าไม่มีข้อมูล หรือ mergedJob ไม่พร้อม ให้ไม่แสดง Modal
-  if (!detailJobs || !mergedJob) return null;
+  // Modal open/close state
+  const [modalIsOpen, setModalIsOpen] = useState<boolean>(true);
 
-  const [modalIsOpen, setModalIsOpen] = useState<boolean>(true); // สร้าง state สำหรับเปิด/ปิด modal
-
-  // เมื่อ modal ปิด
+  // Close modal
   const handleCloseModal = (e: React.MouseEvent | React.SyntheticEvent) => {
     console.log("Closing modal...");
-    setModalIsOpen(false); // ตั้งค่าให้ modal ปิด
+    setModalIsOpen(false);
     setDetailJobs(null); // Close modal by setting detailJobs to null
     console.log("setDetailJobs called with null");
   };
 
   useEffect(() => {
-    // เมื่อ `detailJobs` ถูกตั้งค่าใหม่ (ไม่เป็น null) ให้เปิด modal
+    // Open modal when detailJobs is set
     if (detailJobs !== null) {
-      setModalIsOpen(true); // เปิด modal
+      setModalIsOpen(true);
     }
-  }, [detailJobs]); // ใช้ `detailJobs` เป็น dependency เพื่อให้ modal เปิดใหม่เมื่อข้อมูลถูกตั้งค่า
+  }, [detailJobs]); // Use detailJobs as dependency to reopen modal when data is updated
 
   return (
     modalIsOpen && (
       <div
         className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
-        onClick={handleCloseModal} // คลิกพื้นหลังจะปิด modal
+        onClick={handleCloseModal}
       >
         <div
           className="bg-white rounded-xl shadow-2xl border-4 border-blue-400 p-8 max-w-2xl w-full relative animate-fade-in"
-          onClick={(e) => e.stopPropagation()} // ป้องกันไม่ให้คลิกใน modal ปิด modal
+          onClick={(e) => e.stopPropagation()} // Prevent click event from closing modal
         >
           <button
             className="absolute top-2 right-2 btn btn-sm btn-error"
             onClick={(e) => {
-              e.stopPropagation(); // หยุดการ bubble ของ event ที่มาจากการคลิกปุ่ม
-              handleCloseModal(e); // ปิด modal
+              e.stopPropagation(); // Stop event bubbling
+              handleCloseModal(e); // Close modal
             }}
           >
             ✕
           </button>
           <h2 className="text-xl font-Arial mb-4">All Job Details</h2>
-          <AllJobDetails
-            job={mergedJob}
-            jobs={detailJobs}
-            formatDate={(d) => new Date(d).toLocaleDateString()}
-          />
+          {detailJobs && (
+            <AllJobDetails
+              job={detailJobs[0]}  // Or another appropriate job if required
+              jobs={detailJobs}  // Pass the entire array of jobs
+              formatDate={(d) => new Date(d).toLocaleDateString()}  // Date formatting function
+            />
+          )}
         </div>
       </div>
     )

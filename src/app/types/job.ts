@@ -1,6 +1,9 @@
 import { ChangeEvent, ReactNode } from "react";
 
 export type Job = {
+  allByPNR: {};
+  all: any;
+  serviceProductName: any;
   Driver: any;
   Vehicle: any;
   Guide: any;
@@ -44,9 +47,13 @@ export type MergedJob = Omit<Job, 'PNR'> & {
   allByPNR: Record<string, Job[]>;  // เก็บ job แยกตาม PNR (คือออบเจ็กต์ที่มี PNR เป็น key และ array ของ Job เป็น value)
 };
 
+export interface JobActionProps {
+  job: Job;
+  setJobs: React.Dispatch<React.SetStateAction<Job[]>>;
+}
 
 export type ExpandedJobDetailProps = {
-  job: MergedJob;
+  job: Job;
   jobs: Job[];
   expandedPNRs: Record<string, boolean>;
   renderPlaceDate: (place: string, date: string, label: string) => ReactNode;
@@ -60,16 +67,11 @@ export type FetchStatusProps = {
   filteredJobsLength: number;
 };
 
-export type JobDetailsProps = {
-  job: MergedJob;
-  jobs: Job[];
-  formatDate: (dateStr: string) => string;
-};
-
-export type JobActionProps = {
-  job: any; // หรือ Job ถ้ามี type
-  setJobs: React.Dispatch<React.SetStateAction<any[]>>; // หรือ Job[]
-};
+export interface JobDetailsProps {
+  job: Job;  // Add job prop
+  jobs: Job[]; // Add jobs prop
+  formatDate: (date: string) => string;
+}
 
 export type FilterStatus = "all" | "confirmed" | "cancelled";
 
@@ -87,14 +89,14 @@ export type JobsSummaryProps = {
   filteredByDate: Job[];
 };
 
-export type JobCardProps = {
-  job: MergedJob;
-  expandedPNRs: { [pnr: string]: boolean };
-  setExpandedPNRs: React.Dispatch<React.SetStateAction<{ [pnr: string]: boolean }>>;
+export interface JobCardProps {
+  job: Job[];  // Add jobGroup to the props
+  expandedPNRs: { [key: string]: boolean };
+  setExpandedPNRs: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>;
   setDetailJobs: React.Dispatch<React.SetStateAction<Job[] | null>>;
   jobs: Job[];
   setJobs: React.Dispatch<React.SetStateAction<Job[]>>;
-};
+}
 
 export type Props = {
     onBase64ListReady: (b64List: string[], remark: string) => void;
@@ -117,4 +119,20 @@ export interface EditFormProps {
 export interface PendingFilterProps {
   showPendingOnly: boolean;
   onChange: (checked: boolean) => void;
+}
+
+export interface JobKeyObj {
+  key: number;
+  PNR: string;
+  PNRDate: string;
+  Booking_Name: string;
+  serviceSupplierCode_TP: string;
+  // ใส่ properties อื่น ๆ ตามที่ใช้จริง
+}
+
+export interface JobToAccept {
+  key: JobKeyObj[]; // เพราะ job.key คือ array ของ object แบบนี้
+  IsConfirmed?: boolean[]; // หรือประเภทที่ตรงกับข้อมูลจริง
+  indexInGroup: number;
+  // ใส่ propertiesอื่น ๆ ที่ใช้ในฟังก์ชัน
 }
