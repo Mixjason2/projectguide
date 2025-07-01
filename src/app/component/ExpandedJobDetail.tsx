@@ -22,6 +22,8 @@ const ExpandedJobDetail: React.FC<ExpandedJobDetailProps & {
   renderPlaceDate,
   renderField,
   setJobs,
+  onAccept,
+  onReject,
 }) => {
     if (!expandedPNRs[job.PNRDate]) return null;
 
@@ -86,10 +88,10 @@ const ExpandedJobDetail: React.FC<ExpandedJobDetailProps & {
           return (
             <div
               key={pnr}
-              className="rounded-xl bg-white border border-gray-300 p-6 shadow-sm max-w-xs mx-auto"
+              className="rounded-xl bg-white border border-gray-300 shadow-sm max-w-xs mx-auto"
             >
               {/* กรอบเนื้อหา */}
-              <div className="bg-gray-50 border border-gray-200 rounded-t-lg p-4 space-y-3 break-words">
+              <div className="bg-gray-50 border border-gray-200 rounded-t-lg space-y-3 break-words p-6">
                 <h3 className="font-bold text-blue-800 text-lg leading-tight">
                   PNR: {pnr}
                 </h3>
@@ -115,15 +117,22 @@ const ExpandedJobDetail: React.FC<ExpandedJobDetailProps & {
                   </div>
                 ))}
               </div>
+
+
+
               {/* กรอบปุ่ม ชิดกรอบเนื้อหา */}
-              <div className="bg-white border border-t-0 border-gray-200 rounded-b-lg p-0 flex justify-center w-auto">
+              <div className="bg-white border border-t-0 border-gray-200 rounded-b-lg flex justify-center w-auto p-6">
                 <JobAction job={miniJob} setJobs={setJobs} />
               </div>
             </div>
+
+
           );
         })}
       </div>
     </div>
+
+
   );
 };
 
