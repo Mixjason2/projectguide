@@ -50,6 +50,7 @@ exports.__esModule = true;
 var react_1 = require("react");
 var axios_1 = require("axios");
 var solid_1 = require("@heroicons/react/24/solid");
+var FileToBase64_1 = require("./FileToBase64");
 var sendEmail = function (_a) {
     var emails = _a.emails, emails_CC = _a.emails_CC, subject = _a.subject, body = _a.body;
     return __awaiter(void 0, void 0, void 0, function () {
@@ -186,12 +187,17 @@ var JobAction = function (_a) {
     }); };
     return (react_1["default"].createElement("div", { className: "w-full border rounded-xl p-2 shadow bg-white" }, job.IsCancel ? null : accepted ? (react_1["default"].createElement(react_1["default"].Fragment, null,
         react_1["default"].createElement("button", { onClick: function () { return setShowUploadModal(true); }, className: "w-full py-2 rounded-lg text-blue-700 hover:bg-gray-100 flex items-center justify-center transition", title: "Upload Documents" },
-            react_1["default"].createElement(solid_1.ArrowUpTrayIcon, { className: "w-6 h-6" })))) : (react_1["default"].createElement(react_1["default"].Fragment, null,
-        react_1["default"].createElement("div", { className: "flex gap-2 w-full" },
-            react_1["default"].createElement("button", { className: "flex-1 py-2 rounded-lg bg-[#95c941] hover:opacity-90 flex items-center justify-center transition", onClick: handleAccept, title: "Accept" },
-                react_1["default"].createElement(solid_1.CheckCircleIcon, { className: "w-6 h-6 text-white" })),
-            react_1["default"].createElement("button", { className: "flex-1 py-2 rounded-lg bg-[#ef4444] hover:opacity-90 flex items-center justify-center transition", onClick: handleReject, title: "Reject" },
-                react_1["default"].createElement(solid_1.XCircleIcon, { className: "w-6 h-6 text-white" })))))));
+            react_1["default"].createElement(solid_1.ArrowUpTrayIcon, { className: "w-6 h-6" })),
+        showUploadModal && (react_1["default"].createElement("div", { className: "fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center", onClick: function () { return setShowUploadModal(false); } },
+            react_1["default"].createElement("div", { className: "bg-white rounded-2xl shadow-lg p-6 relative max-w-3xl w-full", onClick: function (e) { return e.stopPropagation(); } },
+                react_1["default"].createElement("button", { onClick: function () { return setShowUploadModal(false); }, className: "absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-xl font-bold" }, "\u00D7"),
+                react_1["default"].createElement(FileToBase64_1["default"], { token: localStorage.getItem("token") || "", keyValue: job.key, job: job })))))) : (
+    // ✅ ปุ่ม Accept / Reject ต้องอยู่ในนี้
+    react_1["default"].createElement("div", { className: "flex gap-2 w-full" },
+        react_1["default"].createElement("button", { className: "flex-1 py-2 rounded-lg bg-[#95c941] hover:opacity-90 flex items-center justify-center transition", onClick: handleAccept, title: "Accept" },
+            react_1["default"].createElement(solid_1.CheckCircleIcon, { className: "w-6 h-6 text-white" })),
+        react_1["default"].createElement("button", { className: "flex-1 py-2 rounded-lg bg-[#ef4444] hover:opacity-90 flex items-center justify-center transition", onClick: handleReject, title: "Reject" },
+            react_1["default"].createElement(solid_1.XCircleIcon, { className: "w-6 h-6 text-white" }))))));
 };
 var ExpandedJobDetail = function (_a) {
     var job = _a.job, expandedPNRs = _a.expandedPNRs, renderPlaceDate = _a.renderPlaceDate, renderField = _a.renderField, setJobs = _a.setJobs;
@@ -237,16 +243,23 @@ var ExpandedJobDetail = function (_a) {
             var pnr = _a[0], items = _a[1];
             var firstItem = items[0]; // ใช้ item แรกในการสร้าง miniJob
             var miniJob = __assign(__assign({}, job), { PNR: firstItem.pnr, Pickup: firstItem.pickup, PickupDate: firstItem.pickupDate, Dropoff: firstItem.dropoff, DropoffDate: firstItem.dropoffDate, AdultQty: firstItem.adult, ChildQty: firstItem.child, ChildShareQty: firstItem.childShare, InfantQty: firstItem.infant, key: firstItem.key, IsConfirmed: firstItem.IsConfirmed, IsCancel: firstItem.IsCancel });
-            return (react_1["default"].createElement("div", { key: pnr, className: "rounded-xl bg-white border border-gray-300 p-6 shadow-sm max-w-xs mx-auto" },
-                react_1["default"].createElement("div", { className: "bg-gray-50 border border-gray-200 rounded-t-lg p-4 space-y-3 break-words" },
-                    react_1["default"].createElement("h3", { className: "font-bold text-blue-800 text-lg leading-tight" },
+            return (react_1["default"].createElement("div", { key: pnr, className: "rounded-xl bg-white border border-gray-300 shadow-sm w-full" },
+                react_1["default"].createElement("div", { className: "bg-gray-50 border-b border-gray-300 rounded-t-xl p-4 space-y-3 break-words" },
+                    react_1["default"].createElement("h3", { className: "font-bold text-blue-800 text-xl leading-tight" },
                         "PNR: ",
                         pnr),
-                    items.map(function (item) { return (react_1["default"].createElement("div", { key: item.key, className: "text-gray-700 text-sm leading-relaxed whitespace-pre-line" },
-                        renderPlaceDate(item.pickup, customFormatDate(item.pickupDate), "Pickup"),
-                        renderPlaceDate(item.dropoff, customFormatDate(item.dropoffDate), "Dropoff"),
-                        renderField("Pax", item.adult + item.child + item.childShare + item.infant))); })),
-                react_1["default"].createElement("div", { className: "bg-white border border-t-0 border-gray-200 rounded-b-lg p-0 flex justify-center w-auto" },
+                    " ",
+                    items.map(function (item) { return (react_1["default"].createElement("div", { key: item.key, className: "text-gray-500 text-xs leading-snug whitespace-pre-line" }, [
+                        item.pickup && "Pickup: " + item.pickup,
+                        item.dropoff && "Dropoff: " + item.dropoff,
+                        (item.pickupDate || item.dropoffDate) &&
+                            "Date: " + customFormatDate(item.pickupDate) + " \u2192 " + customFormatDate(item.dropoffDate),
+                        (item.adult + item.child + item.childShare + item.infant) > 0 &&
+                            "Pax: " + (item.adult + item.child + item.childShare + item.infant),
+                    ]
+                        .filter(Boolean) // ตัดค่าที่ไม่มีออก
+                        .join('\n'))); })),
+                react_1["default"].createElement("div", { className: "bg-white border-t border-gray-300 rounded-b-xl p-2 flex justify-center w-full" },
                     react_1["default"].createElement(JobAction, { job: miniJob, setJobs: setJobs }))));
         }))));
 };

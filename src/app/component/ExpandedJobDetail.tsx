@@ -85,51 +85,55 @@ const ExpandedJobDetail: React.FC<ExpandedJobDetailProps & {
               IsCancel: firstItem.IsCancel,
             };
 
-            return (
-              <div
-                key={pnr}
-                className="rounded-xl bg-white border border-gray-300 p-6 shadow-sm max-w-xs mx-auto"
-              >
-                <div className="bg-gray-50 border border-gray-200 rounded-t-lg p-4 space-y-3 break-words">
-                  <h3 className="font-bold text-blue-800 text-lg leading-tight">
-                    PNR: {pnr}
-                  </h3>
-                  {items.map((item) => (
-                    <div
-                      key={item.key}
-                      className="text-gray-700 text-sm leading-relaxed whitespace-pre-line"
-                    >
-                      {renderPlaceDate(
-                        item.pickup,
-                        customFormatDate(item.pickupDate),
-                        "Pickup"
-                      )}
-                      {renderPlaceDate(
-                        item.dropoff,
-                        customFormatDate(item.dropoffDate),
-                        "Dropoff"
-                      )}
-                      {renderField(
-                        "Pax",
-                        item.adult + item.child + item.childShare + item.infant
-                      )}
-                    </div>
-                  ))}
-                </div>
-                <div className="bg-white border border-t-0 border-gray-200 rounded-b-lg p-0 flex justify-center w-auto">
-                  <JobAction
-                    job={miniJob}
-                    setJobs={setJobs}
-                    onAccept={onAccept}
-                    onReject={onReject}
-                  />
-                </div>
+          return (
+            <div
+              key={pnr}
+              className="rounded-xl bg-white border border-gray-300 p-6 shadow-sm max-w-xs mx-auto"
+            >
+              {/* กรอบเนื้อหา */}
+              <div className="bg-gray-50 border border-gray-200 rounded-t-lg p-4 space-y-3 break-words">
+                <h3 className="font-bold text-blue-800 text-lg leading-tight">
+                  PNR: {pnr}
+                </h3>
+                {items.map((item) => (
+                  <div
+                    key={item.key}
+                    className="text-gray-700 text-sm leading-relaxed whitespace-pre-line"
+                  >
+                    {renderPlaceDate(
+                      item.pickup,
+                      customFormatDate(item.pickupDate),
+                      "Pickup"
+                    )}
+                    {renderPlaceDate(
+                      item.dropoff,
+                      customFormatDate(item.dropoffDate),
+                      "Dropoff"
+                    )}
+                    {renderField(
+                      "Pax",
+                      item.adult + item.child + item.childShare + item.infant
+                    )}
+                  </div>
+                ))}
               </div>
-            );
-          })}
-        </div>
+
+
+
+              {/* กรอบปุ่ม ชิดกรอบเนื้อหา */}
+              <div className="bg-white border border-t-0 border-gray-200 rounded-b-lg p-0 flex justify-center w-auto">
+                <JobAction job={miniJob} setJobs={setJobs} />
+              </div>
+            </div>
+
+
+          );
+        })}
       </div>
-    );
-  };
+    </div>
+
+
+  );
+};
 
 export default ExpandedJobDetail;
