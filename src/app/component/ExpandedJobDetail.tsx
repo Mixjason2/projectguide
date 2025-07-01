@@ -22,8 +22,6 @@ const ExpandedJobDetail: React.FC<ExpandedJobDetailProps & {
   renderPlaceDate,
   renderField,
   setJobs,
-  onAccept,
-  onReject,
 }) => {
     if (!expandedPNRs[job.PNRDate]) return null;
 
@@ -117,22 +115,15 @@ const ExpandedJobDetail: React.FC<ExpandedJobDetailProps & {
                   </div>
                 ))}
               </div>
-
-
-
               {/* กรอบปุ่ม ชิดกรอบเนื้อหา */}
               <div className="bg-white border border-t-0 border-gray-200 rounded-b-lg p-0 flex justify-center w-auto">
                 <JobAction job={miniJob} setJobs={setJobs} />
               </div>
             </div>
-
-
           );
         })}
       </div>
     </div>
-
-
   );
 };
 
