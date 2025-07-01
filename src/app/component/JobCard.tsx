@@ -6,7 +6,7 @@ import { useState } from 'react';
 const renderPlaceDate = (place: string, date: string, label: string) => (
   place || date ? (
     <div>
-      <span className="font-Arial">{label}:</span> {place}{place && date ? ' - ' : ''}{date}
+      <span className="font-Arial font-bold">{label}:</span> {place}{place && date ? ' - ' : ''}{date}
     </div>
   ) : null
 );
@@ -14,12 +14,12 @@ const renderPlaceDate = (place: string, date: string, label: string) => (
 const renderField = (label: string, value: any) => (
   Array.isArray(value) ? (
     <div>
-      <span className="font-Arial">{label}:</span>
+      <span className="font-Arial font-bold">{label}:</span>
       <ul className="list-disc ml-6">{value.map((v, i) => <li key={i}>{String(v)}</li>)}</ul>
     </div>
   ) : (
     <div>
-      <span className="font-Arial">{label}:</span> {String(value)}
+      <span className="font-Arial font-bold">{label}:</span> {String(value)}
     </div>
   )
 );
