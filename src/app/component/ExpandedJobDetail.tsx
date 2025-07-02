@@ -118,8 +118,6 @@ const ExpandedJobDetail: React.FC<ExpandedJobDetailProps & {
                 ))}
               </div>
 
-
-
               {/* กรอบปุ่ม ชิดกรอบเนื้อหา */}
               <div className="bg-white border border-t-0 border-gray-200 rounded-b-lg flex justify-center w-auto p-6">
                 <JobAction job={miniJob} setJobs={setJobs} />
