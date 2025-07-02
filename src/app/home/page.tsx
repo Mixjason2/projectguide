@@ -23,14 +23,14 @@ function groupJobsByPNRDate(jobs: Job[]): Record<string, Job[]> {
 // Get the date of 30 days ago
 const get30DaysAgo = () => {
   const date = new Date();
-  date.setDate(date.getDate() - 30);
+  date.setDate(date.getDate() + 1);
   return date.toISOString().slice(0, 10);
 };
 
 // Get the last date of the previous month
 const getEndOfLastMonth = () => {
   const date = new Date();
-  date.setDate(0);
+  date.setDate(date.getDate() + 31);
   return date.toISOString().slice(0, 10);
 };
 

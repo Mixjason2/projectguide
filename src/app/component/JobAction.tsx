@@ -110,12 +110,38 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
         await sendEmail({
           emails: ["fomexii@hotmail.com"],
           emails_CC: "",
-          subject: `Job Accepted: ${job.PNR}`,
-          body: `The job for service ${job.serviceProductName} has been successfully accepted.
-
-Please note that this confirmation is part of the scheduled PNR: ${job.PNR}.
-
-If you have any questions or require further details, please feel free to contact us.`,
+          subject: `Confirmation ${job.PNR}`,
+          body: `<table border="1" cellspacing="0" cellpadding="8" style="border-collapse: collapse; width: 100%;">
+  <thead style="background-color: #f2f2f2;">
+    <tr>
+      <th style="text-align: left;">Information</th>
+      <th style="text-align: left;">Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>DTH Ref. No.</td><td>${job.PNR}</td></tr>
+    <tr><td>Service Name</td><td>${job.serviceProductName}</td></tr>
+    <tr><td>Service Date</td><td>${job.PNRDate}</td></tr>
+    <tr><td>Comment</td><td>${job.Comment}</td></tr>
+    <tr><td>Class</td><td>${job.Class}</td></tr>
+    <tr><td>Booking Status</td><td>${job.serviceTypeName}</td></tr>
+    <tr>
+      <td>Client name</td>
+      <td>
+        ${job.pax_name}
+      </td>
+    </tr>
+    <tr><td>Pickup Date & Time</td><td>${job.PickupDate}</td></tr>
+    <tr><td>Pickup Location</td><td>${job.Pickup}</td></tr>
+    <tr><td>Dropoff Date & Time</td><td>${job.DropoffDate}</td></tr>
+    <tr><td>Dropoff Location</td><td>${job.Dropoff}</td></tr>
+    <tr><td>Guide</td><td>${job.Guide}</td></tr>
+    <tr><td>Vehicle</td><td>${job.Vehicle}</td></tr>
+    <tr><td>Driver</td><td>${job.Driver}</td></tr>
+    <tr><td>Remarks</td><td>${job.Remark}</td></tr>
+    <tr><td>Sending by</td><td>User: </td></tr>
+  </tbody>
+</table>`,
         });
       } else {
         await Swal.fire({
