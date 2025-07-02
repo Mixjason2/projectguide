@@ -10,7 +10,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [connection, setConnection] = useState("[AS-DTGTHA]"); // ค่าเริ่มต้นสำหรับการเชื่อมต่อ
 
 
@@ -98,9 +98,10 @@ if (rememberMe) {
       } else {
         setMessage("Incorrect username or password.");
       }
-    } catch (err) {
-      setMessage("Failed to connect to the server.");
-    }
+} catch (err) {
+  console.error(err); // ใช้งานตัวแปร err ที่ถูกจับมา
+  setMessage("Failed to connect to the server.");
+}
     // setLoading(false);
   };
 

@@ -1,10 +1,11 @@
 'use client';
 import React, { useState } from "react";
 import Link from "next/link";
- 
+import Image from 'next/image';
+
 export default function CssgGuide({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
- 
+
   return (
     <>
       {/* Header */}
@@ -31,16 +32,19 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
             </svg>
           </button>
         </div>
- 
+
         {/* Center: Logo */}
         <div className="flex items-center justify-center w-full">
-          <img
+          <Image
             src="https://dth.travel/wp-content/uploads/2023/08/DTH-LOGO-FULL-WHITE-FORMERLY-new.svg"
             alt="DTH Logo"
-            className="h-16 w-auto"
+            height={140}  // ปรับขนาดตามที่ต้องการ (16 x 4)
+            width={64}
+            priority // โหลดเร็ว
+            className="w-auto"
           />
         </div>
- 
+
         {/* Right: Notification Button */}
         <div className="flex-none flex items-center">
           <button
@@ -64,7 +68,7 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
           </button>
         </div>
       </header>
- 
+
       {/* Drawer */}
       {open && (
         <>
@@ -74,7 +78,7 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
             onClick={() => setOpen(false)}
             aria-hidden="true"
           />
- 
+
           {/* Drawer panel */}
           <nav
             id="drawer-navigation"
@@ -114,7 +118,7 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
                 </svg>
               </button>
             </div>
- 
+
             {/* Menu items and logout */}
             <div className="flex flex-col flex-1 overflow-hidden pb-8">
               <ul className="flex-1 overflow-y-auto space-y-2 font-medium">
@@ -155,7 +159,7 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
                     <span className="ms-4">Calendar</span>
                   </Link>
                 </li>
- 
+
                 <li>
                   <Link
                     href="/home"
@@ -179,7 +183,7 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
                     <span className="ms-4">Jobs List</span>
                   </Link>
                 </li>
- 
+
                 {/* <li>
                   <Link
                     href="/booking"
@@ -204,41 +208,41 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
                   </Link>
                 </li> */}
               </ul>
- 
+
               {/* Logout button */}
-<div className="mt-auto pt-4">
-  <a
-    href="/"
-    className="flex w-full items-center py-4 px-3 text-red-600 font-medium rounded-lg hover:bg-[#FDECEA] transition-colors duration-200"
-  >
-    <svg
-      className="w-5 h-5 text-red-600 transition duration-75 group-hover:text-red-500"
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1"
-      />
-    </svg>
-    <span className="ms-3">Log Out</span>
-  </a>
-</div>
- 
+              <div className="mt-auto pt-4">
+                <Link
+                  href="/"
+                  className="flex w-full items-center py-4 px-3 text-red-600 font-medium rounded-lg hover:bg-[#FDECEA] transition-colors duration-200"
+                >
+                  <svg
+                    className="w-5 h-5 text-red-600 transition duration-75 group-hover:text-red-500"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1"
+                    />
+                  </svg>
+                  <span className="ms-3">Log Out</span>
+                </Link>
+              </div>
+
             </div>
           </nav>
         </>
       )}
- 
+
       {/* Main content */}
       <main>{children}</main>
     </>
   );
 }
- 
- 
+
+
