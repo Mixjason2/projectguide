@@ -282,7 +282,7 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number; job: J
             setResponseMsg(res.data.message || "Upload สำเร็จ");
             await fetchUploadedData();
             await sendEmail({
-                emails: ["fomexii@hotmail.com"],
+                emails: ["veeratha.p@dth.travel"],
                 emails_CC: "",
                 subject: `Uploaded: ${keyValue}`,
                 body: `<table border="1" cellspacing="0" cellpadding="8" style="border-collapse: collapse; width: 100%;">
