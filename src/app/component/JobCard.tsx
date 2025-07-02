@@ -49,13 +49,13 @@ const JobCard: React.FC<JobCardProps> = ({
     >
       {/* แสดงสถานะรวมของ job[0] */}
       <div
-        className="absolute top-2 left-1 text-[#ffffff] font-Arial rounded-full px-3 py-1 text-sm shadow z-10 flex items-center"
+        className="absolute top-2 left-4 bg-white text-gray-800 font-Arial rounded-full px-3 py-1 text-sm shadow-none border-none z-10 flex items-center"
       >
         {/* แสดงจุดตามจำนวนงาน */}
         {job.map((_, idx) => (
           <span
             key={idx}
-            className="inline-block w-2.5 h-2.5 rounded-full mx-1"
+            className="inline-block w-3 h-3 rounded-full mx-1"
             style={{
               backgroundColor:
                 job[idx]?.isChange ? "#f97316" :  // สีส้มถ้า isChange

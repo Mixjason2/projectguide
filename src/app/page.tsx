@@ -108,7 +108,7 @@ if (rememberMe) {
     <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#2d4392" }}>
       <div className="card w-full max-w-3xl bg-white shadow-xl rounded-xl relative overflow-hidden">
         {/* มุมบนขวาสีเขียวเป็นวงกลมโค้งลง */}
-        <div
+        <div className="absolute top-0 right-0 z-20 overflow-hidden"
           style={{
             position: "absolute",
             top: 0,
@@ -176,7 +176,7 @@ if (rememberMe) {
             ></path>
           </svg>
         </div>
-        <div className="card-body relative z-10">
+        <div className="card-body relative z-10 ml-auto pr-4">
           <div className="flex flex-col items-center justify-center p-0 m-0 leading-none min-h-[150px]">
             <div className="w-[12rem] max-w-full mx-auto">
               <svg
