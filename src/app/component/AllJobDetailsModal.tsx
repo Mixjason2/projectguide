@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Job, MergedJob } from "@/app/types/job";
+import { Job } from "@/app/types/job";
 import AllJobDetails from "./AllJobDetails";
 
 interface Props {
@@ -14,7 +14,7 @@ const AllJobDetailsModal: React.FC<Props> = ({ detailJobs, setDetailJobs}) => {
   const [modalIsOpen, setModalIsOpen] = useState<boolean>(true);
 
   // Close modal
-  const handleCloseModal = (e: React.MouseEvent | React.SyntheticEvent) => {
+  const handleCloseModal = () => {
     console.log("Closing modal...");
     setModalIsOpen(false);
     setDetailJobs(null); // Close modal by setting detailJobs to null
@@ -42,7 +42,7 @@ const AllJobDetailsModal: React.FC<Props> = ({ detailJobs, setDetailJobs}) => {
             className="absolute top-2 right-2 btn btn-sm btn-error"
             onClick={(e) => {
               e.stopPropagation(); // Stop event bubbling
-              handleCloseModal(e); // Close modal
+              handleCloseModal(); // Close modal
             }}
           >
             ✕

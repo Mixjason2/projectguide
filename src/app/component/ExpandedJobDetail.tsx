@@ -22,8 +22,6 @@ const ExpandedJobDetail: React.FC<ExpandedJobDetailProps & {
   renderPlaceDate,
   renderField,
   setJobs,
-  onAccept,
-  onReject,
 }) => {
     if (!expandedPNRs[job.PNRDate]) return null;
 

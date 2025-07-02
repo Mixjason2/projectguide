@@ -1,19 +1,26 @@
 import { ReactNode } from 'react';
 
-export type Job = {
-  isChange: boolean;
-  key: number;
+export interface Job {
+  key: number | string;
   PNR: string;
   PickupDate: string;
+  DropoffDate: string;
+  serviceProductName: string;
   Pickup: string;
+  Dropoff: string;
+  pax_name: string;
   AdultQty: number;
   ChildQty: number;
   ChildShareQty: number;
   InfantQty: number;
-  pax_name: ReactNode;
-  Booking_Name: ReactNode;
-  serviceProductName: ReactNode;
-};
+  IsConfirmed?: boolean;
+  IsCancel?: boolean;
+
+  // ✅ เพิ่มสองบรรทัดนี้เข้าไป
+  isNew?: boolean;
+  isChange?: boolean;
+}
+
 
 export function getTotalPax(job: Job): number {
   return job.AdultQty + job.ChildQty + job.ChildShareQty + job.InfantQty;
