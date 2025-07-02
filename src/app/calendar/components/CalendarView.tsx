@@ -4,7 +4,7 @@ import React, { useMemo, useRef, useEffect, useState } from 'react'; // ✅ เ�
 import FullCalendar from '@fullcalendar/react';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
-import { DatesSetArg } from '@fullcalendar/core';
+import { DatesSetArg, EventClickArg, EventContentArg } from '@fullcalendar/core';
 import { Job, getTotalPax } from './types';
 
 type CalendarViewProps = {
@@ -157,11 +157,12 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     }));
   }, [jobs, currentViewProp]);
 
-  const handleEventClick = (info: any) => {
-    if (currentViewProp === 'dayGridMonth') {
-      const jobsOnDate: Job[] = info.event.extendedProps.jobs || [];
-      const clickedDate = info.event.startStr.split('T')[0];
-      const details = jobsOnDate
+const handleEventClick = (info: EventClickArg) => {
+  if (currentViewProp === 'dayGridMonth') {
+    const jobsOnDate: Job[] = info.event.extendedProps.jobs || [];
+    const clickedDate = info.event.startStr.split('T')[0];
+
+    const details = jobsOnDate
         .map((job, i) => {
           const pickupTime = new Date(job.PickupDate).toLocaleTimeString('en-GB', {
             hour: '2-digit',
@@ -205,7 +206,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     const start = new Date(job.PickupDate);
     const end = new Date(start.getTime() + 60 * 60 * 1000);
 
-    let ics = [
+    const ics = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
       'CALSCALE:GREGORIAN',
@@ -249,10 +250,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     URL.revokeObjectURL(url);
   };
 
-  const renderEventContent = (arg: any) => {
-    const job = arg.event.extendedProps?.job;
-    const jobs: Job[] = arg.event.extendedProps?.jobs;
-    const statusDots = getStatusDots(job ?? jobs ?? []);
+const renderEventContent = (arg: EventContentArg) => {
+  const job = arg.event.extendedProps?.job;
+  const jobs: Job[] = arg.event.extendedProps?.jobs;
+  const statusDots = getStatusDots(job ?? jobs ?? []);
 
     return (
       <div

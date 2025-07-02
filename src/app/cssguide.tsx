@@ -1,9 +1,10 @@
+'use client';
 import React, { useState } from "react";
 import Link from "next/link";
-
+ 
 export default function CssgGuide({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
-
+ 
   return (
     <>
       {/* Header */}
@@ -30,7 +31,7 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
             </svg>
           </button>
         </div>
-
+ 
         {/* Center: Logo */}
         <div className="flex items-center justify-center w-full">
           <img
@@ -39,7 +40,7 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
             className="h-16 w-auto"
           />
         </div>
-
+ 
         {/* Right: Notification Button */}
         <div className="flex-none flex items-center">
           <button
@@ -56,14 +57,14 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth="2"
-                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0
                   .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
               />
             </svg>
           </button>
         </div>
       </header>
-
+ 
       {/* Drawer */}
       {open && (
         <>
@@ -73,7 +74,7 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
             onClick={() => setOpen(false)}
             aria-hidden="true"
           />
-
+ 
           {/* Drawer panel */}
           <nav
             id="drawer-navigation"
@@ -113,7 +114,7 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
                 </svg>
               </button>
             </div>
-
+ 
             {/* Menu items and logout */}
             <div className="flex flex-col flex-1 overflow-hidden pb-8">
               <ul className="flex-1 overflow-y-auto space-y-2 font-medium">
@@ -154,7 +155,7 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
                     <span className="ms-4">Calendar</span>
                   </Link>
                 </li>
-
+ 
                 <li>
                   <Link
                     href="/home"
@@ -178,7 +179,7 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
                     <span className="ms-4">Jobs List</span>
                   </Link>
                 </li>
-
+ 
                 {/* <li>
                   <Link
                     href="/booking"
@@ -203,7 +204,7 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
                   </Link>
                 </li> */}
               </ul>
-
+ 
               {/* Logout button */}
 <div className="mt-auto pt-4">
   <a
@@ -228,14 +229,16 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
     <span className="ms-3">Log Out</span>
   </a>
 </div>
-
+ 
             </div>
           </nav>
         </>
       )}
-
+ 
       {/* Main content */}
       <main>{children}</main>
     </>
   );
 }
+ 
+ 
