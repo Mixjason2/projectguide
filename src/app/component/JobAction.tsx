@@ -108,7 +108,7 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
         );
 
         await sendEmail({
-          emails: ["fomexii@hotmail.com"],
+          emails: ["veeratha.p@dth.travel"],
           emails_CC: "",
           subject: `Confirmation ${job.PNR}`,
           body: `<table border="1" cellspacing="0" cellpadding="8" style="border-collapse: collapse; width: 100%;">
