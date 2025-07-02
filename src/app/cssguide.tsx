@@ -34,16 +34,14 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Center: Logo */}
-        <div className="flex items-center justify-center w-full">
-          <Image
-            src="https://dth.travel/wp-content/uploads/2023/08/DTH-LOGO-FULL-WHITE-FORMERLY-new.svg"
-            alt="DTH Logo"
-            height={140}  // ปรับขนาดตามที่ต้องการ (16 x 4)
-            width={64}
-            priority // โหลดเร็ว
-            className="w-auto"
-          />
-        </div>
+<Image
+  src="https://dth.travel/wp-content/uploads/2023/08/DTH-LOGO-FULL-WHITE-FORMERLY-new.svg"
+  alt="DTH Logo"
+  width={0}       // ไม่กำหนด
+  height={0}
+  priority
+  className="w-24 h-auto"  // หรือ w-24, w-20, ลองปรับตามต้องการ
+/>
 
         {/* Right: Notification Button */}
         <div className="flex-none flex items-center">
