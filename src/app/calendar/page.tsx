@@ -7,6 +7,7 @@ import ErrorMessage from './components/ErrorMessage';
 import { Job } from './components/types';
 import './calendar.css';
 import CssgGuide from '../cssguide';
+import { DatesSetArg } from '@fullcalendar/core/index.js';
 
 function addMonths(date: Date, months: number): Date {
   const d = new Date(date);
@@ -87,11 +88,11 @@ export default function Page() {
   };
 
   // ✅ ดึงแค่ช่วงปัจจุบันถึง 2 เดือนข้างหน้า
-  useEffect(() => {
-    fetchJobs(dataStartDate, dataEndDate);
-  }, []);
+useEffect(() => {
+  fetchJobs(dataStartDate, dataEndDate);
+}, [dataStartDate, dataEndDate]);
 
-  const handleDatesSet = (arg: any) => {
+const handleDatesSet = (arg: DatesSetArg) => {
     if (arg.view.type !== currentView) {
       setCurrentView(arg.view.type);
     }
