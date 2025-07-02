@@ -60,8 +60,12 @@ export default function JobsList() {
       const res = await axios.post('https://operation.dth.travel:7082/api/guide/job', { token, startdate: startDate, enddate: endDate });
       console.log("Fetched jobs:", res.data);
       setJobs(res.data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+  if (err instanceof Error) {
+    setError(err.message);
+  } else {
+    setError(String(err));
+  }
     } finally {
       setLoading(false);
     }
@@ -80,7 +84,7 @@ export default function JobsList() {
 
   const groupedByPNRDate = useMemo(() => {
     const grouped = groupJobsByPNRDate(filteredByDate);
-    const entries = Object.entries(grouped).filter(([_, jobs]) => {
+    const entries = Object.entries(grouped).filter(([, jobs]) => {
       if (showConfirmedOnly) return jobs.some(j => j.IsConfirmed);
       if (showPendingOnly) return jobs.some(j => !j.IsConfirmed && !j.IsCancel);
       return true;
