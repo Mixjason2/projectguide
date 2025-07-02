@@ -140,7 +140,7 @@ function LoginPage() {
     }); };
     return (React.createElement("div", { className: "min-h-screen flex items-center justify-center", style: { backgroundColor: "#2d4392" } },
         React.createElement("div", { className: "card w-full max-w-3xl bg-white shadow-xl rounded-xl relative overflow-hidden" },
-            React.createElement("div", { style: {
+            React.createElement("div", { className: "absolute top-0 right-0 z-20 overflow-hidden", style: {
                     position: "absolute",
                     top: 0,
                     right: 0,
@@ -158,7 +158,7 @@ function LoginPage() {
                     React.createElement("path", { fill: "#95c941", d: "M291,21.3c2,1.5,2.5,4.3,1,6.3s-4.3,2.5-6.3,1s-2.5-4.3-1-6.3S289,19.9,291,21.3" }),
                     React.createElement("path", { fill: "#95c941", d: "M286.9,52.1c1.4-0.4,2.5-1.2,3.3-2.4c0.5-0.7,0.9-1.6,1.3-2.7l2.5-7.9l-18.2-5.9l-2.5,7.9 \r\n        c-0.9,2.8-0.4,5.2,1.4,7.2c1.4,1.5,3.3,2.7,5.7,3.5c1,0.3,2,0.5,3.1,0.6C284.7,52.6,285.8,52.5,286.9,52.1" }),
                     React.createElement("path", { fill: "#95c941", d: "M282.1,59.9c-0.8,2.4-3.3,3.7-5.7,2.9s-3.7-3.3-2.9-5.7s3.3-3.7,5.7-2.9C281.5,55,282.8,57.5,282.1,59.9" }))),
-            React.createElement("div", { className: "card-body relative z-10" },
+            React.createElement("div", { className: "card-body relative z-10 ml-auto pr-4" },
                 React.createElement("div", { className: "flex flex-col items-center justify-center p-0 m-0 leading-none min-h-[150px]" },
                     React.createElement("div", { className: "w-[12rem] max-w-full mx-auto" },
                         React.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 220 150", className: "w-full h-auto block mx-auto" },
