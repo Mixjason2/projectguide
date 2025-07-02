@@ -11,7 +11,7 @@ const renderPlaceDate = (place: string, date: string, label: string) => (
   ) : null
 );
 
-const renderField = (label: string, value: any) => (
+const renderField = (label: string, value: unknown) => (
   Array.isArray(value) ? (
     <div>
       <span className="font-Arial font-bold">{label}:</span>
@@ -57,8 +57,12 @@ const JobCard: React.FC<JobCardProps> = ({
             key={idx}
             className="inline-block w-3 h-3 rounded-full mx-1"
             style={{
-              backgroundColor: job[idx]?.IsConfirmed ? "#22c55e" : "#d1d5db",  // สีเขียวถ้า IsConfirmed เป็น true, สีเทาถ้า false
-              border: '0px solid #2D3E92',  // กรอบสีน้ำเงิน
+              backgroundColor:
+                job[idx]?.isChange ? "#f97316" :  // สีส้มถ้า isChange
+                  job[idx]?.isNew ? "#0ea5e9" :     // สีฟ้าถ้า isNew
+                    job[idx]?.IsConfirmed ? "#22c55e" :  // สีเขียวถ้า IsConfirmed
+                      "#d1d5db",                          // สีเทาถ้าไม่มี flag ใดเลย
+              border: '2px solid #2D3E92',  // กรอบสีน้ำเงิน
             }}
           ></span>
         ))}

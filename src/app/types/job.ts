@@ -2,25 +2,25 @@ import { ChangeEvent, ReactNode } from "react";
 
 export type Job = {
   JobKey: number;
-  allByPNR: {};
-  all: any;
-  serviceProductName: any;
-  Driver: any;
-  Vehicle: any;
-  Guide: any;
+  allByPNR: string;
+  all: string;
+  serviceProductName: string;
+  Driver: string;
+  Vehicle: string;
+  Guide: string;
   serviceSupplierName: string;
-  Comment: any;
+  Comment: string;
   pax_name: ReactNode;
-  Class: any;
+  Class: string;
   Booking_Name: ReactNode;
   AdultQty: number;
   ChildQty: number;
   ChildShareQty: number;
   InfantQty: number;
-  Phone: any;
+  Phone: string;
   Booking_Consultant: ReactNode;
-  TypeName: any;
-  serviceTypeName: any;
+  TypeName: string;
+  serviceTypeName: string;
   isChange: boolean;
   isNew: boolean;
   keys: number[];
@@ -36,7 +36,7 @@ export type Job = {
   Pax: number;
   IsConfirmed: boolean;
   IsCancel: boolean;
-  NotAvailable: any;
+  NotAvailable: unknown;
   Photo?: string;
   Remark?: string;
 };
@@ -58,7 +58,7 @@ export type ExpandedJobDetailProps = {
   jobs: Job[];
   expandedPNRs: Record<string, boolean>;
   renderPlaceDate: (place: string, date: string, label: string) => ReactNode;
-  renderField: (label: string, value: any) => ReactNode;
+  renderField: (label: string, value: unknown) => ReactNode;
   setJobs: React.Dispatch<React.SetStateAction<Job[]>>; // เพิ่ม prop นี้เพื่อส่งไปอัปเดต jobs
 };
 
@@ -89,6 +89,19 @@ export type ConfirmedFilterProps = {
 export type JobsSummaryProps = {
   filteredByDate: Job[];
 };
+
+export interface ImageData {
+  ImageBase64: string;
+}
+
+export interface UploadGroup {
+  key: number;
+  Remark: string;
+  BookingAssignmentId: number;
+  UploadBy?: string;
+  UploadDate?: string;
+  Images: ImageData[];
+}
 
 export interface JobCardProps {
   job: Job[];  // Add jobGroup to the props

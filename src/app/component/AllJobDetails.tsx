@@ -2,7 +2,7 @@ import React from "react";
 import { Job } from "@/app/types/job";
 import { JobDetailsProps } from "@/app/types/job";
 
-const AllJobDetails: React.FC<JobDetailsProps> = ({ job, jobs }) => {
+const AllJobDetails: React.FC<JobDetailsProps> = ({  jobs }) => {
   // ฟังก์ชัน customFormatDate สำหรับการแปลงวันที่ในรูปแบบ DD-MMM-YYYY HH:mm
   const customFormatDate = (dateStr: string): string => {
   const date = new Date(dateStr);
@@ -168,7 +168,7 @@ const AllJobDetails: React.FC<JobDetailsProps> = ({ job, jobs }) => {
                       ].includes(k)
                     )
                     .map(([k, v]) => {
-                      let label = k;
+                      const label = k;
                       return (
                         <div key={k} className="flex items-start">
                           <span className="font-bold text-gray-600 w-24 shrink-0">{label}:</span>

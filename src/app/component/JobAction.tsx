@@ -304,6 +304,11 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
               </div>
             </div>
           )}
+          {statusMessage && (
+            <div className="mt-2 text-sm text-gray-600 text-center">
+              {statusMessage}
+            </div>
+          )}
         </>
       ) : (
         <div className="flex gap-2 w-full">

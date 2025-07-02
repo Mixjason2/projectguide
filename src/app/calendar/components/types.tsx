@@ -1,6 +1,8 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 export type Job = {
+  isNew: unknown;
+  IsConfirmed: unknown;
   isChange: boolean;
   key: number;
   PNR: string;
