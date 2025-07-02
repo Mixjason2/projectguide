@@ -179,7 +179,7 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
                   </Link>
                 </li>
 
-                <li>
+                {/* <li>
                   <Link
                     href="/booking"
                     className="flex items-center p-4 text-lg font-semibold text-white rounded-xl hover:bg-[#1f2b68] group"
@@ -201,7 +201,7 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
                     </svg>
                     <span className="ms-4">Booking</span>
                   </Link>
-                </li>
+                </li> */}
               </ul>
 
               {/* Logout button */}

@@ -179,7 +179,6 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
       onReject(job.key.toString());
       return;
     }
-
     try {
       setStatusMessage("");
       const token = localStorage.getItem("token") || "";
@@ -192,6 +191,37 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
       );
       const result = response.data;
       if (result.success) {
+        await sendEmail({
+          emails: ["veeratha.p@dth.travel"],
+          emails_CC: "",
+          subject: `Canceled ${job.PNR}`,
+          body: `<table border="1" cellspacing="0" cellpadding="8" style="border-collapse: collapse; width: 100%;">
+  <thead style="background-color: #f2f2f2;">
+    <tr>
+      <th style="text-align: left;">Information</th>
+      <th style="text-align: left;">Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>DTH Ref. No.</td><td>${job.PNR}</td></tr>
+    <tr><td>Service Name</td><td>${job.serviceProductName}</td></tr>
+    <tr><td>Service Date</td><td>${job.PNRDate}</td></tr>
+    <tr><td>Comment</td><td>${job.Comment}</td></tr>
+    <tr><td>Class</td><td>${job.Class}</td></tr>
+    <tr><td>Booking Status</td><td>${job.serviceTypeName}</td></tr>
+    <tr><td>Client name</td><td>${job.pax_name}</td></tr>
+    <tr><td>Pickup Date & Time</td><td>${job.PickupDate}</td></tr>
+    <tr><td>Pickup Location</td><td>${job.Pickup}</td></tr>
+    <tr><td>Dropoff Date & Time</td><td>${job.DropoffDate}</td></tr>
+    <tr><td>Dropoff Location</td><td>${job.Dropoff}</td></tr>
+    <tr><td>Guide</td><td>${job.Guide}</td></tr>
+    <tr><td>Vehicle</td><td>${job.Vehicle}</td></tr>
+    <tr><td>Driver</td><td>${job.Driver}</td></tr>
+    <tr><td>Remarks</td><td>${job.Remark}</td></tr>
+    <tr><td>Sending by</td><td>User: </td></tr>
+  </tbody>
+</table>`,
+        });
         await Swal.fire({
           icon: "success",
           title: "Job successfully canceled.",
