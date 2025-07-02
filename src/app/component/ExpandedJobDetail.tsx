@@ -125,8 +125,6 @@ const ExpandedJobDetail: React.FC<ExpandedJobDetailProps & {
                 <JobAction job={miniJob} setJobs={setJobs} />
               </div>
             </div>
-
-
           );
         })}
       </div>
