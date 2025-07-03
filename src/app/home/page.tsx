@@ -159,7 +159,7 @@ export default function JobsList() {
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {pagedGroups.map(([pnrDate, jobs]) => (
-                    <div key={pnrDate} className="w-full p-4 border-gray-300">
+                    <div key={pnrDate} className="w-full p-2.5 border-gray-300"> {/* กรอบแสดง PNRDate */}
                       <JobCard
                         job={jobs}
                         expandedPNRs={expandedPNRs}

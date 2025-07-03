@@ -239,11 +239,23 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
       {/* Main content */}
       <main>{children}</main>
       <footer className="bg-white py-4 px-6">
-  <div className="flex justify-end">
-    <p className="text-sm text-gray-500">
-      © 2014-2023 DTH Travel. All Rights Reserved.
-    </p>
-  </div>
+<div className="flex items-center justify-between w-full bg-white px-0 py-2">
+<img
+  src="https://dth.travel/wp-content/uploads/2023/09/DTH-LOGO-blue.png"
+  alt="DTH Logo"
+  width={80}
+  height={40}
+  className="object-contain block ml-[-8px]"
+/>
+
+  <p className="text-sm text-gray-500 font-Arial whitespace-nowrap mr-4">
+    © 2014–2023 DTH Travel. All Rights Reserved.
+  </p>
+</div>
+
+
+
+
 </footer>
 
     </>
