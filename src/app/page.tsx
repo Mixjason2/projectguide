@@ -10,7 +10,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [message, setMessage] = useState("");
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [connection, setConnection] = useState("[AS-DTGTHA]"); // ค่าเริ่มต้นสำหรับการเชื่อมต่อ
 
 
@@ -58,11 +58,16 @@ useEffect(() => {
 
 
 // ✅ ใช้ .find() กับ array
-const selectedOption = connectionOptions.find((opt) => opt.value === connection);
-const selectedLabel = selectedOption?.label || "TH";
-const asmdbValue = `Assignment_${selectedLabel}`;
+    const selectedOption = connectionOptions.find((opt) => opt.value === connection); 
+    if (!selectedOption) {
+      setMessage("Invalid connection selected.");
+      return;
+    }
 
-    // setLoading(true);
+    const selectedLabel = selectedOption.label || "TH";
+    const asmdbValue = `Assignment_${selectedLabel}`;
+
+    setLoading(true);
     try {
       // Send data to API
       const res = await fetch("https://operation.dth.travel:7082/api/guide/login", {
@@ -102,7 +107,7 @@ if (rememberMe) {
   console.error(err); // ใช้งานตัวแปร err ที่ถูกจับมา
   setMessage("Failed to connect to the server.");
 }
-    // setLoading(false);
+     setLoading(false);
   };
 
   return (
@@ -291,6 +296,7 @@ if (rememberMe) {
               <input
                 id="username"
                 type="text"
+                autoComplete="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="input input-bordered w-full text-base"
@@ -302,6 +308,7 @@ if (rememberMe) {
               <input
                 id="password"
                 type="password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="input input-bordered w-full text-base"
@@ -325,15 +332,7 @@ if (rememberMe) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full text-lg font-bold transition duration-200"
-                style={{
-                  backgroundColor: "#2D3E92",
-                  color: "#ffffff",
-                  minHeight: "3rem",
-                  boxShadow: "0 4px 14px rgba(45, 62, 146, 0.25)",
-                  border: "none",
-                  borderRadius: "0.5rem"
-                }}
+                className="w-full text-lg font-bold transition duration-200 bg-[#2D3E92] hover:bg-[#3D50B2] text-white min-h-[3rem] shadow-md rounded-lg"
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#3D50B2"; // สีอ่อนลง
                 }}

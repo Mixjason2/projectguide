@@ -58,14 +58,15 @@ const JobCard: React.FC<JobCardProps> = ({
             className="inline-block w-3 h-3 rounded-full mx-1"
             style={{
               backgroundColor:
-                job[idx]?.isChange ? "#f97316" :  // สีส้มถ้า isChange
-                  job[idx]?.isNew ? "#0ea5e9" :     // สีฟ้าถ้า isNew
-                    job[idx]?.IsConfirmed ? "#22c55e" :  // สีเขียวถ้า IsConfirmed
-                      "#d1d5db",                          // สีเทาถ้าไม่มี flag ใดเลย
-              border: '2px solid #2D3E92',  // กรอบสีน้ำเงิน
+                job[idx]?.IsConfirmed ? "#22c55e" :     // ✅ สีเขียวมาก่อนทุกเงื่อนไข
+                  job[idx]?.isChange ? "#f97316" :        // สีส้มถ้า isChange
+                    job[idx]?.isNew ? "#0ea5e9" :           // สีฟ้าถ้า isNew
+                      "#d1d5db",                              // สีเทาถ้าไม่มี flag ใดเลย
+              border: '2px solid #2D3E92',
             }}
           ></span>
         ))}
+
       </div>
 
       <button

@@ -6,6 +6,17 @@ import UploadImagesWithRemark from "./FileToBase64";
 import Swal from "sweetalert2";
 import 'sweetalert2/dist/sweetalert2.min.css';
 
+const customFormatDate = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
+
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = date.toLocaleString('default', { month: 'short' });
+  const year = date.getFullYear();
+
+  return `${day}-${month}-${year}`;
+};
+
 const sendEmail = async ({
   emails,
   emails_CC,
@@ -121,7 +132,7 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
   <tbody>
     <tr><td>DTH Ref. No.</td><td>${job.PNR}</td></tr>
     <tr><td>Service Name</td><td>${job.serviceProductName}</td></tr>
-    <tr><td>Service Date</td><td>${job.PNRDate}</td></tr>
+    <tr><td>Service Date</td><td>${customFormatDate(job.PNRDate)}</td></tr>
     <tr><td>Comment</td><td>${job.Comment}</td></tr>
     <tr><td>Class</td><td>${job.Class}</td></tr>
     <tr><td>Booking Status</td><td>${job.serviceTypeName}</td></tr>
@@ -131,9 +142,9 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
         ${job.pax_name}
       </td>
     </tr>
-    <tr><td>Pickup Date & Time</td><td>${job.PickupDate}</td></tr>
+    <tr><td>Pickup Date & Time</td><td>${customFormatDate(job.PickupDate)}</td></tr>
     <tr><td>Pickup Location</td><td>${job.Pickup}</td></tr>
-    <tr><td>Dropoff Date & Time</td><td>${job.DropoffDate}</td></tr>
+    <tr><td>Dropoff Date & Time</td><td>${customFormatDate(job.DropoffDate)}</td></tr>
     <tr><td>Dropoff Location</td><td>${job.Dropoff}</td></tr>
     <tr><td>Guide</td><td>${job.Guide}</td></tr>
     <tr><td>Vehicle</td><td>${job.Vehicle}</td></tr>
@@ -205,14 +216,14 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
   <tbody>
     <tr><td>DTH Ref. No.</td><td>${job.PNR}</td></tr>
     <tr><td>Service Name</td><td>${job.serviceProductName}</td></tr>
-    <tr><td>Service Date</td><td>${job.PNRDate}</td></tr>
+    <tr><td>Service Date</td><td>${customFormatDate(job.PNRDate)}</td></tr>
     <tr><td>Comment</td><td>${job.Comment}</td></tr>
     <tr><td>Class</td><td>${job.Class}</td></tr>
     <tr><td>Booking Status</td><td>${job.serviceTypeName}</td></tr>
     <tr><td>Client name</td><td>${job.pax_name}</td></tr>
-    <tr><td>Pickup Date & Time</td><td>${job.PickupDate}</td></tr>
+    <tr><td>Pickup Date & Time</td><td>${customFormatDate(job.PickupDate)}</td></tr>
     <tr><td>Pickup Location</td><td>${job.Pickup}</td></tr>
-    <tr><td>Dropoff Date & Time</td><td>${job.DropoffDate}</td></tr>
+    <tr><td>Dropoff Date & Time</td><td>${customFormatDate(job.DropoffDate)}</td></tr>
     <tr><td>Dropoff Location</td><td>${job.Dropoff}</td></tr>
     <tr><td>Guide</td><td>${job.Guide}</td></tr>
     <tr><td>Vehicle</td><td>${job.Vehicle}</td></tr>
