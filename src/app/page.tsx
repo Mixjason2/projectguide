@@ -12,34 +12,36 @@ export default function LoginPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [connection, setConnection] = useState("[AS-DTGTHA]"); // ค่าเริ่มต้นสำหรับการเชื่อมต่อ
+  const [guideEmail, setGuideEmail] = useState("");
+  const [emailOP, setEmailOP] = useState<{ key: number; Email: string }[]>([]);
 
 
-const connectionOptions = [
-  { label: "TH", value: "[AS-DTGTHA]", name: "Thailand", flag: "🇹🇭" },
-  { label: "MY", value: "[AS-DTGKUL]", name: "Malaysia", flag: "🇲🇾" },
-  { label: "SL", value: "[AS-DTGSLK]", name: "Sri Lanka", flag: "🇱🇰" },
-  { label: "SG", value: "[AS-DTGSIN]", name: "Singapore", flag: "🇸🇬" },
-  { label: "VN", value: "[AS-DTGVNM]", name: "Vietnam", flag: "🇻🇳" },
-  // { label: "STG", value: "[AS-DTGTHA-Test]", name: "Staging (TH Test)", flag: "🧪" },
-  // { label: "TH_Test", value: "[AS-DTGTHA]", name: "Thailand (Test)", flag: "🧪🇹🇭" },
-];
+  const connectionOptions = [
+    { label: "TH", value: "[AS-DTGTHA]", name: "Thailand", flag: "🇹🇭" },
+    { label: "MY", value: "[AS-DTGKUL]", name: "Malaysia", flag: "🇲🇾" },
+    { label: "SL", value: "[AS-DTGSLK]", name: "Sri Lanka", flag: "🇱🇰" },
+    { label: "SG", value: "[AS-DTGSIN]", name: "Singapore", flag: "🇸🇬" },
+    { label: "VN", value: "[AS-DTGVNM]", name: "Vietnam", flag: "🇻🇳" },
+    // { label: "STG", value: "[AS-DTGTHA-Test]", name: "Staging (TH Test)", flag: "🧪" },
+    // { label: "TH_Test", value: "[AS-DTGTHA]", name: "Thailand (Test)", flag: "🧪🇹🇭" },
+  ];
 
 
-useEffect(() => {
-  const savedUsername = localStorage.getItem("savedUsername") || "";
-  const savedPassword = localStorage.getItem("savedPassword") || "";
-  const savedConnection = localStorage.getItem("savedConnection") || "";
+  useEffect(() => {
+    const savedUsername = localStorage.getItem("savedUsername") || "";
+    const savedPassword = localStorage.getItem("savedPassword") || "";
+    const savedConnection = localStorage.getItem("savedConnection") || "";
 
-  if (savedUsername && savedPassword) {
-    setUsername(savedUsername);
-    setPassword(savedPassword);
-    setRememberMe(true);
-  }
+    if (savedUsername && savedPassword) {
+      setUsername(savedUsername);
+      setPassword(savedPassword);
+      setRememberMe(true);
+    }
 
-  if (savedConnection) {
-    setConnection(savedConnection);
-  }
-}, []);
+    if (savedConnection) {
+      setConnection(savedConnection);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,8 +59,8 @@ useEffect(() => {
     }
 
 
-// ✅ ใช้ .find() กับ array
-    const selectedOption = connectionOptions.find((opt) => opt.value === connection); 
+    // ✅ ใช้ .find() กับ array
+    const selectedOption = connectionOptions.find((opt) => opt.value === connection);
     if (!selectedOption) {
       setMessage("Invalid connection selected.");
       return;
@@ -86,28 +88,31 @@ useEffect(() => {
       if (data.status && data.token) {
         setMessage("Login successful!");
         // เก็บ token ลง localStorage
-        localStorage.setItem("token", data.token);
+        localStorage.setItem("accessToken", data.token); // 🟢 ใช้ชื่อใหม่
+        localStorage.setItem("refreshToken", data.refreshToken); // 🟢 เพิ่ม refreshToken
+        setGuideEmail(data.guideEmail);      // ✅ ดึงจาก API
+        setEmailOP(data.emailOP || []);      // ✅ ดึงจาก API ถ้ามี
 
-if (rememberMe) {
-  localStorage.setItem("savedUsername", username);
-  localStorage.setItem("savedPassword", password);
-  localStorage.setItem("savedConnection", connection); // ✅ เพิ่มตรงนี้
-} else {
-  localStorage.removeItem("savedUsername");
-  localStorage.removeItem("savedPassword");
-  localStorage.removeItem("savedConnection"); // ✅ ลบเมื่อไม่ remember
-} 
+        if (rememberMe) {
+          localStorage.setItem("savedUsername", username);
+          localStorage.setItem("savedPassword", password);
+          localStorage.setItem("savedConnection", connection); // ✅ เพิ่มตรงนี้
+        } else {
+          localStorage.removeItem("savedUsername");
+          localStorage.removeItem("savedPassword");
+          localStorage.removeItem("savedConnection"); // ✅ ลบเมื่อไม่ remember
+        }
         // เก็บ token ไว้ใน localStorage หรือ sessionStorage ถ้าต้องการ
         localStorage.setItem("token", data.token);
         router.push("/home");
       } else {
         setMessage("Incorrect username or password.");
       }
-} catch (err) {
-  console.error(err); // ใช้งานตัวแปร err ที่ถูกจับมา
-  setMessage("Failed to connect to the server.");
-}
-     setLoading(false);
+    } catch (err) {
+      console.error(err); // ใช้งานตัวแปร err ที่ถูกจับมา
+      setMessage("Failed to connect to the server.");
+    }
+    setLoading(false);
   };
 
   return (
@@ -266,31 +271,31 @@ if (rememberMe) {
 
 
           <form onSubmit={handleSubmit} className="space-y-5">
-                       {/* ✅ DROPDOWN ใส่ไว้ที่นี่ */}
-<div className="flex justify-end mt-2">
-  <FormControl
-    size="small"
-    variant="standard"
-    className="w-fit"
-  >
-    <InputLabel htmlFor="connectionSelect">Connection</InputLabel>
-    <NativeSelect
-      id="connectionSelect"
-      value={connection}
-      onChange={(e) => setConnection(e.target.value)}
-      inputProps={{
-        name: "connection",
-        id: "connectionSelect",
-      }}
-    >
-      {connectionOptions.map((option) => (
-        <option key={option.label} value={option.value}>
-          {option.flag} {option.name}
-        </option>
-      ))}
-    </NativeSelect>
-  </FormControl>
-</div>
+            {/* ✅ DROPDOWN ใส่ไว้ที่นี่ */}
+            <div className="flex justify-end mt-2">
+              <FormControl
+                size="small"
+                variant="standard"
+                className="w-fit"
+              >
+                <InputLabel htmlFor="connectionSelect">Connection</InputLabel>
+                <NativeSelect
+                  id="connectionSelect"
+                  value={connection}
+                  onChange={(e) => setConnection(e.target.value)}
+                  inputProps={{
+                    name: "connection",
+                    id: "connectionSelect",
+                  }}
+                >
+                  {connectionOptions.map((option) => (
+                    <option key={option.label} value={option.value}>
+                      {option.flag} {option.name}
+                    </option>
+                  ))}
+                </NativeSelect>
+              </FormControl>
+            </div>
             <div>
               <label htmlFor="username" className="block text-base font-bold mb-1 text-gray-800">Username</label>
               <input
@@ -343,7 +348,7 @@ if (rememberMe) {
                 {loading ? "Logging in..." : "Login"}
               </button>
             </div>
-          
+
 
           </form>
           {message && (
@@ -358,3 +363,59 @@ if (rememberMe) {
 
   );
 }
+// 🔁 ฟังก์ชัน refreshAccessToken สำหรับขอ token ใหม่จาก refreshToken
+export async function refreshAccessToken(): Promise<string | null> {
+  const refreshToken = localStorage.getItem("refreshToken");
+  if (!refreshToken) return null;
+
+  try {
+    const res = await fetch("https://operation.dth.travel:7082/api/guide/refresh", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    if (data.accessToken) {
+      localStorage.setItem("accessToken", data.accessToken);
+      return data.accessToken;
+    }
+  } catch (error) {
+    console.error("Refresh failed", error);
+  }
+
+  return null;
+}
+
+// 🛡️ secureFetch ใช้เรียก API พร้อม auto-refresh token ถ้าหมดอายุ
+export async function secureFetch(url: string, options: RequestInit = {}) {
+  let accessToken = localStorage.getItem("accessToken");
+
+  let res = await fetch(url, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (res.status === 401) {
+    accessToken = await refreshAccessToken();
+    if (!accessToken) {
+      throw new Error("Session expired. Please login again.");
+    }
+
+    res = await fetch(url, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+  }
+
+  return res;
+}
+

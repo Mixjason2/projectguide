@@ -45,6 +45,7 @@ export default function JobsList() {
   const [expandedPNRs, setExpandedPNRs] = useState<{ [pnr: string]: boolean }>({});
   const [showConfirmedOnly, setShowConfirmedOnly] = useState(false);
   const [showPendingOnly, setShowPendingOnly] = useState(false);
+  const [showAllFilteredJobs, setShowAllFilteredJobs] = useState(false);
   const pageSize = 6;
 
   useEffect(() => {
@@ -61,26 +62,26 @@ export default function JobsList() {
       console.log("Fetched jobs:", res.data);
       setJobs(res.data);
     } catch (err) {
-  if (err instanceof Error) {
-    setError(err.message);
-  } else {
-    setError(String(err));
-  }
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError(String(err));
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const filteredByDate = useMemo(() => {
-  return jobs.filter(job => {
-    const pickup = job.PickupDate, dropoff = job.DropoffDate;
-    // กรองงานที่ IsCancel = true ออก
-    return (!job.IsCancel) && 
-           ((!startDate && !endDate) || 
-            (startDate && pickup >= startDate) || 
-            (endDate && dropoff <= endDate));
-  });
-}, [jobs, startDate, endDate]);
+    return jobs.filter(job => {
+      const pickup = job.PickupDate, dropoff = job.DropoffDate;
+      // กรองงานที่ IsCancel = true ออก
+      return (!job.IsCancel) &&
+        ((!startDate && !endDate) ||
+          (startDate && pickup >= startDate) ||
+          (endDate && dropoff <= endDate));
+    });
+  }, [jobs, startDate, endDate]);
 
   const groupedByPNRDate = useMemo(() => {
     const grouped = groupJobsByPNRDate(filteredByDate);
@@ -93,7 +94,13 @@ export default function JobsList() {
   }, [filteredByDate, showConfirmedOnly, showPendingOnly]);
 
   const totalPages = Math.ceil(groupedByPNRDate.length / pageSize);
-  const pagedGroups = groupedByPNRDate.slice((page - 1) * pageSize, page * pageSize);
+  const pagedGroups = useMemo(() => {
+  if ((showConfirmedOnly || showPendingOnly) && showAllFilteredJobs) {
+    return groupedByPNRDate;
+  }
+  return groupedByPNRDate.slice((page - 1) * pageSize, page * pageSize);
+}, [groupedByPNRDate, page, showConfirmedOnly, showPendingOnly, showAllFilteredJobs]);
+
 
   // Ensure mergedJob is properly defined before use
   // สร้าง mergedJob จากข้อมูล jobs ที่ดึงมาและจัดกลุ่ม
@@ -166,12 +173,69 @@ export default function JobsList() {
                 </div>
 
                 <div className="w-full flex justify-center mt-6">
-                  <div className="inline-flex items-center gap-2 bg-base-100 border border-base-300 rounded-full shadow px-4 py-2 ">
-                    <button className="btn btn-outline btn-sm rounded-full min-w-[64px]" disabled={page === 1} onClick={() => setPage(page - 1)}>Prev</button>
-                    <span className="px-2 py-1 font-Arial text-base-content">{page} <span className="text-gray-400">/</span> {totalPages}</span>
-                    <button className="btn btn-outline btn-sm rounded-full min-w-[64px]" disabled={page === totalPages} onClick={() => setPage(page + 1)}>Next</button>
-                  </div>
+                  {(showConfirmedOnly || showPendingOnly) ? (
+                    <button
+                      onClick={() => setShowAllFilteredJobs(prev => !prev)}
+                      className="flex items-center gap-2 px-4 py-2 rounded-full text-white bg-[#2D3E92] hover:bg-[#1f2b68] transition-colors"
+                      title={showAllFilteredJobs ? 'Show less' : 'Load more'}
+                    >
+                      {showAllFilteredJobs ? (
+                        // Show less icon
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1.5}
+                          stroke="white"
+                          className="size-6"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M3 4.5h14.25M3 9h9.75M3 13.5h5.25m5.25-.75L17.25 9m0 0L21 12.75M17.25 9v12"
+                          />
+                        </svg>
+                      ) : (
+                        // Load more icon
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1.5}
+                          stroke="white"
+                          className="size-6"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0-3.75-3.75M17.25 21 21 17.25"
+                          />
+                        </svg>
+                      )}
+                    </button>
+                  ) : (
+                    <div className="inline-flex items-center gap-2 bg-base-100 border border-base-300 rounded-full shadow px-4 py-2">
+                      <button
+                        className="btn btn-outline btn-sm rounded-full min-w-[64px]"
+                        disabled={page === 1}
+                        onClick={() => setPage(page - 1)}
+                      >
+                        Prev
+                      </button>
+                      <span className="px-2 py-1 font-Arial text-base-content">
+                        {page} <span className="text-gray-400">/</span> {totalPages}
+                      </span>
+                      <button
+                        className="btn btn-outline btn-sm rounded-full min-w-[64px]"
+                        disabled={page === totalPages}
+                        onClick={() => setPage(page + 1)}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
                 </div>
+
 
                 {detailJobs && (
                   <AllJobDetailsModal
