@@ -45,11 +45,11 @@ const JobCard: React.FC<JobCardProps> = ({
   return (
     <div
       key={job[0]?.PNRDate}
-      className="relative bg-white border border-[#9EE4F6] rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col"
+      className="relative  bg-white border border-[#9EE4F6] rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col"
     >
       {/* แสดงสถานะรวมของ job[0] */}
       <div
-        className="absolute top-2 left-4 bg-white text-gray-800 font-Arial rounded-full px-3 py-1 text-sm shadow-none border-none z-10 flex items-center"
+        className="absolute top-1 left-2 bg-white text-gray-800 font-Arial rounded-full px-3 py-1 text-sm shadow-none border-none z-10 flex items-center"
       >
         {/* แสดงจุดตามจำนวนงาน */}
         {job.map((_, idx) => (
@@ -69,28 +69,29 @@ const JobCard: React.FC<JobCardProps> = ({
 
       </div>
 
-      <button
-        className="absolute top-3.5 right-2 w-8 h-8 rounded-full bg-white border-2 border-[#2D3E92] shadow-[0_4px_10px_rgba(45,62,146,0.3)] hover:shadow-[0_6px_14px_rgba(45,62,146,0.4)] transition-all duration-200 flex items-center justify-center"
-        title="Show all details"
-        onClick={() => setDetailJobsState(job)}
-        style={{ zIndex: 2 }}
-      >
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="10" fill="#F0F8FF" />
-          <text
-            x="12"
-            y="12"
-            textAnchor="middle"
-            dominantBaseline="central"
-            fontSize="18"
-            fill="#2D3E92"
-            fontFamily="Arial"
-            fontWeight="bold"
-          >
-            i
-          </text>
-        </svg>
-      </button>
+<button
+  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white border-2 border-[#2D3E92] shadow-[0_4px_10px_rgba(45,62,146,0.3)] hover:shadow-[0_6px_14px_rgba(45,62,146,0.4)] transition-all duration-200 flex items-center justify-center hover:text-[#1B2A68]"
+  title="Show all details"
+  onClick={() => setDetailJobsState(job)}
+  style={{ zIndex: 2 }}
+>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="size-6 text-[#2D3E92]"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Zm3.75 11.625a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"
+    />
+  </svg>
+</button>
+ {/* ปุ่มแสดงรายละเอียดทั้งหมด */}
+
       {detailJobs && (
         <AllJobDetailsModal
           detailJobs={detailJobs}
@@ -99,11 +100,11 @@ const JobCard: React.FC<JobCardProps> = ({
       )}
       {/* หัวข้อวันที่และเปิด/ปิดรายละเอียดตาม PNRDate */}
       <div
-        className="inline-block p-6 pb-0 cursor-pointer mx-auto items-center gap-3 text-center"
+        className="inline-block p-6 pb-0 cursor-pointer mx-auto items-center gap-3 text-center "
         onClick={() => setExpandedPNRs((prev) => ({ ...prev, [job[0]?.PNRDate]: !expandedPNRs[job[0]?.PNRDate] }))}
       >
         <h2
-          className="font-Arial mt-0 mb-0 text-[24px]"
+          className="font-Arial -mt-1.5 mb-3.5 text-[24px]  p-0 " // หัวข้อวันที่
           style={{ color: "#2D3E92", textDecoration: "none" }}
         >
           {customFormatDate(job[0]?.PNRDate)}
