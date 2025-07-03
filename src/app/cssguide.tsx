@@ -229,7 +229,7 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
     <span className="ms-3">Log Out</span>
   </a>
 </div>
- 
+
             </div>
           </nav>
         </>
@@ -237,6 +237,14 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
  
       {/* Main content */}
       <main>{children}</main>
+      <footer className="bg-white py-4 px-6">
+  <div className="flex justify-end">
+    <p className="text-sm text-gray-500">
+      © 2014-2023 DTH Travel. All Rights Reserved.
+    </p>
+  </div>
+</footer>
+
     </>
   );
 }
