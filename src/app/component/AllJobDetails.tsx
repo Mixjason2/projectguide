@@ -30,7 +30,7 @@ const AllJobDetails: React.FC<JobDetailsProps> = ({  jobs }) => {
   });
 
   return (
-    <div className="max-h-[60vh] overflow-auto text-xs">
+    <div className="max-h-[80vh] overflow-auto text-xs">
       {/* แสดงรายละเอียดแบบเดิม */}
       {Object.entries(groupedByDate).map(([pnrDate, pnrGroups]) => (
         <div key={pnrDate} className="mb-8">

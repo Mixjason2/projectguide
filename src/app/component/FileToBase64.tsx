@@ -210,7 +210,7 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number; job: J
             await sendEmail({
                 emails: ["veeratha.p@dth.travel"],
                 emails_CC: "",
-                subject: `Updated: ${keyValue}`,
+                subject: `Updated: ${job.PNR}`,
                 body: `<table border="1" cellspacing="0" cellpadding="8" style="border-collapse: collapse; width: 100%;">
   <thead style="background-color: #f2f2f2;">
     <tr>
@@ -238,7 +238,7 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number; job: J
     <tr><td>Guide</td><td>${job.Guide}</td></tr>
     <tr><td>Vehicle</td><td>${job.Vehicle}</td></tr>
     <tr><td>Driver</td><td>${job.Driver}</td></tr>
-    <tr><td>Remarks</td><td>${job.Remark}</td></tr>
+    <tr><td>Remarks</td><td>${job.Remark ?? ''}</td></tr>
     <tr><td>Sending by</td><td>User: </td></tr>
   </tbody>
 </table>`,
@@ -294,7 +294,7 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number; job: J
             await sendEmail({
                 emails: ["veeratha.p@dth.travel"],
                 emails_CC: "",
-                subject: `Uploaded: ${keyValue}`,
+                subject: `Uploaded: ${job.PNR}`,
                 body: `<table border="1" cellspacing="0" cellpadding="8" style="border-collapse: collapse; width: 100%;">
   <thead style="background-color: #f2f2f2;">
     <tr>
@@ -322,7 +322,7 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number; job: J
     <tr><td>Guide</td><td>${job.Guide}</td></tr>
     <tr><td>Vehicle</td><td>${job.Vehicle}</td></tr>
     <tr><td>Driver</td><td>${job.Driver}</td></tr>
-    <tr><td>Remarks</td><td>${job.Remark}</td></tr>
+    <tr><td>Remarks</td><td>${job.Remark ?? ''}</td></tr>
     <tr><td>Sending by</td><td>User: </td></tr>
   </tbody>
 </table>`,

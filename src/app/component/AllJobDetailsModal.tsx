@@ -39,7 +39,7 @@ const AllJobDetailsModal: React.FC<Props> = ({ detailJobs, setDetailJobs}) => {
           onClick={(e) => e.stopPropagation()} // Prevent click event from closing modal
         >
           <button
-            className="absolute top-2 right-2 btn btn-sm btn-error"
+            className="absolute top-2 right-2 btn btn-sm btn-error text-3xl text-red-600"
             onClick={(e) => {
               e.stopPropagation(); // Stop event bubbling
               handleCloseModal(); // Close modal
