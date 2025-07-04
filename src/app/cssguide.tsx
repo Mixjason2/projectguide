@@ -33,7 +33,6 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
           </button>
         </div>
 
-
         <div className="flex items-center justify-center w-full">
           <Image
             src="https://dth.travel/wp-content/uploads/2023/08/DTH-LOGO-FULL-WHITE-FORMERLY-new.svg"
@@ -250,7 +249,6 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
             className="object-contain block ml-[-8px]"
             priority
           />
-
           <p className="text-sm text-gray-500 font-Arial whitespace-nowrap mr-4">
             © 2014–2023 DTH Travel. All Rights Reserved.
           </p>
