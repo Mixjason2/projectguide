@@ -149,7 +149,7 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
     <tr><td>Guide</td><td>${job.Guide}</td></tr>
     <tr><td>Vehicle</td><td>${job.Vehicle}</td></tr>
     <tr><td>Driver</td><td>${job.Driver}</td></tr>
-    <tr><td>Remarks</td><td>${job.Remark}</td></tr>
+    <tr><td>Remarks</td><td>${job.Remark ?? ''}</td></tr>
     <tr><td>Sending by</td><td>User: </td></tr>
   </tbody>
 </table>`,
@@ -228,7 +228,7 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
     <tr><td>Guide</td><td>${job.Guide}</td></tr>
     <tr><td>Vehicle</td><td>${job.Vehicle}</td></tr>
     <tr><td>Driver</td><td>${job.Driver}</td></tr>
-    <tr><td>Remarks</td><td>${job.Remark}</td></tr>
+    <tr><td>Remarks</td><td>${job.Remark ?? ''}</td></tr>
     <tr><td>Sending by</td><td>User: </td></tr>
   </tbody>
 </table>`,
