@@ -262,14 +262,31 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number; job: J
         const files = e.target.files;
         if (!files) return;
 
-        const filesArray = Array.from(files);
-        console.log("📂 เลือกไฟล์:", filesArray.map(f => f.name));
-        // ไม่ใช้ selectedFiles แล้ว จึงไม่ต้อง set
+        const imageFiles = Array.from(files).filter(file =>
+            file.type === "image/jpeg" || file.type === "image/png"
+        );
 
-        const base64List = await Promise.all(filesArray.map(fileToBase64));
+        if (imageFiles.length === 0) {
+            Swal.fire({
+                icon: "error",
+                title: "❌ ไม่รองรับไฟล์ประเภทนี้",
+                text: "กรุณาอัปโหลดเฉพาะไฟล์รูปภาพ JPEG หรือ PNG เท่านั้น",
+                toast: true,
+                position: "top-end",
+                timer: 3000,
+                showConfirmButton: false,
+            });
+            return;
+        }
+
+        console.log("📂 เลือกไฟล์:", imageFiles.map(f => f.name));
+
+        const base64List = await Promise.all(imageFiles.map(fileToBase64));
         setPreviewBase64List(prev => [...prev, ...base64List]);
+
         console.log("🖼 Preview base64 พร้อม:", previewBase64List.length + base64List.length, "ไฟล์");
     };
+
 
     const handleUpload = async () => {
         setLoading(true);
@@ -292,40 +309,16 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number; job: J
             setResponseMsg(res.data.message || "Upload สำเร็จ");
             await fetchUploadedData();
             await sendEmail({
-                emails: ["veeratha.p@dth.travel"],
+                emails: ["peerayut.d@dth.travel"],
                 emails_CC: "",
                 subject: `Uploaded: ${job.PNR}`,
-                body: `<table border="1" cellspacing="0" cellpadding="8" style="border-collapse: collapse; width: 100%;">
-  <thead style="background-color: #f2f2f2;">
-    <tr>
-      <th style="text-align: left;">Information</th>
-      <th style="text-align: left;">Details</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td>DTH Ref. No.</td><td>${job.PNR}</td></tr>
-    <tr><td>Service Name</td><td>${job.serviceProductName}</td></tr>
-    <tr><td>Service Date</td><td>${customFormatDate(job.PNRDate)}</td></tr>
-    <tr><td>Comment</td><td>${job.Comment}</td></tr>
-    <tr><td>Class</td><td>${job.Class}</td></tr>
-    <tr><td>Booking Status</td><td>${job.serviceTypeName}</td></tr>
-    <tr>
-      <td>Client name</td>
-      <td>
-        ${job.pax_name}
-      </td>
-    </tr>
-    <tr><td>Pickup Date & Time</td><td>${customFormatDate(job.PickupDate)}</td></tr>
-    <tr><td>Pickup Location</td><td>${job.Pickup}</td></tr>
-    <tr><td>Dropoff Date & Time</td><td>${customFormatDate(job.DropoffDate)}</td></tr>
-    <tr><td>Dropoff Location</td><td>${job.Dropoff}</td></tr>
-    <tr><td>Guide</td><td>${job.Guide}</td></tr>
-    <tr><td>Vehicle</td><td>${job.Vehicle}</td></tr>
-    <tr><td>Driver</td><td>${job.Driver}</td></tr>
-    <tr><td>Remarks</td><td>${job.Remark ?? ''}</td></tr>
-    <tr><td>Sending by</td><td>User: </td></tr>
-  </tbody>
-</table>`,
+                body: `
+    <p><strong>📌 Remark:</strong> ${remark || '-'}</p>
+    <p><strong>📎 Attachments:</strong></p>
+    ${previewBase64List.map((base64, idx) => (
+        `<p><img src="${base64}" alt="Image ${idx + 1}" style="max-width: 100%; height: auto; margin-bottom: 10px;" /></p>`
+    )).join('')}
+`,
             });
             setIsEditing(false);
         } catch (error: unknown) {
@@ -355,16 +348,6 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number; job: J
                             <div className="flex flex-wrap gap-3">
                                 {src.Images?.map((img: ImageData, imgIdx: number) => (
                                     <div key={imgIdx} className="relative inline-block">
-                                        {img.ImageBase64.startsWith("data:application/pdf") ? (
-                                            <a
-                                                href={img.ImageBase64}
-                                                download={`file-${imgIdx}.pdf`}
-                                                className="w-20 h-20 flex items-center justify-center bg-gray-100 border rounded-lg text-blue-600 text-xs font-medium text-center hover:underline"
-                                                title="ดาวน์โหลด PDF"
-                                            >
-                                                📄 Download PDF
-                                            </a>
-                                        ) : (
                                             <Image
                                                 src={img.ImageBase64}
                                                 alt={`uploaded-${imgIdx}`}
@@ -373,7 +356,6 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number; job: J
                                                 className="object-cover rounded-lg border shadow-sm cursor-pointer"
                                                 onClick={() => openPreview(img.ImageBase64, imgIdx)}
                                             />
-                                        )}
                                         <button
                                             type="button"
                                             className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-700"
@@ -411,45 +393,34 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number; job: J
                     <input
                         type="file"
                         multiple
-                        accept="image/*,application/pdf"
+                        accept="image/jpeg,image/png"
                         onChange={handleFileChange}
                         className="mb-4"
                     />
 
                     <div className="flex flex-wrap gap-4 mb-4">
                         {previewBase64List.map((base64, idx) => (
-                            base64.startsWith("data:application/pdf") ? (
-                                <a
-                                    key={idx}
-                                    href={base64}
-                                    download={`file-${idx}.pdf`}
-                                    className="w-20 h-20 flex items-center justify-center bg-gray-100 border rounded-lg text-blue-600 text-xs font-medium text-center hover:underline"
-                                    title="ดาวน์โหลด PDF"
+                            <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden border shadow-sm">
+                                <Image
+                                    src={base64}
+                                    alt={`preview-${idx}`}
+                                    width={80}
+                                    height={80}
+                                    className="object-cover rounded-lg cursor-pointer"
+                                    onClick={() => openPreview(base64, idx)}
+                                />
+                                <button
+                                    type="button"
+                                    className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                                    onClick={() => {
+                                        setPreviewBase64List(prev => prev.filter((_, i) => i !== idx));
+                                    }}
                                 >
-                                    📄 PDF {idx + 1}
-                                </a>
-                            ) : (
-                                <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden border shadow-sm">
-                                    <Image
-                                        src={base64}
-                                        alt={`preview-${idx}`}
-                                        width={80}
-                                        height={80}
-                                        className="object-cover rounded-lg cursor-pointer"
-                                        onClick={() => openPreview(base64, idx)}
-                                    />
-                                    <button
-                                        type="button"
-                                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
-                                        onClick={() => {
-                                            setPreviewBase64List(prev => prev.filter((_, i) => i !== idx));
-                                        }}
-                                    >
-                                        ×
-                                    </button>
-                                </div>
-                            )
+                                    ×
+                                </button>
+                            </div>
                         ))}
+
                     </div>
 
                     {loading && <p className="text-blue-600 mb-2">⏳ Processing...</p>}
