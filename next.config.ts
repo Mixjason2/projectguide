@@ -3,7 +3,13 @@ const nextConfig = {
   devIndicators: false,
   allowedDevOrigins: ['local-origin.dev', '*.local-origin.dev'],
   images: {
-    domains: ['dth.travel'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'dth.travel',
+        pathname: '/**',
+      },
+    ],
   },
 };
 

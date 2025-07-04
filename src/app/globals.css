@@ -88,17 +88,4 @@ h2, .card-title {
   margin-bottom: 1.5rem;
 }
 
-@keyframes carRun {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(20px);
-  }
-}
-
-.animate-carRun {
-  display: inline-block;
-  animation: carRun 0.5s infinite alternate;
-}
 
