@@ -101,20 +101,6 @@ export default function JobsList() {
     return groupedByPNRDate.slice((page - 1) * pageSize, page * pageSize);
   }, [groupedByPNRDate, page, showConfirmedOnly, showPendingOnly, showAllFilteredJobs]);
 
-  const customFormatDate = (dateStr: string): string => {
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return '';
-
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = date.toLocaleString('default', { month: 'short' });
-    const year = date.getFullYear();
-
-    return `${day}-${month}-${year}`;
-  };
-
-  // Ensure mergedJob is properly defined before use
-  // สร้าง mergedJob จากข้อมูล jobs ที่ดึงมาและจัดกลุ่ม
-
   return (
     <CssgGuide>
       <div className="flex flex-col items-center py-8 min-h-screen bg-base-200 relative bg-[#9EE4F6]">
