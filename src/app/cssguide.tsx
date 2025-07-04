@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from "react";
 import Link from "next/link";
-import Image from 'next/image';
+import Image from "next/image";
 
 export default function CssgGuide({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -33,15 +33,17 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
           </button>
         </div>
 
-        {/* Center: Logo */}
+
         <div className="flex items-center justify-center w-full">
-          <img
+          <Image
             src="https://dth.travel/wp-content/uploads/2023/08/DTH-LOGO-FULL-WHITE-FORMERLY-new.svg"
             alt="DTH Logo"
-            className="h-16 w-auto"
+            width={60} // ปรับขนาดตามต้องการ
+            height={20}
+            priority // ช่วย preload สำหรับโลโก้
           />
         </div>
- 
+
         {/* Right: Notification Button */}
         <div className="flex-none flex items-center">
           <button
@@ -239,27 +241,21 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
       {/* Main content */}
       <main>{children}</main>
       <footer className="bg-white py-4 px-6">
-<div className="flex items-center justify-between w-full bg-white px-0 py-2">
-<img
-  src="https://dth.travel/wp-content/uploads/2023/09/DTH-LOGO-blue.png"
-  alt="DTH Logo"
-  width={80}
-  height={40}
-  className="object-contain block ml-[-8px]"
-/>
+        <div className="flex items-center justify-between w-full bg-white px-0 py-2">
+          <Image
+            src="https://dth.travel/wp-content/uploads/2023/09/DTH-LOGO-blue.png"
+            alt="DTH Logo"
+            width={80}
+            height={40}
+            className="object-contain block ml-[-8px]"
+            priority
+          />
 
-  <p className="text-sm text-gray-500 font-Arial whitespace-nowrap mr-4">
-    © 2014–2023 DTH Travel. All Rights Reserved.
-  </p>
-</div>
-
-
-
-
-</footer>
-
+          <p className="text-sm text-gray-500 font-Arial whitespace-nowrap mr-4">
+            © 2014–2023 DTH Travel. All Rights Reserved.
+          </p>
+        </div>
+      </footer>
     </>
   );
 }
-
-

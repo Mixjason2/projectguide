@@ -1,14 +1,10 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   devIndicators: false,
-  /* config options here */
+  allowedDevOrigins: ['local-origin.dev', '*.local-origin.dev'],
+  images: {
+    domains: ['dth.travel'],
+  },
 };
 
-module.exports = {
-  allowedDevOrigins: ['local-origin.dev', '*.local-origin.dev'],
-}
-
-
-
-export default nextConfig;
+module.exports = nextConfig;

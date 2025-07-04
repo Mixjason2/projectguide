@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { FormControl, InputLabel, NativeSelect } from "@mui/material";
+import Swal from 'sweetalert2';
 import './globals.css';
 
 export default function LoginPage() {
@@ -50,19 +51,30 @@ export default function LoginPage() {
     // Validate username/password (only a-z, A-Z, 0-9)
     const validPattern = /^[a-zA-Z0-9]+$/;
     if (!validPattern.test(username)) {
-      setMessage("Username must contain only letters or numbers.");
+      Swal.fire({
+        icon: "warning",
+        title: "Invalid Username",
+        text: "Username must contain only letters or numbers.",
+      });
       return;
     }
     if (!validPattern.test(password)) {
-      setMessage("Password must contain only letters or numbers.");
+      Swal.fire({
+        icon: "warning",
+        title: "Invalid Password",
+        text: "Password must contain only letters or numbers.",
+      });
       return;
     }
-
 
     // ✅ ใช้ .find() กับ array
     const selectedOption = connectionOptions.find((opt) => opt.value === connection);
     if (!selectedOption) {
-      setMessage("Invalid connection selected.");
+      Swal.fire({
+        icon: "error",
+        title: "Invalid Connection",
+        text: "Invalid connection selected.",
+      });
       return;
     }
 
@@ -86,12 +98,24 @@ export default function LoginPage() {
 
       // Show result from API to user
       if (data.status && data.token) {
-        setMessage("Login successful!");
+        Swal.fire({
+          icon: "success",
+          title: "Login successful!",
+          text: "You have successfully logged in.",
+          timer: 1500,
+          showConfirmButton: false,
+        });
         // เก็บ token ลง localStorage
         localStorage.setItem("accessToken", data.token); // 🟢 ใช้ชื่อใหม่
         localStorage.setItem("refreshToken", data.refreshToken); // 🟢 เพิ่ม refreshToken
         setGuideEmail(data.guideEmail);      // ✅ ดึงจาก API
         setEmailOP(data.emailOP || []);      // ✅ ดึงจาก API ถ้ามี
+
+        console.log("guideEmail:", guideEmail);
+
+        emailOP.forEach(item => {
+          console.log(`key: ${item.key}, Email: ${item.Email}`);
+        });
 
         if (rememberMe) {
           localStorage.setItem("savedUsername", username);
@@ -106,14 +130,24 @@ export default function LoginPage() {
         localStorage.setItem("token", data.token);
         router.push("/home");
       } else {
-        setMessage("Incorrect username or password.");
+        Swal.fire({
+          icon: "error",
+          title: "Login Failed",
+          text: "Incorrect username or password.",
+        });
       }
     } catch (err) {
       console.error(err); // ใช้งานตัวแปร err ที่ถูกจับมา
-      setMessage("Failed to connect to the server.");
+      Swal.fire({
+        icon: "error",
+        title: "Connection Error",
+        text: "Failed to connect to the server.",
+      });
     }
     setLoading(false);
   };
+
+
 
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#2d4392" }}>
@@ -337,16 +371,48 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full text-lg font-bold transition duration-200 bg-[#2D3E92] hover:bg-[#3D50B2] text-white min-h-[3rem] shadow-md rounded-lg"
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#3D50B2"; // สีอ่อนลง
+                onClick={() => {
+                  if (!loading) {
+                    // Handle sign in
+                  }
                 }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#2D3E92"; // กลับมาสีเดิม
-                }}
+                className={`relative overflow-hidden px-8 py-3 text-lg font-semibold rounded-full shadow-xl transition-all duration-300 ease-in-out
+    ${loading
+                    ? 'bg-gradient-to-r from-[#6DD5ED] to-[#2193B0] animate-pulse text-white cursor-wait'
+                    : 'bg-gradient-to-br from-[#2D3E92] via-[#3549A7] to-[#1C2E78] text-white hover:brightness-110 hover:shadow-[0_8px_30px_rgba(45,62,146,0.35)] active:scale-95'
+                  } flex items-center justify-center gap-3 group`}
               >
-                {loading ? "Logging in..." : "Login"}
+                {loading ? (
+                  <div className="flex items-center gap-2 whitespace-nowrap">
+                    <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        className="opacity-25"
+                      />
+                      <path
+                        d="M4 12a8 8 0 018-8v8z"
+                        fill="currentColor"
+                        className="opacity-75"
+                      />
+                    </svg>
+                    <span className="font-medium tracking-wide">Please wait... Logging in</span>
+                  </div>
+                ) : (
+                  <span className="font-bold tracking-wide transition group-hover:tracking-wider">
+                    Sign In
+                  </span>
+                )}
               </button>
+
+
+
+
+
+
             </div>
 
 
@@ -363,59 +429,7 @@ export default function LoginPage() {
 
   );
 }
-// 🔁 ฟังก์ชัน refreshAccessToken สำหรับขอ token ใหม่จาก refreshToken
-export async function refreshAccessToken(): Promise<string | null> {
-  const refreshToken = localStorage.getItem("refreshToken");
-  if (!refreshToken) return null;
 
-  try {
-    const res = await fetch("https://operation.dth.travel:7082/api/guide/refresh", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken }),
-    });
 
-    if (!res.ok) return null;
 
-    const data = await res.json();
-    if (data.accessToken) {
-      localStorage.setItem("accessToken", data.accessToken);
-      return data.accessToken;
-    }
-  } catch (error) {
-    console.error("Refresh failed", error);
-  }
-
-  return null;
-}
-
-// 🛡️ secureFetch ใช้เรียก API พร้อม auto-refresh token ถ้าหมดอายุ
-export async function secureFetch(url: string, options: RequestInit = {}) {
-  let accessToken = localStorage.getItem("accessToken");
-
-  let res = await fetch(url, {
-    ...options,
-    headers: {
-      ...(options.headers || {}),
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-
-  if (res.status === 401) {
-    accessToken = await refreshAccessToken();
-    if (!accessToken) {
-      throw new Error("Session expired. Please login again.");
-    }
-
-    res = await fetch(url, {
-      ...options,
-      headers: {
-        ...(options.headers || {}),
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-  }
-
-  return res;
-}
 
