@@ -6,14 +6,14 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 import Image from "next/image";
 
 const customFormatDate = (dateStr: string): string => {
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
 
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = date.toLocaleString('default', { month: 'short' });
-  const year = date.getFullYear();
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = date.toLocaleString('default', { month: 'short' });
+    const year = date.getFullYear();
 
-  return `${day}-${month}-${year}`;
+    return `${day}-${month}-${year}`;
 };
 
 const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number; job: Job }> = ({ token, keyValue, job }) => {
@@ -262,14 +262,31 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number; job: J
         const files = e.target.files;
         if (!files) return;
 
-        const filesArray = Array.from(files);
-        console.log("📂 เลือกไฟล์:", filesArray.map(f => f.name));
-        // ไม่ใช้ selectedFiles แล้ว จึงไม่ต้อง set
+        const imageFiles = Array.from(files).filter(file =>
+            file.type === "image/jpeg" || file.type === "image/png"
+        );
 
-        const base64List = await Promise.all(filesArray.map(fileToBase64));
+        if (imageFiles.length === 0) {
+            Swal.fire({
+                icon: "error",
+                title: "❌ ไม่รองรับไฟล์ประเภทนี้",
+                text: "กรุณาอัปโหลดเฉพาะไฟล์รูปภาพ JPEG หรือ PNG เท่านั้น",
+                toast: true,
+                position: "top-end",
+                timer: 3000,
+                showConfirmButton: false,
+            });
+            return;
+        }
+
+        console.log("📂 เลือกไฟล์:", imageFiles.map(f => f.name));
+
+        const base64List = await Promise.all(imageFiles.map(fileToBase64));
         setPreviewBase64List(prev => [...prev, ...base64List]);
+
         console.log("🖼 Preview base64 พร้อม:", previewBase64List.length + base64List.length, "ไฟล์");
     };
+
 
     const handleUpload = async () => {
         setLoading(true);
@@ -292,40 +309,16 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number; job: J
             setResponseMsg(res.data.message || "Upload สำเร็จ");
             await fetchUploadedData();
             await sendEmail({
-                emails: ["veeratha.p@dth.travel"],
+                emails: ["peerayut.d@dth.travel"],
                 emails_CC: "",
                 subject: `Uploaded: ${job.PNR}`,
-                body: `<table border="1" cellspacing="0" cellpadding="8" style="border-collapse: collapse; width: 100%;">
-  <thead style="background-color: #f2f2f2;">
-    <tr>
-      <th style="text-align: left;">Information</th>
-      <th style="text-align: left;">Details</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td>DTH Ref. No.</td><td>${job.PNR}</td></tr>
-    <tr><td>Service Name</td><td>${job.serviceProductName}</td></tr>
-    <tr><td>Service Date</td><td>${customFormatDate(job.PNRDate)}</td></tr>
-    <tr><td>Comment</td><td>${job.Comment}</td></tr>
-    <tr><td>Class</td><td>${job.Class}</td></tr>
-    <tr><td>Booking Status</td><td>${job.serviceTypeName}</td></tr>
-    <tr>
-      <td>Client name</td>
-      <td>
-        ${job.pax_name}
-      </td>
-    </tr>
-    <tr><td>Pickup Date & Time</td><td>${customFormatDate(job.PickupDate)}</td></tr>
-    <tr><td>Pickup Location</td><td>${job.Pickup}</td></tr>
-    <tr><td>Dropoff Date & Time</td><td>${customFormatDate(job.DropoffDate)}</td></tr>
-    <tr><td>Dropoff Location</td><td>${job.Dropoff}</td></tr>
-    <tr><td>Guide</td><td>${job.Guide}</td></tr>
-    <tr><td>Vehicle</td><td>${job.Vehicle}</td></tr>
-    <tr><td>Driver</td><td>${job.Driver}</td></tr>
-    <tr><td>Remarks</td><td>${job.Remark ?? ''}</td></tr>
-    <tr><td>Sending by</td><td>User: </td></tr>
-  </tbody>
-</table>`,
+                body: `
+    <p><strong>📌 Remark:</strong> ${remark || '-'}</p>
+    <p><strong>📎 Attachments:</strong></p>
+    ${previewBase64List.map((base64, idx) => (
+        `<p><img src="${base64}" alt="Image ${idx + 1}" style="max-width: 100%; height: auto; margin-bottom: 10px;" /></p>`
+    )).join('')}
+`,
             });
             setIsEditing(false);
         } catch (error: unknown) {
@@ -342,149 +335,141 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number; job: J
         }
     };
 
-    if (initialLoading) {
-        return <p className="text-center text-gray-500">⏳ กำลังโหลดข้อมูล...</p>;
-    }
-    if (uploadedData && Array.isArray(uploadedData) && hasUploaded && !isEditing) {
-        return (
-            <div className="max-w-xl mx-auto p-6 bg-white rounded-2xl shadow-md">
-                <h2 className="text-xl font-semibold mb-4 text-green-600">📦 Uploaded Summary</h2>
-
-                {uploadedData.map((src: UploadGroup, idx: number) => (
-                    <div key={idx} className="mb-4 border-b pb-4">
-                        <p className="mb-2"><strong>Remark:</strong> {src.Remark}</p>
-                        <div className="flex flex-wrap gap-3">
-                            {src.Images?.map((img: ImageData, imgIdx: number) => (
-                                <div key={imgIdx} className="relative inline-block">
-                                    {img.ImageBase64.startsWith("data:application/pdf") ? (
-                                        <a
-                                            href={img.ImageBase64}
-                                            download={`file-${imgIdx}.pdf`}
-                                            className="w-20 h-20 flex items-center justify-center bg-gray-100 border rounded-lg text-blue-600 text-xs font-medium text-center hover:underline"
-                                            title="ดาวน์โหลด PDF"
-                                        >
-                                            📄 Download PDF
-                                        </a>
-                                    ) : (
-                                        <Image
-                                            src={img.ImageBase64}
-                                            alt={`uploaded-${imgIdx}`}
-                                            width={80}
-                                            height={80}
-                                            className="object-cover rounded-lg border shadow-sm"
-                                        />
-                                    )}
-                                    <button
-                                        type="button"
-                                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-700"
-                                        onClick={() => handleRemovePreviewImage(idx, imgIdx)}
-                                        title="ลบรูปภาพนี้"
-                                    >
-                                        ×
-                                    </button>
-                                </div>
-                            ))}
-
-                        </div>
-                    </div>
-                ))}
-
-                <button
-                    onClick={handleEdit}
-                    className="mt-4 w-full py-2 px-4 rounded-full bg-yellow-500 text-white font-semibold hover:bg-yellow-600"
-                >
-                    ✏️ Edit
-                </button>
-            </div>
-        );
-    }
-    console.log("📝 แสดงหน้าสำหรับอัปโหลดใหม่");
     return (
         <div className="max-w-xl mx-auto p-6 bg-white rounded-2xl shadow-md">
-            <h2 className="text-xl font-semibold mb-4">📤 Upload Images with Remark</h2>
-
-            <textarea
-                value={remark}
-                onChange={e => setRemark(e.target.value)}
-                placeholder="Write your remark here..."
-                className="w-full p-2 mb-4 border rounded-md resize-none"
-                rows={3}
-            />
-
-            <input
-                type="file"
-                multiple
-                accept="image/*,application/pdf"
-                onChange={handleFileChange}
-                className="mb-4"
-            />
-
-            <div className="flex flex-wrap gap-4 mb-4">
-                {previewBase64List.map((base64, idx) => (
-                    base64.startsWith("data:application/pdf") ? (
-                        <a
-                            key={idx}
-                            href={base64}
-                            download={`file-${idx}.pdf`}
-                            className="w-20 h-20 flex items-center justify-center bg-gray-100 border rounded-lg text-blue-600 text-xs font-medium text-center hover:underline"
-                            title="ดาวน์โหลด PDF"
-                        >
-                            📄 PDF {idx + 1}
-                        </a>
-                    ) : (
-                        <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden border shadow-sm">
-                            <Image
-                                src={base64}
-                                alt={`preview-${idx}`}
-                                width={500}        // กำหนดขนาดที่เหมาะสม (ปรับตามต้องการ)
-                                height={300}       // กำหนดขนาดที่เหมาะสม (ปรับตามต้องการ)
-                                className="object-cover cursor-pointer"
-                                onClick={() => openPreview(base64, idx)}
-                                style={{ width: "100%", height: "100%" }} // ถ้าต้องการให้เต็ม container
-                            />
-                            <button
-                                type="button"
-                                className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
-                                onClick={() => {
-                                    setPreviewBase64List(prev => prev.filter((_, i) => i !== idx));
-                                }}
-                            >
-                                ×
-                            </button>
+            {initialLoading ? (
+                <p className="text-center text-gray-500">⏳ Loading Files...</p>
+            ) : (hasUploaded && !isEditing) ? (
+                <>
+                    <h2 className="text-xl font-semibold mb-4 text-green-600">📦 Uploaded Summary</h2>
+                    {uploadedData.map((src: UploadGroup, idx: number) => (
+                        <div key={idx} className="mb-4 border-b pb-4">
+                            <p className="mb-2"><strong>Remark:</strong> {src.Remark}</p>
+                            <div className="flex flex-wrap gap-3">
+                                {src.Images?.map((img: ImageData, imgIdx: number) => (
+                                    <div key={imgIdx} className="relative inline-block">
+                                            <Image
+                                                src={img.ImageBase64}
+                                                alt={`uploaded-${imgIdx}`}
+                                                width={80}
+                                                height={80}
+                                                className="object-cover rounded-lg border shadow-sm cursor-pointer"
+                                                onClick={() => openPreview(img.ImageBase64, imgIdx)}
+                                            />
+                                        <button
+                                            type="button"
+                                            className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-700"
+                                            onClick={() => handleRemovePreviewImage(idx, imgIdx)}
+                                            title="ลบรูปภาพนี้"
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                    )
-                ))}
-            </div>
+                    ))}
 
-            {loading && <p className="text-blue-600 mb-2">⏳ Processing...</p>}
-            {responseMsg && <p className="mb-2">{responseMsg}</p>}
+                    <button
+                        onClick={handleEdit}
+                        className="mt-4 w-full py-2 px-4 rounded-full bg-yellow-500 text-white font-semibold hover:bg-yellow-600"
+                    >
+                        ✏️ Edit
+                    </button>
+                </>
+            ) : (
+                <>
+                    {/* ✅ Upload or Edit form */}
+                    <h2 className="text-xl font-semibold mb-4">📤 Upload Images with Remark</h2>
 
-            <button
-                disabled={loading}
-                onClick={hasUploaded ? handleSave : handleUpload}
-                className={`w-full py-2 px-4 rounded-full text-white font-semibold ${loading ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"}`}
-            >
-                {hasUploaded ? "💾 Save" : "📤 Upload"}
-            </button>
+                    <textarea
+                        value={remark}
+                        onChange={e => setRemark(e.target.value)}
+                        placeholder="Write your remark here..."
+                        className="w-full p-2 mb-4 border rounded-md resize-none"
+                        rows={3}
+                    />
 
-            {/* Preview modal */}
+                    <input
+                        type="file"
+                        multiple
+                        accept="image/jpeg,image/png"
+                        onChange={handleFileChange}
+                        className="mb-4"
+                    />
+
+                    <div className="flex flex-wrap gap-4 mb-4">
+                        {previewBase64List.map((base64, idx) => (
+                            <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden border shadow-sm">
+                                <Image
+                                    src={base64}
+                                    alt={`preview-${idx}`}
+                                    width={80}
+                                    height={80}
+                                    className="object-cover rounded-lg cursor-pointer"
+                                    onClick={() => openPreview(base64, idx)}
+                                />
+                                <button
+                                    type="button"
+                                    className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                                    onClick={() => {
+                                        setPreviewBase64List(prev => prev.filter((_, i) => i !== idx));
+                                    }}
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        ))}
+
+                    </div>
+
+                    {loading && <p className="text-blue-600 mb-2">⏳ Processing...</p>}
+                    {responseMsg && <p className="mb-2">{responseMsg}</p>}
+
+                    <button
+                        disabled={loading}
+                        onClick={hasUploaded ? handleSave : handleUpload}
+                        className={`w-full py-2 px-4 rounded-full text-white font-semibold ${loading ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"}`}
+                    >
+                        {hasUploaded ? "💾 Save" : "📤 Upload"}
+                    </button>
+                </>
+            )}
+
+            {/* ✅ ✅ ✅ Modal อยู่ข้างล่างสุดของ return เท่านั้น! */}
             {previewModal && (
                 <div
                     className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50"
                     onClick={closePreview}
                 >
-                    <Image
-                        src={previewModal.base64}
-                        alt={`preview-modal-${previewModal.index}`}
-                        layout="fill"
-                        objectFit="contain"
-                        className="rounded-lg"
-                        priority // ถ้าอยากโหลดไว
-                    />
+                    <div
+                        className="relative w-[90vw] h-[90vh] max-w-4xl mx-auto"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <Image
+                            src={previewModal.base64}
+                            alt={`preview-modal-${previewModal.index}`}
+                            fill
+                            className="object-contain rounded-lg"
+                            priority
+                        />
+
+                        <a
+                            href={previewModal.base64}
+                            download={`image-${previewModal.index}.jpg`}
+                            className="absolute bottom-5 left-5 bg-blue-600 text-white py-1 px-4 rounded-md hover:bg-blue-700 text-sm"
+                        >
+                            ⬇️ Download
+                        </a>
+                    </div>
+
                     <button
                         type="button"
                         className="absolute top-5 right-5 bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-xl"
-                        onClick={closePreview}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            closePreview();
+                        }}
                     >
                         ×
                     </button>
@@ -492,6 +477,7 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number; job: J
             )}
         </div>
     );
+
 };
 
 export default UploadImagesWithRemark;

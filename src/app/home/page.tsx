@@ -95,15 +95,11 @@ export default function JobsList() {
 
   const totalPages = Math.ceil(groupedByPNRDate.length / pageSize);
   const pagedGroups = useMemo(() => {
-  if ((showConfirmedOnly || showPendingOnly) && showAllFilteredJobs) {
-    return groupedByPNRDate;
-  }
-  return groupedByPNRDate.slice((page - 1) * pageSize, page * pageSize);
-}, [groupedByPNRDate, page, showConfirmedOnly, showPendingOnly, showAllFilteredJobs]);
-
-
-  // Ensure mergedJob is properly defined before use
-  // สร้าง mergedJob จากข้อมูล jobs ที่ดึงมาและจัดกลุ่ม
+    if ((showConfirmedOnly || showPendingOnly) && showAllFilteredJobs) {
+      return groupedByPNRDate;
+    }
+    return groupedByPNRDate.slice((page - 1) * pageSize, page * pageSize);
+  }, [groupedByPNRDate, page, showConfirmedOnly, showPendingOnly, showAllFilteredJobs]);
 
   return (
     <CssgGuide>
@@ -125,8 +121,20 @@ export default function JobsList() {
                       value={i === 0 ? startDate : endDate}
                       onChange={(e) => {
                         const newDate = e.target.value;
-                        if (i === 0) setStartDate(newDate);
-                        else setEndDate(newDate);
+
+                        if (i === 0) {
+                          // Start date ห้ามมากกว่า end date
+                          if (newDate > endDate) {
+                            return;
+                          }
+                          setStartDate(newDate);
+                        } else {
+                          // End date ห้ามน้อยกว่า start date
+                          if (newDate < startDate) {
+                            return;
+                          }
+                          setEndDate(newDate);
+                        }
                       }}
                       className="input input-bordered w-full"
                     />
