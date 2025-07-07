@@ -46,6 +46,7 @@ export default function JobsList() {
   const [showConfirmedOnly, setShowConfirmedOnly] = useState(false);
   const [showPendingOnly, setShowPendingOnly] = useState(false);
   const [showAllFilteredJobs, setShowAllFilteredJobs] = useState(false);
+  const [showNewOnly, setShowNewOnly] = useState(false);
   const pageSize = 6;
 
   useEffect(() => {
@@ -86,20 +87,21 @@ export default function JobsList() {
   const groupedByPNRDate = useMemo(() => {
     const grouped = groupJobsByPNRDate(filteredByDate);
     const entries = Object.entries(grouped).filter(([, jobs]) => {
+      if (showNewOnly) return jobs.some(j => j.isNew);
       if (showConfirmedOnly) return jobs.some(j => j.IsConfirmed);
       if (showPendingOnly) return jobs.some(j => !j.IsConfirmed && !j.IsCancel);
       return true;
     });
     return entries.sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime());
-  }, [filteredByDate, showConfirmedOnly, showPendingOnly]);
+  }, [filteredByDate, showConfirmedOnly, showPendingOnly, showNewOnly]);
 
   const totalPages = Math.ceil(groupedByPNRDate.length / pageSize);
   const pagedGroups = useMemo(() => {
-    if ((showConfirmedOnly || showPendingOnly) && showAllFilteredJobs) {
+    if ((showConfirmedOnly || showPendingOnly || showNewOnly) && showAllFilteredJobs) {
       return groupedByPNRDate;
     }
     return groupedByPNRDate.slice((page - 1) * pageSize, page * pageSize);
-  }, [groupedByPNRDate, page, showConfirmedOnly, showPendingOnly, showAllFilteredJobs]);
+  }, [groupedByPNRDate, page, showConfirmedOnly, showPendingOnly, showAllFilteredJobs,showNewOnly]);
 
   return (
     <CssgGuide>
@@ -149,16 +151,18 @@ export default function JobsList() {
               <label className="block mb-1 font-medium text-gray-700">Filter by Status</label>
               <select
                 className="w-full md:w-60 border rounded-lg p-2 focus:outline-none focus:ring focus:border-blue-300"
-                value={showConfirmedOnly ? "confirmed" : showPendingOnly ? "pending" : "all"}
+                value={showConfirmedOnly ? "confirmed" : showPendingOnly ? "pending" :  showNewOnly ? "new" : "all"}
                 onChange={(e) => {
                   const value = e.target.value;
                   setShowConfirmedOnly(value === "confirmed");
                   setShowPendingOnly(value === "pending");
+                  setShowNewOnly(value === "new");
                 }}
               >
                 <option value="all">⚫️ All Jobs</option>
                 <option value="confirmed">✅ Confirmed Only</option>
                 <option value="pending">🕒 Pending Only</option>
+                <option value="new">🆕 New Only</option>
               </select>
             </div>
 
@@ -181,7 +185,7 @@ export default function JobsList() {
                 </div>
 
                 <div className="w-full flex justify-center mt-6">
-                  {(showConfirmedOnly || showPendingOnly) ? (
+                  {(showConfirmedOnly || showPendingOnly || showNewOnly) ? (
                     <button
                       onClick={() => setShowAllFilteredJobs(prev => !prev)}
                       className="flex items-center gap-2 px-4 py-2 rounded-full text-white bg-[#2D3E92] hover:bg-[#1f2b68] transition-colors"
