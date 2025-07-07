@@ -167,6 +167,7 @@ export default function Page() {
 
   return (
     <CssgGuide>
+       <div className="min-h-screen bg-white p-4"> {/* ✅ พื้นหลังขาว เต็มหน้าจอ พร้อม padding */}
       <div className="max-w-4xl mx-auto p-4 overflow-auto">
         <h1 className="text-2xl font-bold mb-4">Calendar</h1>
         <CalendarView
@@ -194,6 +195,7 @@ export default function Page() {
         )}
 
         {error && <p className="text-red-600">{error}</p>}
+      </div>
       </div>
     </CssgGuide>
   );
