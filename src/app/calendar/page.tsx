@@ -19,18 +19,34 @@ function formatISO(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
+// ฟังก์ชันช่วยแบ่งช่วงเวลาแบบ chunk (3 เดือน)
+function getDateRanges(start: string, end: string, chunkMonths = 3): { start: string; end: string }[] {
+  const ranges = [];
+  let currentStart = new Date(start);
+  const endDate = new Date(end);
+
+  while (currentStart < endDate) {
+    const currentEnd = addMonths(currentStart, chunkMonths);
+    ranges.push({
+      start: formatISO(currentStart),
+      end: formatISO(currentEnd < endDate ? currentEnd : endDate),
+    });
+    currentStart = currentEnd;
+  }
+
+  return ranges;
+}
+
 export default function Page() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // ✅ ตอนแรก: เริ่มวันนี้
   const [dataStartDate, setDataStartDate] = useState(() => {
     const today = new Date();
     return formatISO(today);
   });
 
-  // ✅ ตอนแรก: โหลดล่วงหน้า 2 เดือน
   const [dataEndDate, setDataEndDate] = useState(() => {
     const d = addMonths(new Date(), 2);
     return formatISO(d);
@@ -39,13 +55,31 @@ export default function Page() {
   const [currentView, setCurrentView] = useState('dayGridMonth');
   const [currentCenterDate, setCurrentCenterDate] = useState<Date | null>(null);
 
+  const [fetchedRanges, setFetchedRanges] = useState<{ start: string; end: string }[]>([]);
+
+  function hasFetchedRange(start: string, end: string): boolean {
+    return fetchedRanges.some(
+      (range) => start >= range.start && end <= range.end
+    );
+  }
+
+  function addFetchedRange(start: string, end: string) {
+    setFetchedRanges(prev => [...prev, { start, end }]);
+  }
+
+  // fetchJobs เหมือนเดิม ไม่แก้ไข
   const fetchJobs = (start: string, end: string) => {
+    if (hasFetchedRange(start, end)) {
+      console.log('✅ Already fetched:', start, 'to', end);
+      return Promise.resolve();
+    }
+
     const token = localStorage.getItem('token') || '';
     if (!token) {
       setError('Token not found. Please log in.');
       setLoading(false);
       setJobs([]);
-      return;
+      return Promise.resolve();
     }
 
     setLoading(true);
@@ -78,6 +112,7 @@ export default function Page() {
           });
           return combined;
         });
+        addFetchedRange(start, end);
         setError(null);
       })
       .catch(err => {
@@ -87,12 +122,19 @@ export default function Page() {
       .finally(() => setLoading(false));
   };
 
-  // ✅ ดึงแค่ช่วงปัจจุบันถึง 2 เดือนข้างหน้า
-useEffect(() => {
-  fetchJobs(dataStartDate, dataEndDate);
-}, [dataStartDate, dataEndDate]);
+  // ฟังก์ชัน fetch แบบ chunk 3 เดือน โดยเรียก fetchJobs ทีละช่วง
+  const fetchJobsChunked = async (start: string, end: string) => {
+    const ranges = getDateRanges(start, end, 3);
+    for (const range of ranges) {
+      await fetchJobs(range.start, range.end);
+    }
+  };
 
-const handleDatesSet = (arg: DatesSetArg) => {
+  useEffect(() => {
+    fetchJobsChunked(dataStartDate, dataEndDate);
+  }, [dataStartDate, dataEndDate]);
+
+  const handleDatesSet = (arg: DatesSetArg) => {
     if (arg.view.type !== currentView) {
       setCurrentView(arg.view.type);
     }
@@ -107,18 +149,16 @@ const handleDatesSet = (arg: DatesSetArg) => {
     const viewStart = formatISO(arg.start);
     const viewEnd = formatISO(arg.end);
 
-    // ✅ โหลด "เพิ่ม" ล่วงหน้า
     if (viewEnd > dataEndDate) {
       const newEndDate = formatISO(addMonths(new Date(dataEndDate), 3));
+      fetchJobsChunked(dataEndDate, newEndDate);
       setDataEndDate(newEndDate);
-      fetchJobs(dataEndDate, newEndDate);
     }
 
-    // ✅ โหลด "ย้อนหลัง" เมื่อผู้ใช้เลื่อนย้อน
     if (viewStart < dataStartDate) {
       const newStartDate = formatISO(addMonths(new Date(dataStartDate), -3));
+      fetchJobsChunked(newStartDate, dataStartDate);
       setDataStartDate(newStartDate);
-      fetchJobs(newStartDate, dataStartDate);
     }
   };
 

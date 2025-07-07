@@ -349,7 +349,7 @@ const renderEventContent = (arg: EventContentArg) => {
         datesSet={(arg: DatesSetArg) => {
           const year = arg.start.getFullYear();
           const month = String(arg.start.getMonth() + 1).padStart(2, '0');
-          setIcsFilename(`dth-calendar-${year}-${month}.ics`);
+          setIcsFilename(`dth-calendar-${year}-${month}`);
           onDatesSet?.(arg);
         }}
         height="auto"
