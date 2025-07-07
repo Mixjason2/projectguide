@@ -150,3 +150,12 @@ export interface JobToAccept {
   indexInGroup: number;
   // ใส่ propertiesอื่น ๆ ที่ใช้ในฟังก์ชัน
 }
+
+export interface EmailGuideProps {
+  guidemail: string;
+}
+
+export const emailOP: {
+  key: number;
+  Email: string;
+}[] = [];
