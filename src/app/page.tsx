@@ -151,27 +151,28 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#2d4392" }}>
-      <div className="card w-full max-w-3xl bg-white shadow-xl rounded-xl relative overflow-hidden">
-        <div
-          className="fixed top-18 right-6 z-50"
-          style={{
-            width: "160px",
-            height: "170px",
-            pointerEvents: "none", // ป้องกันไม่ให้ block UI อื่น
-            overflow: "hidden",    // ปิดส่วนที่เกินขอบ
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 300 190"
-            style={{
-              width: "100%",
-              height: "auto",
-              display: "block",
-              transform: "scale(1.8)", // หรือปรับเป็น scale ที่ดูดี
-              transformOrigin: "top right", // ยึดขวาบนไว้
-            }}
-          >
+<div className="card w-full max-w-3xl bg-white shadow-xl rounded-xl relative overflow-hidden">
+  {/* SVG มุมขวาบนของ card */}
+  <div
+    className="absolute top-6 right-5 z-10"
+    style={{
+      width: "160px",
+      height: "170px",
+      pointerEvents: "none",
+      overflow: "hidden",
+    }}
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 300 190"
+      style={{
+        width: "100%",
+        height: "auto",
+        display: "block",
+        transform: "scale(2.2)",
+        transformOrigin: "top right",
+      }}
+    >
             <path
               fill="#95c941"
               d="M251.5,65.5c0.8,1.2,1.9,2,3.3,2.4c0.8,0.3,1.8,0.4,3,0.4h8.3V49.2h-8.3c-2.9,0-5.1,1.2-6.4,3.6 
