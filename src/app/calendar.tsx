@@ -8,7 +8,7 @@ import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 // import CssgGuide from '../cssguide'; // Removed because the module was not found or does not exist
 import './calendar.css';
-import { DatesSetArg } from '@fullcalendar/core/index.js';
+import { DatesSetArg, EventClickArg, EventContentArg } from '@fullcalendar/core'; // ✅ แก้ตรงนี้
 
 type Job = {
   isChange: boolean;
@@ -138,7 +138,7 @@ export default function CalendarExcel() {
     }
   }, [jobs, currentView]);
 
-  const handleEventClick = (info: any) => {
+    const handleEventClick = (info: EventClickArg) => { // ✅ แก้ตรงนี้
     if (currentView === 'dayGridMonth') {
       const jobsOnDate: Job[] = info.event.extendedProps.jobs || [];
       const clickedDate = info.event.startStr.split('T')[0];
@@ -163,7 +163,7 @@ export default function CalendarExcel() {
     }
   };
 
-  const renderEventContent = (arg: any) => {
+  const renderEventContent = (arg: EventContentArg) => { // ✅ แก้ตรงนี้
     const job = arg.event.extendedProps?.job;
     const isChanged = arg.event.extendedProps?.isChanged;
     return (
