@@ -8,6 +8,7 @@ import StatusMessage from "@/app/component/StatusMessage";
 import JobsSummary from '@/app/component/JobsSummary';
 import JobCard from '@/app/component/JobCard';
 import AllJobDetailsModal from "@/app/component/AllJobDetailsModal";
+import Swal from 'sweetalert2';
 
 // Group jobs by their PNRDate
 function groupJobsByPNRDate(jobs: Job[]): Record<string, Job[]> {
@@ -101,7 +102,7 @@ export default function JobsList() {
       return groupedByPNRDate;
     }
     return groupedByPNRDate.slice((page - 1) * pageSize, page * pageSize);
-  }, [groupedByPNRDate, page, showConfirmedOnly, showPendingOnly, showAllFilteredJobs,showNewOnly]);
+  }, [groupedByPNRDate, page, showConfirmedOnly, showPendingOnly, showAllFilteredJobs, showNewOnly]);
 
   return (
     <CssgGuide>
@@ -129,15 +130,42 @@ export default function JobsList() {
                           if (newDate > endDate) {
                             return;
                           }
+
+                          // ❗️ตรวจสอบห่างเกิน 90 วันไหม
+                          const diff = new Date(endDate).getTime() - new Date(newDate).getTime();
+                          if (diff > 122 * 24 * 60 * 60 * 1000) {
+                            Swal.fire({
+                              icon: 'error',
+                              title: 'Invalid Date Range',
+                              text: '❌ Date range cannot exceed 3 months.',
+                              confirmButtonColor: '#2D3E92',
+                            });
+                            return;
+                          }
+
                           setStartDate(newDate);
                         } else {
                           // End date ห้ามน้อยกว่า start date
                           if (newDate < startDate) {
                             return;
                           }
+
+                          // ❗️ตรวจสอบห่างเกิน 90 วันไหม
+                          const diff = new Date(newDate).getTime() - new Date(startDate).getTime();
+                          if (diff > 122 * 24 * 60 * 60 * 1000) {
+                            Swal.fire({
+                              icon: 'error',
+                              title: 'Invalid Date Range',
+                              text: '❌ Date range cannot exceed 3 months.',
+                              confirmButtonColor: '#2D3E92',
+                            });
+                            return;
+                          }
+
                           setEndDate(newDate);
                         }
                       }}
+
                       className="input input-bordered w-full"
                     />
                   </div>
@@ -151,7 +179,7 @@ export default function JobsList() {
               <label className="block mb-1 font-medium text-gray-700">Filter by Status</label>
               <select
                 className="w-full md:w-60 border rounded-lg p-2 focus:outline-none focus:ring focus:border-blue-300"
-                value={showConfirmedOnly ? "confirmed" : showPendingOnly ? "pending" :  showNewOnly ? "new" : "all"}
+                value={showConfirmedOnly ? "confirmed" : showPendingOnly ? "pending" : showNewOnly ? "new" : "all"}
                 onChange={(e) => {
                   const value = e.target.value;
                   setShowConfirmedOnly(value === "confirmed");
