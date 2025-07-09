@@ -8,6 +8,8 @@ export type Job = {
   PNR: string;
   PickupDate: string;
   Pickup: string;
+  Dropoff:string;
+  DropoffDate:string;
   AdultQty: number;
   ChildQty: number;
   ChildShareQty: number;
@@ -16,6 +18,13 @@ export type Job = {
   Booking_Name: ReactNode;
   serviceProductName: ReactNode;
 };
+
+// เพิ่มใต้ import ด้านบน
+type JobWithTHDate = Job & {
+  PickupDateTH: Date;
+  DropoffDateTH: Date;
+};
+
 
 export function getTotalPax(job: Job): number {
   return job.AdultQty + job.ChildQty + job.ChildShareQty + job.InfantQty;

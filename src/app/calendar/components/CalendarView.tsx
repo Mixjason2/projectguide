@@ -7,6 +7,13 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { DatesSetArg, EventClickArg, EventContentArg } from '@fullcalendar/core';
 import { Job, getTotalPax } from './types';
 
+// เพิ่มใต้ import ด้านบน
+type JobWithTHDate = Job & {
+  PickupDateTH: Date;
+  DropoffDateTH: Date;
+};
+
+
 type CalendarViewProps = {
   jobs: Job[];
   onDatesSet?: (arg: DatesSetArg) => void;
@@ -26,6 +33,12 @@ function getStatusDots(input: Job | Job[] | 'all'): { color: string; label: stri
     ];
   }
   return [{ color: '#404040', label: 'Normal' }];
+}
+
+// ✅ ฟังก์ชันแปลงเวลาเป็นไทย (UTC+7)
+function toTHDate(dateStr: string): Date {
+  const utcDate = new Date(dateStr);
+  return new Date(utcDate.getTime() - 7 * 60 * 60 * 1000); // ลบ 7 ชั่วโมง
 }
 
 function generateICS(jobs: Job[]): string {
@@ -81,6 +94,15 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   const calendarRef = useRef<FullCalendar>(null);
   const [icsFilename, setIcsFilename] = useState('dth-calendar.ics'); // ✅ เพิ่ม state
 
+  // ✅ ใช้ useMemo เพื่อแปลง jobs ให้เป็นเวลาประเทศไทยทันที
+  const jobsWithTHDate: JobWithTHDate[] = useMemo(() => {
+    return jobs.map(job => ({
+      ...job,
+      PickupDateTH: toTHDate(job.PickupDate),
+      DropoffDateTH: toTHDate(job.DropoffDate),
+    }));
+  }, [jobs]);
+
   const handleDownloadICS = () => {
     const calendarApi = calendarRef.current?.getApi();
     if (!calendarApi) return;
@@ -88,9 +110,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     const viewStart = calendarApi.view.currentStart;
     const viewEnd = calendarApi.view.currentEnd;
 
-    const confirmedJobs = jobs.filter((job: Job) => {
-      const pickupDate = new Date(job.PickupDate);
-      return job.IsConfirmed && pickupDate >= viewStart && pickupDate < viewEnd;
+    const confirmedJobs = jobsWithTHDate.filter((job: JobWithTHDate) => {
+      return job.IsConfirmed && job.PickupDateTH >= viewStart && job.PickupDateTH < viewEnd;
     });
 
     const icsContent = generateICS(confirmedJobs);
@@ -123,12 +144,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   }, [currentViewProp, gotoDate]);
 
   const events = useMemo(() => {
-    const confirmedJobs = jobs.filter(job => job.IsConfirmed);
     if (currentViewProp === 'dayGridMonth') {
       const grouped: Record<string, Job[]> = {};
-      jobs.forEach(job => {
-        if (!job.PickupDate) return;
-        const date = job.PickupDate.split('T')[0];
+      jobsWithTHDate.forEach((job: JobWithTHDate) => {
+        if (!job.PickupDateTH) return;
+        const date = job.PickupDateTH.toISOString().split('T')[0];
         (grouped[date] ??= []).push(job);
       });
 
@@ -146,47 +166,48 @@ const CalendarView: React.FC<CalendarViewProps> = ({
       }));
     }
 
-    return confirmedJobs.map(job => ({
-      id: `job-${job.key}`,
-      title: `${job.serviceProductName}`,
-      start: job.PickupDate,
-      backgroundColor: '#95c941',
-      borderColor: '#0369a1',
-      textColor: 'white',
-      extendedProps: { job },
-    }));
-  }, [jobs, currentViewProp]);
+    return jobsWithTHDate
+      .filter(job => job.IsConfirmed)
+      .map(job => ({
+        id: `job-${job.key}`,
+        title: '',
+        start: job.PickupDateTH.toISOString(),
+        backgroundColor: '#95c941',
+        borderColor: '#0369a1',
+        textColor: 'white',
+        extendedProps: { job },
+      }));
+  }, [jobsWithTHDate, currentViewProp]);
 
-const handleEventClick = (info: EventClickArg) => {
-  if (currentViewProp === 'dayGridMonth') {
-    const jobsOnDate: Job[] = info.event.extendedProps.jobs || [];
-    const clickedDate = info.event.startStr.split('T')[0];
+  const handleEventClick = (info: EventClickArg) => {
+  const jobs: JobWithTHDate[] = info.event.extendedProps.jobs;
+  const job: JobWithTHDate = info.event.extendedProps.job;
+  const clickedDate = info.event.startStr.split('T')[0];
 
-    const details = jobsOnDate
-        .map((job, i) => {
-          const pickupTime = new Date(job.PickupDate).toLocaleTimeString('en-GB', {
-            hour: '2-digit',
-            minute: '2-digit',
-          });
-          const totalPax = getTotalPax(job);
-          return `${i + 1}. 🕒 ${pickupTime} 📍 ${job.Pickup} | 👤 ${totalPax} Pax | 🎫 PNR: ${job.PNR}`;
-        })
-        .join('\n');
-      alert(`📅 Date: ${clickedDate}\n📌 Jobs:\n${details}`);
-    } else {
-      const job: Job = info.event.extendedProps.job;
-      const pickupTime = new Date(job.PickupDate).toLocaleString('en-GB', {
-        dateStyle: 'short',
-        timeStyle: 'short',
-      });
-      const totalPax = getTotalPax(job);
-      alert(`🎫 PNR: ${job.PNR}
+  if (jobs) {
+    const details = jobs
+      .map((j, i) => {
+        const pickupTime = j.PickupDateTH.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+        const totalPax = getTotalPax(j);
+        return `${i + 1}. 🕒 ${pickupTime} 📍 ${j.Pickup} | 👤 ${totalPax} Pax | 🎫 PNR: ${j.PNR}`;
+      })
+      .join('\n');
+
+    alert(`📅 Date: ${clickedDate}\n📌 Jobs:\n${details}`);
+  } else if (job) {
+    const pickupTime = job.PickupDateTH.toLocaleString('en-GB', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+    });
+    const totalPax = getTotalPax(job);
+
+    alert(`🎫 PNR: ${job.PNR}
 🕒 Pickup: ${pickupTime}
 📍 Location: ${job.Pickup}
 👤 Pax: ${totalPax} (Adult: ${job.AdultQty}, Child: ${job.ChildQty}, Share: ${job.ChildShareQty}, Infant: ${job.InfantQty})
 👤 Name: ${job.pax_name}`);
-    }
-  };
+  }
+};
 
   const generateSingleICS = (job: Job): string => {
     const pad = (n: number) => String(n).padStart(2, '0');
@@ -250,10 +271,10 @@ const handleEventClick = (info: EventClickArg) => {
     URL.revokeObjectURL(url);
   };
 
-const renderEventContent = (arg: EventContentArg) => {
-  const job = arg.event.extendedProps?.job;
-  const jobs: Job[] = arg.event.extendedProps?.jobs;
-  const statusDots = getStatusDots(job ?? jobs ?? []);
+  const renderEventContent = (arg: EventContentArg) => {
+    const job = arg.event.extendedProps?.job;
+    const jobs: Job[] = arg.event.extendedProps?.jobs;
+    const statusDots = getStatusDots(job ?? jobs ?? []);
 
     return (
       <div
@@ -297,8 +318,15 @@ const renderEventContent = (arg: EventContentArg) => {
               }}
             />
           ))}
-          <span style={{ flexShrink: 1, minWidth: 0 }}>{arg.event.title}</span>
+          {job && (
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span>P:{job.Pickup}</span>
+              <span>D:{job.Dropoff}</span>
+            </div>
+          )}
+          {!job && <span style={{ flexShrink: 1, minWidth: 0 }}>{arg.event.title}</span>}
         </div>
+
         {job && (
           <button
             onClick={(e) => {
@@ -329,6 +357,7 @@ const renderEventContent = (arg: EventContentArg) => {
       </div>
     );
   };
+
 
   return (
     <>
