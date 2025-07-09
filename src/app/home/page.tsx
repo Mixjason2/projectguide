@@ -124,47 +124,47 @@ export default function JobsList() {
                       value={i === 0 ? startDate : endDate}
                       onChange={(e) => {
                         const newDate = e.target.value;
+                        const maxDiffMs = 90 * 24 * 60 * 60 * 1000; // 90 วัน
 
                         if (i === 0) {
-                          // Start date ห้ามมากกว่า end date
-                          if (newDate > endDate) {
-                            return;
+                          // --- เปลี่ยน Start Date ---
+                          const newStart = new Date(newDate);
+                          const currentEnd = new Date(endDate);
+
+                          // ถ้า start > end → end = start
+                          let adjustedEnd = currentEnd;
+                          if (newStart > currentEnd) {
+                            adjustedEnd = newStart;
                           }
 
-                          // ❗️ตรวจสอบห่างเกิน 90 วันไหม
-                          const diff = new Date(endDate).getTime() - new Date(newDate).getTime();
-                          if (diff > 122 * 24 * 60 * 60 * 1000) {
-                            Swal.fire({
-                              icon: 'error',
-                              title: 'Invalid Date Range',
-                              text: '❌ Date range cannot exceed 3 months.',
-                              confirmButtonColor: '#2D3E92',
-                            });
-                            return;
+                          // ถ้า end - start > 90 วัน → end = start + 90 วัน
+                          if (adjustedEnd.getTime() - newStart.getTime() > maxDiffMs) {
+                            adjustedEnd = new Date(newStart.getTime() + maxDiffMs);
                           }
 
                           setStartDate(newDate);
+                          setEndDate(adjustedEnd.toISOString().slice(0, 10));
                         } else {
-                          // End date ห้ามน้อยกว่า start date
-                          if (newDate < startDate) {
-                            return;
+                          // --- เปลี่ยน End Date ---
+                          const newEnd = new Date(newDate);
+                          const currentStart = new Date(startDate);
+
+                          // ถ้า end < start → start = end
+                          let adjustedStart = currentStart;
+                          if (newEnd < currentStart) {
+                            adjustedStart = newEnd;
                           }
 
-                          // ❗️ตรวจสอบห่างเกิน 90 วันไหม
-                          const diff = new Date(newDate).getTime() - new Date(startDate).getTime();
-                          if (diff > 122 * 24 * 60 * 60 * 1000) {
-                            Swal.fire({
-                              icon: 'error',
-                              title: 'Invalid Date Range',
-                              text: '❌ Date range cannot exceed 3 months.',
-                              confirmButtonColor: '#2D3E92',
-                            });
-                            return;
+                          // ถ้า end - start > 90 วัน → start = end - 90 วัน
+                          if (newEnd.getTime() - adjustedStart.getTime() > maxDiffMs) {
+                            adjustedStart = new Date(newEnd.getTime() - maxDiffMs);
                           }
 
                           setEndDate(newDate);
+                          setStartDate(adjustedStart.toISOString().slice(0, 10));
                         }
                       }}
+
 
                       className="input input-bordered w-full"
                     />
