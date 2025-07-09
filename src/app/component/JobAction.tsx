@@ -113,11 +113,13 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
           }
         });
         setAccepted(true);
+
         setJobs((prevJobs) =>
           prevJobs.map((j) => (j.key === job.key ? { ...j, IsConfirmed: true } : j))
         );
+
         await sendEmail({
-          emails: ["fomexii@hotmail.com"],
+          emails: ["veeratha.p@dth.travel"],
           emails_CC: "",
           subject: `Confirmation ${job.PNR}`,
           body: `<table border="1" cellspacing="0" cellpadding="8" style="border-collapse: collapse; width: 100%;">
@@ -147,7 +149,7 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
     <tr><td>Guide</td><td>${job.Guide}</td></tr>
     <tr><td>Vehicle</td><td>${job.Vehicle}</td></tr>
     <tr><td>Driver</td><td>${job.Driver}</td></tr>
-    <tr><td>Remarks</td><td>${job.Remark ?? ''}</td></tr>
+    <tr><td>Remarks</td><td>${job.Remark}</td></tr>
     <tr><td>Sending by</td><td>User: </td></tr>
   </tbody>
 </table>`,
@@ -184,63 +186,27 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
   };
 
   const handleReject = async () => {
-  console.log("[REJECT] Start rejecting job", job);
-
-  if (onReject) {
-    console.log("[REJECT] onReject() handler is provided, calling it...");
-    onReject(job.key.toString());
-    return;
-  }
-
-  try {
-    setStatusMessage("");
-    const token = localStorage.getItem("token") || "";
-    console.log("[REJECT] Using token:", token);
-
-    const payload = {
-      token,
-      data: { isCancel: true },
-    };
-
-    console.log("[REJECT] Sending cancel request to backend:", payload);
-
-    const response = await axios.post(
-      `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
-      payload
-    );
-
-    console.log("[REJECT] Backend response:", response);
-
-    const result = response.data;
-    console.log("[REJECT] Result from backend:", result);
-
-    if (result.success) {
-      console.log("[REJECT] Cancel succeeded, preparing to send email");
-
-      // Log job data used in email
-      console.log("[REJECT] Email data:", {
-        PNR: job.PNR,
-        serviceProductName: job.serviceProductName,
-        PNRDate: job.PNRDate,
-        Comment: job.Comment,
-        Class: job.Class,
-        serviceTypeName: job.serviceTypeName,
-        pax_name: job.pax_name,
-        PickupDate: job.PickupDate,
-        Pickup: job.Pickup,
-        DropoffDate: job.DropoffDate,
-        Dropoff: job.Dropoff,
-        Guide: job.Guide,
-        Vehicle: job.Vehicle,
-        Driver: job.Driver,
-        Remark: job.Remark,
-      });
-
-      await sendEmail({
-        emails: ["fomexii@hotmail.com"],
-        emails_CC: "",
-        subject: `Canceled ${job.PNR}`,
-        body: `<table border="1" cellspacing="0" cellpadding="8" style="border-collapse: collapse; width: 100%;">
+    if (onReject) {
+      onReject(job.key.toString());
+      return;
+    }
+    try {
+      setStatusMessage("");
+      const token = localStorage.getItem("token") || "";
+      const response = await axios.post(
+        `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
+        {
+          token,
+          data: { isCancel: true },
+        }
+      );
+      const result = response.data;
+      if (result.success) {
+        await sendEmail({
+          emails: ["veeratha.p@dth.travel"],
+          emails_CC: "",
+          subject: `Canceled ${job.PNR}`,
+          body: `<table border="1" cellspacing="0" cellpadding="8" style="border-collapse: collapse; width: 100%;">
   <thead style="background-color: #f2f2f2;">
     <tr>
       <th style="text-align: left;">Information</th>
@@ -262,66 +228,58 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
     <tr><td>Guide</td><td>${job.Guide}</td></tr>
     <tr><td>Vehicle</td><td>${job.Vehicle}</td></tr>
     <tr><td>Driver</td><td>${job.Driver}</td></tr>
-    <tr><td>Remarks</td><td>${job.Remark ?? ''}</td></tr>
+    <tr><td>Remarks</td><td>${job.Remark}</td></tr>
     <tr><td>Sending by</td><td>User: </td></tr>
   </tbody>
 </table>`,
-      });
-
-      console.log("[REJECT] Email sent successfully (or no error thrown)");
-
-      await Swal.fire({
-        icon: "success",
-        title: "Job successfully canceled.",
-        showConfirmButton: false,
-        timer: 2500,
-        toast: true,
-        position: "top",
-        timerProgressBar: true,
-        didOpen: (toast) => {
-          toast.style.margin = '0 auto';
-          toast.style.left = '0';
-          toast.style.right = '0';
-        }
-      });
-
-      setJobs((prevJobs) =>
-        prevJobs.map((j) => (j.key === job.key ? { ...j, IsCancel: true } : j))
-      );
-    } else {
-      console.error("[REJECT] Cancel failed:", result);
+        });
+        await Swal.fire({
+          icon: "success",
+          title: "Job successfully canceled.",
+          showConfirmButton: false,
+          timer: 2500,
+          toast: true,
+          position: "top",
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.style.margin = '0 auto';       // ✅ จัดให้อยู่ตรงกลางแนวนอน
+            toast.style.left = '0';
+            toast.style.right = '0';
+          }
+        });
+        setJobs((prevJobs) =>
+          prevJobs.map((j) => (j.key === job.key ? { ...j, IsCancel: true } : j))
+        );
+      } else {
+        await Swal.fire({
+          icon: "error",
+          title: "Failed to cancel the job: " + (result?.error || "Unknown error"),
+          showConfirmButton: false,
+          timer: 3000,
+          toast: true,
+          position: "top", didOpen: (toast) => {
+            toast.style.margin = '0 auto';       // ✅ จัดให้อยู่ตรงกลางแนวนอน
+            toast.style.left = '0';
+            toast.style.right = '0';
+          }
+        });
+      }
+    } catch (error) {
       await Swal.fire({
         icon: "error",
-        title: "Failed to cancel the job: " + (result?.error || "Unknown error"),
+        title: "Error: " + String(error),
         showConfirmButton: false,
         timer: 3000,
         toast: true,
         position: "top",
         didOpen: (toast) => {
-          toast.style.margin = '0 auto';
+          toast.style.margin = '0 auto';       // ✅ จัดให้อยู่ตรงกลางแนวนอน
           toast.style.left = '0';
           toast.style.right = '0';
         }
       });
     }
-  } catch (error) {
-    console.error("[REJECT] Error during reject:", error);
-    await Swal.fire({
-      icon: "error",
-      title: "Error: " + String(error),
-      showConfirmButton: false,
-      timer: 3000,
-      toast: true,
-      position: "top",
-      didOpen: (toast) => {
-        toast.style.margin = '0 auto';
-        toast.style.left = '0';
-        toast.style.right = '0';
-      }
-    });
-  }
-};
-
+  };
 
   return (
     <div className="w-full border rounded-xl p-2 shadow bg-white">
@@ -384,5 +342,6 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
     </div>
   );
 };
+
 
 export default JobAction;
