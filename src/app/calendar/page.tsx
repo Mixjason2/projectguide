@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'; // ✅ เพิ่ม useRef
 import CalendarView from './components/CalendarView';
-import Loading from './components/Loading';
+
 import ErrorMessage from './components/ErrorMessage';
 import { Job } from './components/types';
 import './calendar.css';
@@ -19,7 +19,7 @@ function formatISO(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
-function getDateRanges(start: string, end: string, chunkMonths = 3): { start: string; end: string }[] {
+function getDateRanges(start: string, end: string, chunkMonths = 1): { start: string; end: string }[] {
   const ranges = [];
   let currentStart = new Date(start);
   const endDate = new Date(end);
@@ -38,16 +38,17 @@ function getDateRanges(start: string, end: string, chunkMonths = 3): { start: st
 
 export default function Page() {
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [loadingInitial, setLoadingInitial] = useState(false);
+  const [, setLoadingInitial] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [dataStartDate, setDataStartDate] = useState(() => {
+  // state เก็บวันที่ไม่ลบเลย แต่จะไม่ใช้ fetch ตาม state นี้โดยตรง
+  const [dataStartDate] = useState(() => {
     const today = new Date();
     return formatISO(today);
   });
 
-  const [dataEndDate, setDataEndDate] = useState(() => {
+  const [dataEndDate] = useState(() => {
     const d = addMonths(new Date(), 2);
     return formatISO(d);
   });
@@ -76,7 +77,6 @@ export default function Page() {
       return Promise.resolve();
     }
 
-    // ยกเลิก fetch เก่าก่อน
     abortControllerRef.current?.abort();
 
     const token = localStorage.getItem('token') || '';
@@ -84,22 +84,25 @@ export default function Page() {
       setError('Token not found. Please log in.');
       setLoadingInitial(false);
       setLoadingMore(false);
-      setJobs([]);
+      setJobs([]); // ล้าง
       return Promise.resolve();
     }
 
     if (isInitial) {
       setLoadingInitial(true);
+      setJobs([]); // ✅ ล้าง jobs รอบแรก
+      setFetchedRanges([]); // ✅ ล้าง range cache
     } else {
       setLoadingMore(true);
     }
+
     setError(null);
     console.time('⏱️ fetchJobs');
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    return fetch('https://operation.dth.travel:7082/api/guide/job', {
+    return fetch('https://operation.dth.travel:7082/api/guide/job/confirm', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, startdate: start, enddate: end }),
@@ -117,15 +120,19 @@ export default function Page() {
       })
       .then((data: Job[]) => {
         console.timeEnd('⏱️ fetchJobs');
+
+        const confirmedOnly = data.filter(j => j.IsConfirmed); // ✅ กรอง
+
         setJobs(prev => {
           const combined = [...prev];
-          data.forEach(newJob => {
+          confirmedOnly.forEach(newJob => {
             if (!combined.find(j => j.key === newJob.key)) {
               combined.push(newJob);
             }
           });
           return combined;
         });
+
         addFetchedRange(start, end);
         setError(null);
       })
@@ -148,22 +155,47 @@ export default function Page() {
 
   const isFetchingRef = useRef(false);
 
-  const fetchJobsChunked = useCallback(async (start: string, end: string, isInitial = false) => {
-    if (isFetchingRef.current) {
-      console.log("⛔ Already fetching, skip...");
-      return;
-    }
-    isFetchingRef.current = true;
-    const ranges = getDateRanges(start, end, 3);
-    for (const range of ranges) {
-      await fetchJobs(range.start, range.end, isInitial);
-    }
-    isFetchingRef.current = false;
-  }, [fetchJobs]);
+const fetchJobsChunked = useCallback(async (start: string, end: string, isInitial = false) => {
+  if (isFetchingRef.current) {
+    console.log("⛔ Already fetching, skip...");
+    return;
+  }
+  isFetchingRef.current = true;
 
+  const ranges = getDateRanges(start, end, 1);
+  try {
+    await Promise.all(
+      ranges.map(range =>
+        fetchJobs(range.start, range.end, isInitial)
+      )
+    );
+  } finally {
+    isFetchingRef.current = false;
+  }
+}, [fetchJobs]);
+
+
+  // ✅ เพิ่ม ref เก็บวันที่โหลดแล้วแทน state สำหรับ fetch
+  const loadedStartRef = useRef(dataStartDate);
+  const loadedEndRef = useRef(dataEndDate);
+
+  // ❌ ลบ useEffect เดิมที่ fetch ตาม dataStartDate, dataEndDate ทิ้ง
+  // useEffect(() => {
+  //   fetchJobsChunked(dataStartDate, dataEndDate, true);
+  // }, [dataStartDate, dataEndDate, fetchJobsChunked]);
+
+  // ✅ เพิ่ม useEffect แค่รอบแรก load เท่านั้น
   useEffect(() => {
-    fetchJobsChunked(dataStartDate, dataEndDate, true);
-  }, [dataStartDate, dataEndDate, fetchJobsChunked]);
+    const today = new Date();
+    const future = addMonths(today, 0);
+    const start = formatISO(today);
+    const end = formatISO(future);
+
+    fetchJobsChunked(start, end, true);
+
+    loadedStartRef.current = start;
+    loadedEndRef.current = end;
+  }, [fetchJobsChunked]);
 
   const handleDatesSet = (arg: DatesSetArg) => {
     if (isFetchingRef.current) return;
@@ -182,20 +214,20 @@ export default function Page() {
     const viewStart = formatISO(arg.start);
     const viewEnd = formatISO(arg.end);
 
-    if (viewEnd > dataEndDate) {
-      const newEndDate = formatISO(addMonths(new Date(dataEndDate), 3));
-      fetchJobsChunked(dataEndDate, newEndDate);
-      setDataEndDate(newEndDate);
+    // เปรียบเทียบกับ loaded ref แทน state
+    if (viewEnd > loadedEndRef.current) {
+      const newEnd = formatISO(addMonths(new Date(loadedEndRef.current), 1));
+      fetchJobsChunked(loadedEndRef.current, newEnd);
+      loadedEndRef.current = newEnd;
     }
 
-    if (viewStart < dataStartDate) {
-      const newStartDate = formatISO(addMonths(new Date(dataStartDate), -3));
-      fetchJobsChunked(newStartDate, dataStartDate);
-      setDataStartDate(newStartDate);
+    if (viewStart < loadedStartRef.current) {
+      const newStart = formatISO(addMonths(new Date(loadedStartRef.current), -1));
+      fetchJobsChunked(newStart, loadedStartRef.current);
+      loadedStartRef.current = newStart;
     }
   };
 
-  if (loadingInitial && jobs.length === 0) return <Loading />;
   if (error && jobs.length === 0) return <ErrorMessage error={error} />;
 
   return (

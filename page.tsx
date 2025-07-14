@@ -147,6 +147,8 @@ export default function LoginPage() {
     setLoading(false);
   };
 
+
+
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#2d4392" }}>
       <div className="card w-full max-w-3xl bg-white shadow-xl rounded-xl relative overflow-hidden">

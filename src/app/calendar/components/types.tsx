@@ -19,11 +19,6 @@ export type Job = {
   serviceProductName: ReactNode;
 };
 
-// เพิ่มใต้ import ด้านบน
-type JobWithTHDate = Job & {
-  PickupDateTH: Date;
-  DropoffDateTH: Date;
-};
 
 
 export function getTotalPax(job: Job): number {

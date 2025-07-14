@@ -119,7 +119,7 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
         );
 
         await sendEmail({
-          emails: ["veeratha.p@dth.travel"],
+          emails: ["pakinnat.patthanajiranan@g.swu.ac.th"],
           emails_CC: "",
           subject: `Confirmation ${job.PNR}`,
           body: `<table border="1" cellspacing="0" cellpadding="8" style="border-collapse: collapse; width: 100%;">
@@ -203,7 +203,7 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
       const result = response.data;
       if (result.success) {
         await sendEmail({
-          emails: ["veeratha.p@dth.travel"],
+          emails: ["pakinnat.patthanajiranan@g.swu.ac.th"],
           emails_CC: "",
           subject: `Canceled ${job.PNR}`,
           body: `<table border="1" cellspacing="0" cellpadding="8" style="border-collapse: collapse; width: 100%;">

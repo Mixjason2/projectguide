@@ -166,9 +166,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
       }));
     }
 
-    return jobsWithTHDate
-      .filter(job => job.IsConfirmed)
-      .map(job => ({
+return jobsWithTHDate.map(job => ({
         id: `job-${job.key}`,
         title: '',
         start: job.PickupDateTH.toISOString(),
@@ -319,10 +317,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({
             />
           ))}
           {job && (
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span>P:{job.Pickup}</span>
-              <span>D:{job.Dropoff}</span>
-            </div>
+<div style={{ display: 'flex', flexDirection: 'column' }}>
+<span className="text-neutral-800">P: {job.Pickup}</span>
+<span className="text-neutral-600">D: {job.Dropoff}</span>
+
+</div>
           )}
           {!job && <span style={{ flexShrink: 1, minWidth: 0 }}>{arg.event.title}</span>}
         </div>

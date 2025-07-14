@@ -1,7 +1,15 @@
 import React from 'react';
 
-const Loading = () => (
-  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', fontSize: '1.2rem', color: '#555' }}>
+const LoadingIndicator = () => (
+  <div style={{
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100vh',
+    fontSize: '1.2rem',
+    color: '#555'
+  }}>
     <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
       {[0, 1, 2].map(i => (
         <span key={i} style={{
@@ -12,7 +20,7 @@ const Loading = () => (
           display: 'inline-block',
           animation: 'bounce 1.4s infinite ease-in-out both',
           animationDelay: `${i * 0.2}s`,
-        }}></span>
+        }} />
       ))}
     </div>
     Loading jobs...
@@ -25,4 +33,4 @@ const Loading = () => (
   </div>
 );
 
-export default Loading;
+export default LoadingIndicator;
