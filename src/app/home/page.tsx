@@ -257,7 +257,10 @@ export default function JobsList() {
                       <button
                         className="btn btn-outline btn-sm rounded-full min-w-[64px]"
                         disabled={page === 1}
-                        onClick={() => setPage(page - 1)}
+                        onClick={() => {
+                          setPage(page - 1);
+                          setExpandedPNRs({});
+                        }}
                       >
                         Prev
                       </button>
@@ -267,7 +270,10 @@ export default function JobsList() {
                       <button
                         className="btn btn-outline btn-sm rounded-full min-w-[64px]"
                         disabled={page === totalPages}
-                        onClick={() => setPage(page + 1)}
+                        onClick={() => {
+                          setPage(page + 1);
+                          setExpandedPNRs({});
+                        }}
                       >
                         Next
                       </button>
