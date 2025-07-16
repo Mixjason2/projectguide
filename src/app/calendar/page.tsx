@@ -240,6 +240,7 @@ const fetchJobsChunked = useCallback(async (start: string, end: string, isInitia
             gotoDate={currentCenterDate}
             currentViewProp={currentView}
             onDatesSet={handleDatesSet}
+            loading={loadingMore}
           />
 
           {loadingMore && (

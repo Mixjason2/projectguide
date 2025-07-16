@@ -123,7 +123,7 @@ export default function JobsList() {
                       value={i === 0 ? startDate : endDate}
                       onChange={(e) => {
                         const newDate = e.target.value;
-                        const maxDiffMs = 90 * 24 * 60 * 60 * 1000; // 90 วัน
+                        const maxDiffMs = 91 * 24 * 60 * 60 * 1000; // 90 วัน
 
                         if (i === 0) {
                           // --- เปลี่ยน Start Date ---

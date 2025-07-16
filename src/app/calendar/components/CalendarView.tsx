@@ -19,6 +19,7 @@ type CalendarViewProps = {
   onDatesSet?: (arg: DatesSetArg) => void;
   gotoDate?: Date | null;
   currentViewProp?: string;
+  loading?: boolean;
 };
 
 function getStatusDots(input: Job | Job[] | 'all'): { color: string; label: string }[] {
@@ -90,6 +91,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   onDatesSet,
   gotoDate,
   currentViewProp = 'dayGridMonth',
+    loading = false,
 }) => {
   const calendarRef = useRef<FullCalendar>(null);
   const [icsFilename, setIcsFilename] = useState('dth-calendar.ics'); // ✅ เพิ่ม state
@@ -361,12 +363,17 @@ return jobsWithTHDate.map(job => ({
   return (
     <>
       <div className="mb-2">
-        <button
-          onClick={handleDownloadICS}
-          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          📥 Download ({icsFilename})
-        </button>
+<button
+  onClick={handleDownloadICS}
+  disabled={loading}
+  className={`px-3 py-1 text-white rounded ${
+    loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+  }`}
+  title={loading ? 'Please wait for data to load' : 'Download calendar as ICS'}
+>
+  📥 Download ({icsFilename})
+</button>
+
       </div>
 
       <FullCalendar

@@ -5,17 +5,6 @@ import Swal from "sweetalert2";
 import 'sweetalert2/dist/sweetalert2.min.css';
 import Image from "next/image";
 
-const customFormatDate = (dateStr: string): string => {
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return '';
-
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = date.toLocaleString('default', { month: 'short' });
-    const year = date.getFullYear();
-
-    return `${day}-${month}-${year}`;
-};
-
 const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number; job: Job }> = ({ token, keyValue, job }) => {
     const [remark, setRemark] = useState<string>("");
     // ลบ selectedFiles เพราะไม่ได้ใช้
@@ -208,40 +197,16 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number; job: J
             setResponseMsg(res.data.message || "อัปเดตสำเร็จ");
             await fetchUploadedData();
             await sendEmail({
-                emails: ["veeratha.p@dth.travel"],
+                emails: ["fomexii@hotmail.com"],
                 emails_CC: "",
                 subject: `Updated: ${job.PNR}`,
-                body: `<table border="1" cellspacing="0" cellpadding="8" style="border-collapse: collapse; width: 100%;">
-  <thead style="background-color: #f2f2f2;">
-    <tr>
-      <th style="text-align: left;">Information</th>
-      <th style="text-align: left;">Details</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td>DTH Ref. No.</td><td>${job.PNR}</td></tr>
-    <tr><td>Service Name</td><td>${job.serviceProductName}</td></tr>
-    <tr><td>Service Date</td><td>${customFormatDate(job.PNRDate)}</td></tr>
-    <tr><td>Comment</td><td>${job.Comment}</td></tr>
-    <tr><td>Class</td><td>${job.Class}</td></tr>
-    <tr><td>Booking Status</td><td>${job.serviceTypeName}</td></tr>
-    <tr>
-      <td>Client name</td>
-      <td>
-        ${job.pax_name}
-      </td>
-    </tr>
-    <tr><td>Pickup Date & Time</td><td>${customFormatDate(job.PickupDate)}</td></tr>
-    <tr><td>Pickup Location</td><td>${job.Pickup}</td></tr>
-    <tr><td>Dropoff Date & Time</td><td>${customFormatDate(job.DropoffDate)}</td></tr>
-    <tr><td>Dropoff Location</td><td>${job.Dropoff}</td></tr>
-    <tr><td>Guide</td><td>${job.Guide}</td></tr>
-    <tr><td>Vehicle</td><td>${job.Vehicle}</td></tr>
-    <tr><td>Driver</td><td>${job.Driver}</td></tr>
-    <tr><td>Remarks</td><td>${job.Remark ?? ''}</td></tr>
-    <tr><td>Sending by</td><td>User: </td></tr>
-  </tbody>
-</table>`,
+                body: `
+    <p><strong>📌 Remark:</strong> ${remark || '-'}</p>
+    <p><strong>📎 Attachments:</strong></p>
+    ${previewBase64List.map((base64, idx) => (
+                    `<p><img src="${base64}" alt="Image ${idx + 1}" style="max-width: 100%; height: auto; margin-bottom: 10px;" /></p>`
+                )).join('')}
+`,
             });
             setIsEditing(false);
         } catch (error: unknown) {
@@ -309,15 +274,15 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number; job: J
             setResponseMsg(res.data.message || "Upload สำเร็จ");
             await fetchUploadedData();
             await sendEmail({
-                emails: ["peerayut.d@dth.travel"],
+                emails: ["fomexii@hotmail.com"],
                 emails_CC: "",
                 subject: `Uploaded: ${job.PNR}`,
                 body: `
     <p><strong>📌 Remark:</strong> ${remark || '-'}</p>
     <p><strong>📎 Attachments:</strong></p>
     ${previewBase64List.map((base64, idx) => (
-        `<p><img src="${base64}" alt="Image ${idx + 1}" style="max-width: 100%; height: auto; margin-bottom: 10px;" /></p>`
-    )).join('')}
+                    `<p><img src="${base64}" alt="Image ${idx + 1}" style="max-width: 100%; height: auto; margin-bottom: 10px;" /></p>`
+                )).join('')}
 `,
             });
             setIsEditing(false);
@@ -348,14 +313,14 @@ const UploadImagesWithRemark: React.FC<{ token: string; keyValue: number; job: J
                             <div className="flex flex-wrap gap-3">
                                 {src.Images?.map((img: ImageData, imgIdx: number) => (
                                     <div key={imgIdx} className="relative inline-block">
-                                            <Image
-                                                src={img.ImageBase64}
-                                                alt={`uploaded-${imgIdx}`}
-                                                width={80}
-                                                height={80}
-                                                className="object-cover rounded-lg border shadow-sm cursor-pointer"
-                                                onClick={() => openPreview(img.ImageBase64, imgIdx)}
-                                            />
+                                        <Image
+                                            src={img.ImageBase64}
+                                            alt={`uploaded-${imgIdx}`}
+                                            width={80}
+                                            height={80}
+                                            className="object-cover rounded-lg border shadow-sm cursor-pointer"
+                                            onClick={() => openPreview(img.ImageBase64, imgIdx)}
+                                        />
                                         <button
                                             type="button"
                                             className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-700"
