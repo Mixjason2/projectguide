@@ -112,6 +112,11 @@ export interface JobCardProps {
   setJobs: React.Dispatch<React.SetStateAction<Job[]>>;
 }
 
+export type PreviewImage = {
+  id : string;
+  base64: string;
+}
+
 export type Props = {
     onBase64ListReady: (b64List: string[], remark: string) => void;
 };
