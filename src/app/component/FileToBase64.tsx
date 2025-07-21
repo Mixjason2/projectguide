@@ -3,6 +3,7 @@ import axios from "axios";
 import { Job, UploadGroup, ImageData, PreviewImage } from "@/app/types/job"; // แก้ path ให้ถูกต้อง
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
+import Image from 'next/image';
 
 const UploadImagesWithRemark: React.FC<{
   token: string;
@@ -329,7 +330,7 @@ const UploadImagesWithRemark: React.FC<{
               <div className="flex flex-wrap gap-3">
                 {src.Images?.map((img: ImageData, imgIdx: number) => (
                   <div key={imgIdx} className="relative inline-block">
-                    <img
+                    <Image
                       src={img.ImageBase64}
                       alt={`uploaded-${imgIdx}`}
                       width={80}
@@ -385,7 +386,7 @@ const UploadImagesWithRemark: React.FC<{
                   key={img.id}
                   className="relative w-20 h-20 rounded-lg overflow-hidden border shadow-sm"
                 >
-                  <img
+                  <Image
                     src={img.base64}
                     alt={`preview-${idx}`}
                     width={80}
@@ -429,7 +430,7 @@ const UploadImagesWithRemark: React.FC<{
           onClick={closePreview}
         >
           <div className="relative w-[90vw] h-[90vh] max-w-4xl mx-auto" onClick={(e) => e.stopPropagation()}>
-            <img
+            <Image
               src={previewModal.base64}
               alt={`preview-modal-${previewModal.index}`}
               className="object-contain rounded-lg"

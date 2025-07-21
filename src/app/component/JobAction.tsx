@@ -74,7 +74,7 @@ interface ExtendedJobActionProps extends JobActionProps {
 const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, onReject }) => {
   const [accepted, setAccepted] = useState(job.IsConfirmed);
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [statusMessage, setStatusMessage] = useState("");
+  const [, setStatusMessage] = useState("");
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
 
