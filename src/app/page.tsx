@@ -108,6 +108,7 @@ export default function LoginPage() {
         // เก็บ token ลง localStorage
         localStorage.setItem("accessToken", data.token); // 🟢 ใช้ชื่อใหม่
         localStorage.setItem("refreshToken", data.refreshToken); // 🟢 เพิ่ม refreshToken
+        localStorage.setItem("connectionOptions", JSON.stringify(connectionOptions));
         setGuideEmail(data.guideEmail);      // ✅ ดึงจาก API
         setEmailOP(data.emailOP || []);      // ✅ ดึงจาก API ถ้ามี
 
