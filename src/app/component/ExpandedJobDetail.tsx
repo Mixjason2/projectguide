@@ -18,12 +18,14 @@ const customFormatDate = (dateStr: string): string => {
 const ExpandedJobDetail: React.FC<ExpandedJobDetailProps & {
   onAccept?: (jobKey: string) => void;
   onReject?: (jobKey: string) => void;
+  asmdbValue: string;   // เพิ่มบรรทัดนี้
 }> = ({
   job,
   expandedPNRs,
   renderPlaceDate,
   renderField,
   setJobs,
+  asmdbValue,
 }) => {
     if (!expandedPNRs[job.PNRDate]) return null;
 
@@ -120,7 +122,7 @@ const ExpandedJobDetail: React.FC<ExpandedJobDetailProps & {
 
               {/* กรอบปุ่ม ชิดกรอบเนื้อหา */}
               <div className="bg-white border border-t-0 border-gray-200 rounded-b-lg flex justify-center w-auto p-6">
-                <JobAction job={miniJob} setJobs={setJobs} />
+                <JobAction job={miniJob} setJobs={setJobs} asmdbValue={asmdbValue} />
               </div>
             </div>
           );

@@ -47,7 +47,17 @@ export default function JobsList() {
   const [showPendingOnly, setShowPendingOnly] = useState(false);
   const [showAllFilteredJobs, setShowAllFilteredJobs] = useState(false);
   const [showNewOnly, setShowNewOnly] = useState(false);
+  const [asmdbValue, setAsmdbValue] = useState('');
   const pageSize = 6;
+
+useEffect(() => {
+  // effect ตัวที่ 1: โหลด asmdb จาก localStorage
+  const storedAsmdb = localStorage.getItem('asmdb');
+  if (storedAsmdb) {
+    setAsmdbValue(storedAsmdb);
+  }
+}, []);
+
 
   useEffect(() => {
     const token = localStorage.getItem('token') || '';
@@ -72,6 +82,7 @@ export default function JobsList() {
       setLoading(false);
     }
   };
+
 
   const filteredByDate = useMemo(() => {
     return jobs.filter(job => {
@@ -205,8 +216,7 @@ export default function JobsList() {
                         setExpandedPNRs={setExpandedPNRs}
                         setDetailJobs={setDetailJobs}
                         jobs={jobs}
-                        setJobs={setJobs}
-                      />
+                        setJobs={setJobs} asmdbValue={asmdbValue}                   />
                     </div>
                   ))}
                 </div>

@@ -13,8 +13,8 @@ export default function LoginPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [connection, setConnection] = useState("[AS-DTGTHA]"); // ค่าเริ่มต้นสำหรับการเชื่อมต่อ
-  const [guideEmail, setGuideEmail] = useState("");
-  const [emailOP, setEmailOP] = useState<{ key: number; Email: string }[]>([]);
+  const [, setGuideEmail] = useState("");
+  const [, setEmailOP] = useState<{ key: number; Email: string }[]>([]);
 
 
   const connectionOptions = [
@@ -80,7 +80,7 @@ export default function LoginPage() {
 
     const selectedLabel = selectedOption.label || "TH";
     const asmdbValue = `Assignment_${selectedLabel}`;
-
+    console.log("asmdbValue:", asmdbValue);
     setLoading(true);
     try {
       // Send data to API
@@ -97,6 +97,7 @@ export default function LoginPage() {
       const data = await res.json();
 
       // Show result from API to user
+      // แก้ไขใน handleSubmit ตรงส่วน login สำเร็จ
       if (data.status && data.token) {
         Swal.fire({
           icon: "success",
@@ -105,30 +106,37 @@ export default function LoginPage() {
           timer: 1500,
           showConfirmButton: false,
         });
-        // เก็บ token ลง localStorage
-        localStorage.setItem("accessToken", data.token); // 🟢 ใช้ชื่อใหม่
-        localStorage.setItem("refreshToken", data.refreshToken); // 🟢 เพิ่ม refreshToken
+
+        // เก็บ token และ refresh token
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("refreshToken", data.refreshToken);
+
+        // เก็บ asmdb (ที่เราสร้างไว้ก่อนส่ง request)
+        localStorage.setItem("asmdb", asmdbValue);
+
+        // เก็บ connection options (อาจจะไม่จำเป็นแต่ถ้าต้องการเก็บ)
         localStorage.setItem("connectionOptions", JSON.stringify(connectionOptions));
-        setGuideEmail(data.guideEmail);      // ✅ ดึงจาก API
-        setEmailOP(data.emailOP || []);      // ✅ ดึงจาก API ถ้ามี
 
-        console.log("guideEmail:", guideEmail);
-
-        emailOP.forEach(item => {
-          console.log(`key: ${item.key}, Email: ${item.Email}`);
-        });
-
+        // เก็บ username/password/connection ถ้าเลือก rememberMe
         if (rememberMe) {
           localStorage.setItem("savedUsername", username);
           localStorage.setItem("savedPassword", password);
-          localStorage.setItem("savedConnection", connection); // ✅ เพิ่มตรงนี้
+          localStorage.setItem("savedConnection", connection);
         } else {
           localStorage.removeItem("savedUsername");
           localStorage.removeItem("savedPassword");
-          localStorage.removeItem("savedConnection"); // ✅ ลบเมื่อไม่ remember
+          localStorage.removeItem("savedConnection");
         }
-        // เก็บ token ไว้ใน localStorage หรือ sessionStorage ถ้าต้องการ
-        localStorage.setItem("token", data.token);
+
+        setGuideEmail(data.guideEmail);
+        setEmailOP(data.emailOP || []);
+
+        // แก้ให้ log แสดงผลหลัง set state
+        console.log("guideEmail:", data.guideEmail);
+        (data.emailOP || []).forEach((item: { key: number; Email: string }) => {
+          console.log(`key: ${item.key}, Email: ${item.Email}`);
+        });
+
         router.push("/home");
       } else {
         Swal.fire({

@@ -69,15 +69,15 @@ const sendEmail = async ({
 interface ExtendedJobActionProps extends JobActionProps {
   onAccept?: (jobKey: string) => void;
   onReject?: (jobKey: string) => void;
+  asmdbValue: string;  // เพิ่มบรรทัดนี้ (ถ้าเป็น required ก็เอา ? ออก)
 }
 
-const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, onReject }) => {
+const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, onReject,asmdbValue}) => {
   const [accepted, setAccepted] = useState(job.IsConfirmed);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [, setStatusMessage] = useState("");
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
-
   const handleAccept = async () => {
     if (onAccept) {
       onAccept(job.key.toString());
@@ -262,8 +262,8 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
                 <UploadImagesWithRemark
                   token={localStorage.getItem("token") || ""}
                   keyValue={job.key}
-                  job={job}
-                />
+                  job={job} 
+                  asmdbValue={asmdbValue}                />
               </div>
             </div>
           )}

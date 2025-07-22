@@ -33,12 +33,13 @@ const customFormatDate = (dateStr: string): string => {
   return `${day}-${month}-${year}`;
 };
 
-const JobCard: React.FC<JobCardProps> = ({
+const JobCard: React.FC<JobCardProps & { asmdbValue: string }> = ({
   job,              // job เป็น array ของ Job[]
   expandedPNRs,
   setExpandedPNRs,
   jobs,
   setJobs,
+  asmdbValue,  // รับมาจาก prop
 }) => {
   const [detailJobs, setDetailJobsState] = useState<Job[] | null>(null);
 
@@ -120,6 +121,7 @@ const JobCard: React.FC<JobCardProps> = ({
           renderPlaceDate={renderPlaceDate}
           renderField={renderField}
           setJobs={setJobs}
+          asmdbValue={asmdbValue}  // ส่งต่อจาก prop
         />
       ))}
     </div>

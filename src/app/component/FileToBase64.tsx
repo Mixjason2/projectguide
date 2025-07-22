@@ -5,11 +5,14 @@ import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 import Image from 'next/image';
 
+
 const UploadImagesWithRemark: React.FC<{
   token: string;
   keyValue: number;
   job: Job;
-}> = ({ token, keyValue, job }) => {
+  asmdbValue: string; // เพิ่ม prop นี้เพื่อรับ asmdbValue
+}> = ({ token, keyValue, job,asmdbValue}) => {
+  console.log("🔍 asmdbValue received:", asmdbValue);
   const [remark, setRemark] = useState<string>("");
   const [previewBase64List, setPreviewBase64List] = useState<PreviewImage[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -182,6 +185,7 @@ const UploadImagesWithRemark: React.FC<{
     }
   };
 
+
   const handleSave = async () => {
     if (!uploadedData || !Array.isArray(uploadedData) || uploadedData.length === 0) return;
     setLoading(true);
@@ -209,16 +213,17 @@ const UploadImagesWithRemark: React.FC<{
         emails_CC: "",
         subject: `Updated: ${job.PNR}`,
         body: `
-          <p><strong>📌 Remark:</strong> ${remark || "-"}</p>
-          <p><strong>📎 Attachments:</strong></p>
-          ${previewBase64List
+    <p><strong>📌 Remark:</strong> ${remark || "-"}</p>
+    <p><strong>📎 Attachments (via URL):</strong></p>
+    ${previewBase64List
             .map(
-              (img, idx) =>
-                `<p><img src="${img.base64}" alt="Image ${idx + 1}" style="max-width: 100%; height: auto; margin-bottom: 10px;" /></p>`
+              (_img, idx) =>
+                `<p><a href="https://operation.dth.travel:7082/api/download/image/${asmdbValue}/${_img.id}" target="_blank">📸 View Image ${idx + 1}</a></p>`
             )
             .join("")}
-        `,
+  `,
       });
+
       setIsEditing(false);
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -287,20 +292,21 @@ const UploadImagesWithRemark: React.FC<{
       setResponseMsg(res.data.message || "Upload สำเร็จ");
       await fetchUploadedData();
       await sendEmail({
-        emails: ["fomexii@hotmail.com"],
-        emails_CC: "",
-        subject: `Uploaded: ${job.PNR}`,
-        body: `
-          <p><strong>📌 Remark:</strong> ${remark || "-"}</p>
-          <p><strong>📎 Attachments:</strong></p>
-          ${previewBase64List
-            .map(
-              (img, idx) =>
-                `<p><img src="${img.base64}" alt="Image ${idx + 1}" style="max-width: 100%; height: auto; margin-bottom: 10px;" /></p>`
-            )
-            .join("")}
-        `,
-      });
+  emails: ["fomexii@hotmail.com"],
+  emails_CC: "",
+  subject: `Upload: ${job.PNR}`,
+  body: `
+    <p><strong>📌 Remark:</strong> ${remark || "-"}</p>
+    <p><strong>📎 Attachments (via URL):</strong></p>
+    ${previewBase64List
+      .map(
+        (_img, idx) =>
+          `<p><a href="https://operation.dth.travel:7082/api/download/image/${asmdbValue}/${_img.id}" target="_blank">📸 View Image ${idx + 1}</a></p>`
+      )
+      .join("")}
+  `,
+});
+
       setIsEditing(false);
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -415,9 +421,8 @@ const UploadImagesWithRemark: React.FC<{
           <button
             disabled={loading}
             onClick={hasUploaded ? handleSave : handleUpload}
-            className={`w-full py-2 px-4 rounded-full text-white font-semibold ${
-              loading ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
-            }`}
+            className={`w-full py-2 px-4 rounded-full text-white font-semibold ${loading ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
+              }`}
           >
             {hasUploaded ? "💾 Save" : "📤 Upload"}
           </button>
