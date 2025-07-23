@@ -322,7 +322,8 @@ const UploadImagesWithRemark: React.FC<{
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6 bg-white rounded-2xl shadow-md">
+    <div className="w-full max-w-[400px] mx-auto p-6 bg-white rounded-2xl shadow-md overflow-y-auto"
+      style={{ maxHeight: "90vh" }}>
       {initialLoading ? (
         <p className="text-center text-gray-500">⏳ Loading Files...</p>
       ) : hasUploaded && !isEditing ? (

@@ -6,6 +6,7 @@ import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 import { DatesSetArg, EventClickArg, EventContentArg } from '@fullcalendar/core';
 import { Job, getTotalPax } from './types';
+import type { CalendarApi } from '@fullcalendar/core'; // เพิ่ม type CalendarApi
 
 // เพิ่มใต้ import ด้านบน
 type JobWithTHDate = Job & {
@@ -20,6 +21,7 @@ type CalendarViewProps = {
   gotoDate?: Date | null;
   currentViewProp?: string;
   loading?: boolean;
+  calendarApiRef?: React.RefObject<CalendarApi | null>; // เปลี่ยน any เป็น CalendarApi | null
 };
 
 function getStatusDots(input: Job | Job[] | 'all'): { color: string; label: string }[] {
@@ -91,7 +93,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   onDatesSet,
   gotoDate,
   currentViewProp = 'dayGridMonth',
-    loading = false,
+  loading = false,
+  calendarApiRef,
 }) => {
   const calendarRef = useRef<FullCalendar>(null);
   const [icsFilename, setIcsFilename] = useState('dth-calendar.ics'); // ✅ เพิ่ม state
@@ -128,22 +131,40 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     URL.revokeObjectURL(url);
   };
 
+  // ใน useEffect ที่จัดการ calendarRef:
   useEffect(() => {
     const timeout = setTimeout(() => {
-      const calendarEl = calendarRef.current;
-      if (calendarEl) {
-        const calendarApi = calendarEl.getApi();
-        if (calendarApi.view.type !== currentViewProp) {
-          calendarApi.changeView(currentViewProp);
-        }
-        if (gotoDate) {
-          calendarApi.gotoDate(gotoDate);
-        }
-      }
-    }, 0);
+      const calendarApi = calendarRef.current?.getApi();
+      if (!calendarApi) return;
 
-    return () => clearTimeout(timeout);
-  }, [currentViewProp, gotoDate]);
+      // ✅ เชื่อม calendarApiRef ให้ Page ใช้ได้
+      if (calendarApiRef) {
+        calendarApiRef.current = calendarApi;
+      }
+
+      if (calendarApi.view.type !== currentViewProp) {
+        calendarApi.changeView(currentViewProp);
+      }
+
+    if (gotoDate) {
+      calendarApi.gotoDate(gotoDate);
+
+      onDatesSet?.({
+        start: calendarApi.view.currentStart,
+        end: calendarApi.view.currentEnd,
+        startStr: calendarApi.view.currentStart.toISOString(),
+        endStr: calendarApi.view.currentEnd.toISOString(),
+        timeZone: calendarApi.getOption('timeZone') || 'local',
+        view: calendarApi.view,
+      });
+    }
+  }, 0); 
+
+  return () => clearTimeout(timeout); 
+
+}, [currentViewProp, gotoDate, calendarApiRef, onDatesSet]);
+
+  
 
   const events = useMemo(() => {
     if (currentViewProp === 'dayGridMonth') {
@@ -168,46 +189,46 @@ const CalendarView: React.FC<CalendarViewProps> = ({
       }));
     }
 
-return jobsWithTHDate.map(job => ({
-        id: `job-${job.key}`,
-        title: '',
-        start: job.PickupDateTH.toISOString(),
-        backgroundColor: '#95c941',
-        borderColor: '#0369a1',
-        textColor: 'white',
-        extendedProps: { job },
-      }));
+    return jobsWithTHDate.map(job => ({
+      id: `job-${job.key}`,
+      title: '',
+      start: job.PickupDateTH.toISOString(),
+      backgroundColor: '#95c941',
+      borderColor: '#0369a1',
+      textColor: 'white',
+      extendedProps: { job },
+    }));
   }, [jobsWithTHDate, currentViewProp]);
 
   const handleEventClick = (info: EventClickArg) => {
-  const jobs: JobWithTHDate[] = info.event.extendedProps.jobs;
-  const job: JobWithTHDate = info.event.extendedProps.job;
-  const clickedDate = info.event.startStr.split('T')[0];
+    const jobs: JobWithTHDate[] = info.event.extendedProps.jobs;
+    const job: JobWithTHDate = info.event.extendedProps.job;
+    const clickedDate = info.event.startStr.split('T')[0];
 
-  if (jobs) {
-    const details = jobs
-      .map((j, i) => {
-        const pickupTime = j.PickupDateTH.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-        const totalPax = getTotalPax(j);
-        return `${i + 1}. 🕒 ${pickupTime} 📍 ${j.Pickup} | 👤 ${totalPax} Pax | 🎫 PNR: ${j.PNR}`;
-      })
-      .join('\n');
+    if (jobs) {
+      const details = jobs
+        .map((j, i) => {
+          const pickupTime = j.PickupDateTH.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+          const totalPax = getTotalPax(j);
+          return `${i + 1}. 🕒 ${pickupTime} 📍 ${j.Pickup} | 👤 ${totalPax} Pax | 🎫 PNR: ${j.PNR}`;
+        })
+        .join('\n');
 
-    alert(`📅 Date: ${clickedDate}\n📌 Jobs:\n${details}`);
-  } else if (job) {
-    const pickupTime = job.PickupDateTH.toLocaleString('en-GB', {
-      dateStyle: 'short',
-      timeStyle: 'short',
-    });
-    const totalPax = getTotalPax(job);
+      alert(`📅 Date: ${clickedDate}\n📌 Jobs:\n${details}`);
+    } else if (job) {
+      const pickupTime = job.PickupDateTH.toLocaleString('en-GB', {
+        dateStyle: 'short',
+        timeStyle: 'short',
+      });
+      const totalPax = getTotalPax(job);
 
-    alert(`🎫 PNR: ${job.PNR}
+      alert(`🎫 PNR: ${job.PNR}
 🕒 Pickup: ${pickupTime}
 📍 Location: ${job.Pickup}
 👤 Pax: ${totalPax} (Adult: ${job.AdultQty}, Child: ${job.ChildQty}, Share: ${job.ChildShareQty}, Infant: ${job.InfantQty})
 👤 Name: ${job.pax_name}`);
-  }
-};
+    }
+  };
 
   const generateSingleICS = (job: Job): string => {
     const pad = (n: number) => String(n).padStart(2, '0');
@@ -319,11 +340,11 @@ return jobsWithTHDate.map(job => ({
             />
           ))}
           {job && (
-<div style={{ display: 'flex', flexDirection: 'column' }}>
-<span className="text-neutral-800">P: {job.Pickup}</span>
-<span className="text-neutral-600">D: {job.Dropoff}</span>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span className="text-neutral-800">P: {job.Pickup}</span>
+              <span className="text-neutral-600">D: {job.Dropoff}</span>
 
-</div>
+            </div>
           )}
           {!job && <span style={{ flexShrink: 1, minWidth: 0 }}>{arg.event.title}</span>}
         </div>
@@ -363,16 +384,15 @@ return jobsWithTHDate.map(job => ({
   return (
     <>
       <div className="mb-2">
-<button
-  onClick={handleDownloadICS}
-  disabled={loading}
-  className={`px-3 py-1 text-white rounded ${
-    loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-  }`}
-  title={loading ? 'Please wait for data to load' : 'Download calendar as ICS'}
->
-  📥 Download ({icsFilename})
-</button>
+        <button
+          onClick={handleDownloadICS}
+          disabled={loading}
+          className={`px-3 py-1 text-white rounded ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+            }`}
+          title={loading ? 'Please wait for data to load' : 'Download calendar as ICS'}
+        >
+          📥 Download ({icsFilename})
+        </button>
 
       </div>
 
