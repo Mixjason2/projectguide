@@ -107,8 +107,10 @@ export default function LoginPage() {
           showConfirmButton: false,
         });
 
+
         // เก็บ token และ refresh token
         localStorage.setItem("token", data.token);
+        localStorage.setItem("accessToken", data.token);
         localStorage.setItem("refreshToken", data.refreshToken);
 
         // เก็บ asmdb (ที่เราสร้างไว้ก่อนส่ง request)
@@ -116,6 +118,15 @@ export default function LoginPage() {
 
         // เก็บ connection options (อาจจะไม่จำเป็นแต่ถ้าต้องการเก็บ)
         localStorage.setItem("connectionOptions", JSON.stringify(connectionOptions));
+
+        setGuideEmail(data.guideEmail);      // ✅ ดึงจาก API
+        setEmailOP(data.emailOP || []);      // ✅ ดึงจาก API ถ้ามี
+
+        // แก้ให้ log แสดงผลหลัง set state
+        console.log("guideEmail:", data.guideEmail);
+        (data.emailOP || []).forEach((item: { key: number; Email: string }) => {
+          console.log(`key: ${item.key}, Email: ${item.Email}`);
+        });
 
         // เก็บ username/password/connection ถ้าเลือก rememberMe
         if (rememberMe) {
@@ -127,15 +138,6 @@ export default function LoginPage() {
           localStorage.removeItem("savedPassword");
           localStorage.removeItem("savedConnection");
         }
-
-        setGuideEmail(data.guideEmail);
-        setEmailOP(data.emailOP || []);
-
-        // แก้ให้ log แสดงผลหลัง set state
-        console.log("guideEmail:", data.guideEmail);
-        (data.emailOP || []).forEach((item: { key: number; Email: string }) => {
-          console.log(`key: ${item.key}, Email: ${item.Email}`);
-        });
 
         router.push("/home");
       } else {

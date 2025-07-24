@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'; // ✅ เพิ่ม useRef
 import CalendarView from './components/CalendarView';
-
 import ErrorMessage from './components/ErrorMessage';
 import { Job } from './components/types';
 import './calendar.css';
 import CssgGuide from '../cssguide';
 import { DatesSetArg } from '@fullcalendar/core/index.js';
+import type { CalendarApi } from '@fullcalendar/core'; // เพิ่ม type CalendarApi
 
 function addMonths(date: Date, months: number): Date {
   const d = new Date(date);
@@ -71,6 +71,9 @@ export default function Page() {
   // ✅ เพิ่ม useRef สำหรับ AbortController
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  // ✅ เพิ่ม calendarApiRef เพื่อเรียก refetchEvents ได้
+  const calendarApiRef = useRef<CalendarApi | null>(null);
+
   const fetchJobs = useCallback((start: string, end: string, isInitial = false) => {
     if (hasFetchedRange(start, end)) {
       console.log('✅ Already fetched:', start, 'to', end);
@@ -130,12 +133,17 @@ export default function Page() {
               combined.push(newJob);
             }
           });
+          // ✅ บังคับ refresh FullCalendar
+          setTimeout(() => {
+            calendarApiRef.current?.refetchEvents?.();
+          }, 0);
+
           return combined;
         });
-
         addFetchedRange(start, end);
         setError(null);
       })
+
       .catch(err => {
         console.timeEnd('⏱️ fetchJobs');
         if (err.name === 'AbortError') {
@@ -155,24 +163,24 @@ export default function Page() {
 
   const isFetchingRef = useRef(false);
 
-const fetchJobsChunked = useCallback(async (start: string, end: string, isInitial = false) => {
-  if (isFetchingRef.current) {
-    console.log("⛔ Already fetching, skip...");
-    return;
-  }
-  isFetchingRef.current = true;
+  const fetchJobsChunked = useCallback(async (start: string, end: string, isInitial = false) => {
+    if (isFetchingRef.current) {
+      console.log("⛔ Already fetching, skip...");
+      return;
+    }
+    isFetchingRef.current = true;
 
-  const ranges = getDateRanges(start, end, 1);
-  try {
-    await Promise.all(
-      ranges.map(range =>
-        fetchJobs(range.start, range.end, isInitial)
-      )
-    );
-  } finally {
-    isFetchingRef.current = false;
-  }
-}, [fetchJobs]);
+    const ranges = getDateRanges(start, end, 1);
+    try {
+      await Promise.all(
+        ranges.map(range =>
+          fetchJobs(range.start, range.end, isInitial)
+        )
+      );
+    } finally {
+      isFetchingRef.current = false;
+    }
+  }, [fetchJobs]);
 
 
   // ✅ เพิ่ม ref เก็บวันที่โหลดแล้วแทน state สำหรับ fetch
@@ -197,6 +205,7 @@ const fetchJobsChunked = useCallback(async (start: string, end: string, isInitia
     loadedEndRef.current = end;
   }, [fetchJobsChunked]);
 
+    // ฟังก์ชันจัดการวันที่ที่ปฏิทินเปลี่ยน
   const handleDatesSet = (arg: DatesSetArg) => {
     if (isFetchingRef.current) return;
 
@@ -241,6 +250,7 @@ const fetchJobsChunked = useCallback(async (start: string, end: string, isInitia
             currentViewProp={currentView}
             onDatesSet={handleDatesSet}
             loading={loadingMore}
+            calendarApiRef={calendarApiRef} // ✅ ส่ง ref ไป
           />
 
           {loadingMore && (
@@ -260,7 +270,8 @@ const fetchJobsChunked = useCallback(async (start: string, end: string, isInitia
             </div>
           )}
 
-          {error && <p className="text-red-600">{error}</p>}
+          {/* แสดง error เฉพาะตอน loadingMore = false */}
+          {!loadingMore && error && <p className="text-red-600">{error}</p>}
         </div>
       </div>
     </CssgGuide>
