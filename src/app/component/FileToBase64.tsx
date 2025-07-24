@@ -11,7 +11,7 @@ const UploadImagesWithRemark: React.FC<{
   keyValue: number;
   job: Job;
   asmdbValue: string; // เพิ่ม prop นี้เพื่อรับ asmdbValue
-}> = ({ token, keyValue, job,asmdbValue}) => {
+}> = ({ token, keyValue, job, asmdbValue }) => {
   console.log("🔍 asmdbValue received:", asmdbValue);
   const [remark, setRemark] = useState<string>("");
   const [previewBase64List, setPreviewBase64List] = useState<PreviewImage[]>([]);
@@ -23,6 +23,30 @@ const UploadImagesWithRemark: React.FC<{
   const [hasUploaded, setHasUploaded] = useState<boolean>(false);
   const [previewModal, setPreviewModal] = useState<{ base64: string; index: number } | null>(null);
 
+  const imagesPerRow = 4;
+
+  const getImageRowsHtml = (images: PreviewImage[]) => {
+    let rowsHtml = "";
+    for (let i = 0; i < images.length; i += imagesPerRow) {
+      const rowImages = images.slice(i, i + imagesPerRow);
+      const tds = rowImages
+        .map(
+          (img, idx) => `
+          <td style="padding:5px; text-align:center;">
+            <img
+              src="${img.base64}"
+              alt="Image ${i + idx + 1}"
+              style="width: 80px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);"
+            />
+          </td>
+        `
+        )
+        .join("");
+
+      rowsHtml += `<tr>${tds}</tr>`;
+    }
+    return rowsHtml;
+  };
   // สร้าง id แบบ UUID หรือ fallback เป็น timestamp+random
   const generateUniqueId = (): string => {
     return crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
@@ -292,21 +316,24 @@ const UploadImagesWithRemark: React.FC<{
       setResponseMsg(res.data.message || "Upload สำเร็จ");
       await fetchUploadedData();
       await sendEmail({
-  emails: ["fomexii@hotmail.com"],
-  emails_CC: "",
-  subject: `Upload: ${job.PNR}`,
-  body: `
-    <p><strong>📌 Remark:</strong> ${remark || "-"}</p>
-    <p><strong>📎 Attachments (via URL):</strong></p>
-    ${previewBase64List
-      .map(
-        (_img, idx) =>
-          `<p><a href="https://operation.dth.travel:7082/api/download/image/${asmdbValue}/${_img.id}" target="_blank">📸 View Image ${idx + 1}</a></p>`
-      )
-      .join("")}
-  `,
-});
-
+        emails: ["fomexii@hotmail.com"],
+        emails_CC: "",
+        subject: `Upload: ${job.PNR}`,
+        body: `
+  <p><strong>📌 Remark:</strong> ${remark || "-"}</p>
+  <p><strong>📎 Attachments (preview):</strong></p>
+  <table style="border-collapse: collapse;">
+    ${getImageRowsHtml(previewBase64List)}
+  </table>
+  <p><strong>🔗 View Images (Download URL):</strong></p>
+  ${previewBase64List
+            .map(
+              (_img, idx) =>
+                `<p><a href="https://operation.dth.travel:7082/api/download/image/${asmdbValue}/${_img.id}" target="_blank">📸 View Image ${idx + 1}</a></p>`
+            )
+            .join("")}
+`,
+      });
       setIsEditing(false);
     } catch (error: unknown) {
       if (error instanceof Error) {

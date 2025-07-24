@@ -8,6 +8,7 @@ import StatusMessage from "@/app/component/StatusMessage";
 import JobsSummary from '@/app/component/JobsSummary';
 import JobCard from '@/app/component/JobCard';
 import AllJobDetailsModal from "@/app/component/AllJobDetailsModal";
+import debounce from 'lodash.debounce';
 
 // Group jobs by their PNRDate
 function groupJobsByPNRDate(jobs: Job[]): Record<string, Job[]> {
@@ -60,10 +61,18 @@ useEffect(() => {
 
 
   useEffect(() => {
-    const token = localStorage.getItem('token') || '';
+  const token = localStorage.getItem('token') || '';
+
+  const debouncedFetch = debounce(() => {
     setLoading(true);
     fetchJobs(token, startDate, endDate);
-  }, [startDate, endDate]);
+  }, 800); // รอ 800ms หลัง user หยุดเลือกวันที่ค่อย fetch
+  debouncedFetch();
+  // ยกเลิก debounce ถ้า startDate หรือ endDate เปลี่ยนก่อนครบเวลา
+  return () => {
+    debouncedFetch.cancel();
+  };
+}, [startDate, endDate]);
 
   const fetchJobs = async (token: string, startDate: string, endDate: string) => {
     setLoading(true);
