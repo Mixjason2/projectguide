@@ -53,7 +53,8 @@ const UploadImagesWithRemark: React.FC<{
   };
 
   // โหลดข้อมูลที่เคยอัพโหลดมา
-  const fetchUploadedData = useCallback(async () => {
+  const fetchUploadedData = useCallback(
+    async (preserveEditMode: boolean = false) => {
     try {
       const res = await axios.post(`https://operation.dth.travel:7082/api/upload/${keyValue}`, { token });
       if (Array.isArray(res.data)) {
@@ -61,8 +62,7 @@ const UploadImagesWithRemark: React.FC<{
         if (matched) {
           setUploadedData(res.data);
           setHasUploaded(true);
-          setIsEditing(false);
-
+          if (!preserveEditMode) setIsEditing(false); // ✅ เปลี่ยนตรงนี้
           // ตอนโหลดรูปจาก backend ให้ map มาใส่ id ใหม่
           setPreviewBase64List(
             matched.Images.map((img: ImageData) => ({
@@ -203,12 +203,12 @@ const UploadImagesWithRemark: React.FC<{
     try {
       await axios.post(`https://operation.dth.travel:7082/api/upload/${keyValue}/update`, payload);
       console.log("✅ Deleted image from server");
-      await fetchUploadedData(); // reload data หลังลบ
+      setIsEditing(true); // << บังคับให้อยู่ในโหมดแก้ไขต่อ
+      await fetchUploadedData(true); // reload data หลังลบ
     } catch (error) {
       console.error("❌ Failed to delete image from server", error);
     }
   };
-
 
   const handleSave = async () => {
     if (!uploadedData || !Array.isArray(uploadedData) || uploadedData.length === 0) return;
@@ -370,16 +370,7 @@ const UploadImagesWithRemark: React.FC<{
                       width={80}
                       height={80}
                       className="object-cover rounded-lg border shadow-sm cursor-pointer"
-                      onClick={() => openPreview(img.ImageBase64, imgIdx)}
                     />
-                    <button
-                      type="button"
-                      className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-700"
-                      onClick={() => handleRemovePreviewImage(previewBase64List[imgIdx]?.id)}
-                      title="ลบรูปภาพนี้"
-                    >
-                      ×
-                    </button>
                   </div>
                 ))}
               </div>
