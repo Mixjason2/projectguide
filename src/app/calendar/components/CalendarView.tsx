@@ -131,9 +131,13 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     URL.revokeObjectURL(url);
   };
 
+const [lastGotoDate, setLastGotoDate] = useState<Date | null>(null);
+
   // ใน useEffect ที่จัดการ calendarRef:
   useEffect(() => {
+     console.log('useEffect run', { currentViewProp, gotoDate });
     const timeout = setTimeout(() => {
+      
       const calendarApi = calendarRef.current?.getApi();
       if (!calendarApi) return;
 
@@ -146,8 +150,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         calendarApi.changeView(currentViewProp);
       }
 
-    if (gotoDate) {
-      calendarApi.gotoDate(gotoDate);
+  if (gotoDate && (!lastGotoDate || gotoDate.getTime() !== lastGotoDate.getTime())) {
+    calendarApi.gotoDate(gotoDate);
 
       onDatesSet?.({
         start: calendarApi.view.currentStart,
@@ -157,12 +161,15 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         timeZone: calendarApi.getOption('timeZone') || 'local',
         view: calendarApi.view,
       });
+    setLastGotoDate(gotoDate);
     }
   }, 0); 
 
   return () => clearTimeout(timeout); 
 
 }, [currentViewProp, gotoDate, calendarApiRef, onDatesSet]);
+
+
 
   
 
