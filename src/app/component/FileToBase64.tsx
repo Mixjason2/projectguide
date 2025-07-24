@@ -154,61 +154,23 @@ const UploadImagesWithRemark: React.FC<{
     });
   };
 
-  const openPreview = (base64: string, index: number) => {
-    setPreviewModal({ base64, index });
-  };
-
   const closePreview = () => {
     setPreviewModal(null);
   };
 
   const handleRemovePreviewImage = async (idToRemove: string) => {
-    // ลบรูปใน previewBase64List
+  const confirm = await Swal.fire({
+    icon: "warning",
+    title: "Are you sure you want to delete this image?",
+    showCancelButton: true,
+    confirmButtonText: "Yes, delete it",
+    cancelButtonText: "Cancel",
+  });
+
+  if (confirm.isConfirmed) {
     setPreviewBase64List((prev) => prev.filter((img) => img.id !== idToRemove));
-
-    // ลบรูปใน uploadedData ด้วย (ถ้ามี)
-    if (!uploadedData.length) return;
-
-    const updatedData = [...uploadedData];
-    const firstGroup = updatedData[0];
-    if (!firstGroup) return;
-
-    const updatedImages = firstGroup.Images.filter((img: ImageData) => {
-      // img.ImageBase64 อันนี้ไม่มี id เลยจับตาม base64 ไม่ได้ตรงเป๊ะ ๆ
-      // ดังนั้นถ้า backend มี Id อยู่ ควรใช้ Id ของ backend แต่ถ้าไม่มี ให้ลองใช้ base64 เทียบก็พอได้
-      // สมมติ backend ยังไม่มี Id ดังนั้นเทียบ base64 แบบง่าย ๆ
-      const previewImg = previewBase64List.find((p) => p.id === idToRemove);
-      return img.ImageBase64 !== previewImg?.base64;
-    });
-
-    updatedData[0] = {
-      ...firstGroup,
-      Images: updatedImages,
-    };
-    setUploadedData(updatedData);
-
-    // ส่งข้อมูลอัพเดตไป backend
-    const payload = {
-      token,
-      data: {
-        key: firstGroup.key,
-        Remark: firstGroup.Remark,
-        BookingAssignmentId: keyValue,
-        UploadBy: firstGroup.UploadBy || "Your Name",
-        UploadDate: new Date().toISOString(),
-        Images: updatedImages,
-      },
-    };
-
-    try {
-      await axios.post(`https://operation.dth.travel:7082/api/upload/${keyValue}/update`, payload);
-      console.log("✅ Deleted image from server");
-      setIsEditing(true); // << บังคับให้อยู่ในโหมดแก้ไขต่อ
-      await fetchUploadedData(true); // reload data หลังลบ
-    } catch (error) {
-      console.error("❌ Failed to delete image from server", error);
-    }
-  };
+  }
+};
 
   const handleSave = async () => {
     if (!uploadedData || !Array.isArray(uploadedData) || uploadedData.length === 0) return;
@@ -417,7 +379,6 @@ const UploadImagesWithRemark: React.FC<{
                     width={80}
                     height={80}
                     className="object-cover rounded-lg cursor-pointer"
-                    onClick={() => openPreview(img.base64, idx)}
                   />
                   <button
                     type="button"
