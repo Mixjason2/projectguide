@@ -75,11 +75,6 @@ export default function Page() {
   const calendarApiRef = useRef<CalendarApi | null>(null);
 
   const fetchJobs = useCallback((start: string, end: string, isInitial = false) => {
-    if (hasFetchedRange(start, end)) {
-      console.log('✅ Already fetched:', start, 'to', end);
-      return Promise.resolve();
-    }
-
     abortControllerRef.current?.abort();
 
     const token = localStorage.getItem('token') || '';
@@ -105,7 +100,7 @@ export default function Page() {
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    return fetch('https://operation.dth.travel:7082/api/guide/job/confirm', {
+    return fetch('https://operation.dth.travel:7082/api/guide/job', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, startdate: start, enddate: end }),
@@ -124,11 +119,13 @@ export default function Page() {
       .then((data: Job[]) => {
         console.timeEnd('⏱️ fetchJobs');
 
-        const confirmedOnly = data.filter(j => j.IsConfirmed); // ✅ กรอง
+        // เอาตัวกรอง IsConfirmed ออก
+        // const confirmedOnly = data.filter(j => j.IsConfirmed); // ❌ ลบออก
 
         setJobs(prev => {
           const combined = [...prev];
-          confirmedOnly.forEach(newJob => {
+          // ใช้ data ตรงๆ ไม่กรอง
+          data.forEach(newJob => {
             if (!combined.find(j => j.key === newJob.key)) {
               combined.push(newJob);
             }
@@ -159,29 +156,47 @@ export default function Page() {
           setLoadingMore(false);
         }
       });
-  }, [hasFetchedRange, addFetchedRange]);
+  }, [addFetchedRange]);
 
   const isFetchingRef = useRef(false);
 
-  const fetchJobsChunked = useCallback(async (start: string, end: string, isInitial = false) => {
-    if (isFetchingRef.current) {
-      console.log("⛔ Already fetching, skip...");
-      return;
-    }
-    isFetchingRef.current = true;
+  const fetchJobsChunked = useCallback(
+    async (start: string, end: string, isInitial = false) => {
+      if (isFetchingRef.current) {
+        console.log("⛔ Already fetching, skip...");
+        return;
+      }
+      isFetchingRef.current = true;
 
-    const ranges = getDateRanges(start, end, 1);
-    try {
-      await Promise.all(
-        ranges.map(range =>
-          fetchJobs(range.start, range.end, isInitial)
-        )
-      );
-    } finally {
-      isFetchingRef.current = false;
-    }
-  }, [fetchJobs]);
+      // จำกัดช่วง fetch ไม่เกิน 1 เดือนต่อครั้ง ถ้าเกิน 1 เดือน ให้แบ่งเป็นช่วงละเดือน
+      const startDate = new Date(start);
+      const endDate = new Date(end);
 
+      const ranges: { start: string; end: string }[] = [];
+      let chunkStart = new Date(startDate);
+      while (chunkStart < endDate) {
+        let chunkEnd = addMonths(chunkStart, 1);
+        if (chunkEnd > endDate) chunkEnd = endDate;
+        ranges.push({
+          start: formatISO(chunkStart),
+          end: formatISO(chunkEnd),
+        });
+        chunkStart = chunkEnd;
+      }
+
+      try {
+        // fetch ข้อมูลแต่ละเดือนพร้อมกัน
+        await Promise.all(
+          ranges.map(range =>
+            fetchJobs(range.start, range.end, isInitial)
+          )
+        );
+      } finally {
+        isFetchingRef.current = false;
+      }
+    },
+    [fetchJobs]
+  );
 
   // ✅ เพิ่ม ref เก็บวันที่โหลดแล้วแทน state สำหรับ fetch
   const loadedStartRef = useRef(dataStartDate);
