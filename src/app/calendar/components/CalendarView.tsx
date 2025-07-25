@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useRef, useEffect, useState } from 'react'; // ✅ เพิ่ม useState
+import React, { useMemo, useRef, useEffect, useState, useCallback } from 'react'; // ✅ เพิ่ม useState
 import FullCalendar from '@fullcalendar/react';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -97,7 +97,75 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   calendarApiRef,
 }) => {
   const calendarRef = useRef<FullCalendar>(null);
-  const [icsFilename, setIcsFilename] = useState('dth-calendar.ics'); // ✅ เพิ่ม state
+  const [icsFilename, setIcsFilename] = useState('dth-calendar.ics');
+
+  // สำหรับกัน fetch ซ้ำ
+  const fetchedRangesRef = useRef<string[]>([]);
+  // สำหรับ stepwise gotoDate
+  const [pendingTarget, setPendingTarget] = useState<Date | null>(null);
+  const [stepTarget, setStepTarget] = useState<Date | null>(null);
+  const [isStepping, setIsStepping] = useState(false);
+  const stepLockRef = useRef(false);
+
+  // ฟังก์ชันเลื่อนทีละเดือน
+  const stepwiseGotoDate = useCallback((targetDate: Date) => {
+    setStepTarget(targetDate);
+    setIsStepping(true);
+  }, []);
+
+  // เมื่อ gotoDate เปลี่ยน ให้เริ่ม stepwiseGotoDate
+  useEffect(() => {
+    if (!gotoDate) return;
+    stepwiseGotoDate(gotoDate);
+    // reset fetchedRanges เมื่อเปลี่ยนช่วง
+    fetchedRangesRef.current = [];
+  }, [gotoDate]);
+
+  const handleDatesSet = useCallback(
+    async (arg: DatesSetArg) => {
+      // กัน fetch ซ้ำ
+      const key = `${arg.startStr}::${arg.endStr}`;
+      if (!fetchedRangesRef.current.includes(key)) {
+        fetchedRangesRef.current.push(key);
+        stepLockRef.current = true;
+        await onDatesSet?.(arg); // ถ้า onDatesSet เป็น async, ถ้าไม่ใช่ลบ await ออก
+        stepLockRef.current = false;
+      }
+
+      // ถ้าอยู่ในโหมด stepwise และยังไม่ถึงเป้าหมาย
+      if (isStepping && stepTarget) {
+        const calendarApi = calendarApiRef?.current;
+        if (!calendarApi) return;
+        const currentDate = calendarApi.getDate();
+
+        if (
+          currentDate.getFullYear() === stepTarget.getFullYear() &&
+          currentDate.getMonth() === stepTarget.getMonth()
+        ) {
+          setIsStepping(false);
+          setStepTarget(null);
+          return;
+        }
+
+        // รอให้ fetch เสร็จก่อนค่อยไปเดือนถัดไป
+        if (!stepLockRef.current) {
+          let nextDate = new Date(currentDate);
+          if (
+            currentDate.getFullYear() > stepTarget.getFullYear() ||
+            (currentDate.getFullYear() === stepTarget.getFullYear() &&
+              currentDate.getMonth() > stepTarget.getMonth())
+          ) {
+            nextDate.setMonth(nextDate.getMonth() - 1);
+          } else {
+            nextDate.setMonth(nextDate.getMonth() + 1);
+          }
+          calendarApi.gotoDate(nextDate);
+        }
+      }
+      // ...setIcsFilename ตามเดิม...
+    },
+    [calendarApiRef, isStepping, stepTarget, onDatesSet]
+  );
 
   // ✅ ใช้ useMemo เพื่อแปลง jobs ให้เป็นเวลาประเทศไทยทันที
   const jobsWithTHDate: JobWithTHDate[] = useMemo(() => {
@@ -131,13 +199,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     URL.revokeObjectURL(url);
   };
 
-const [lastGotoDate, setLastGotoDate] = useState<Date | null>(null);
-
   // ใน useEffect ที่จัดการ calendarRef:
   useEffect(() => {
-     console.log('useEffect run', { currentViewProp, gotoDate });
     const timeout = setTimeout(() => {
-      
       const calendarApi = calendarRef.current?.getApi();
       if (!calendarApi) return;
 
@@ -150,8 +214,8 @@ const [lastGotoDate, setLastGotoDate] = useState<Date | null>(null);
         calendarApi.changeView(currentViewProp);
       }
 
-  if (gotoDate && (!lastGotoDate || gotoDate.getTime() !== lastGotoDate.getTime())) {
-    calendarApi.gotoDate(gotoDate);
+    if (gotoDate) {
+      calendarApi.gotoDate(gotoDate);
 
       onDatesSet?.({
         start: calendarApi.view.currentStart,
@@ -161,15 +225,12 @@ const [lastGotoDate, setLastGotoDate] = useState<Date | null>(null);
         timeZone: calendarApi.getOption('timeZone') || 'local',
         view: calendarApi.view,
       });
-    setLastGotoDate(gotoDate);
     }
   }, 0); 
 
   return () => clearTimeout(timeout); 
 
 }, [currentViewProp, gotoDate, calendarApiRef, onDatesSet]);
-
-
 
   
 
@@ -400,7 +461,6 @@ const [lastGotoDate, setLastGotoDate] = useState<Date | null>(null);
         >
           📥 Download ({icsFilename})
         </button>
-
       </div>
 
       <FullCalendar
@@ -408,12 +468,7 @@ const [lastGotoDate, setLastGotoDate] = useState<Date | null>(null);
         plugins={[listPlugin, interactionPlugin]}
         initialView="listMonth"
         events={events}
-        datesSet={(arg: DatesSetArg) => {
-          const year = arg.start.getFullYear();
-          const month = String(arg.start.getMonth() + 1).padStart(2, '0');
-          setIcsFilename(`dth-calendar-${year}-${month}`);
-          onDatesSet?.(arg);
-        }}
+        datesSet={handleDatesSet}
         height="auto"
         contentHeight="auto"
         aspectRatio={1.7}
