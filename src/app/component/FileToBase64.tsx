@@ -55,23 +55,30 @@ const UploadImagesWithRemark: React.FC<{
   // โหลดข้อมูลที่เคยอัพโหลดมา
   const fetchUploadedData = useCallback(
     async (preserveEditMode: boolean = false) => {
-    try {
-      const res = await axios.post(`https://operation.dth.travel:7082/api/upload/${keyValue}`, { token });
-      if (Array.isArray(res.data)) {
-        const matched = res.data.find((item: UploadGroup) => item.BookingAssignmentId === keyValue);
-        if (matched) {
-          setUploadedData(res.data);
-          setHasUploaded(true);
-          if (!preserveEditMode) setIsEditing(false); // ✅ เปลี่ยนตรงนี้
-          // ตอนโหลดรูปจาก backend ให้ map มาใส่ id ใหม่
-          setPreviewBase64List(
-            matched.Images.map((img: ImageData) => ({
-              id: generateUniqueId(),
-              base64: img.ImageBase64,
-            }))
-          );
+      try {
+        const res = await axios.post(`https://operation.dth.travel:7082/api/upload/${keyValue}`, { token });
+        if (Array.isArray(res.data)) {
+          const matched = res.data.find((item: UploadGroup) => item.BookingAssignmentId === keyValue);
+          if (matched) {
+            setUploadedData(res.data);
+            setHasUploaded(true);
+            if (!preserveEditMode) setIsEditing(false); // ✅ เปลี่ยนตรงนี้
+            // ตอนโหลดรูปจาก backend ให้ map มาใส่ id ใหม่
+            setPreviewBase64List(
+              matched.Images.map((img: ImageData) => ({
+                id: generateUniqueId(),
+                base64: img.ImageBase64,
+              }))
+            );
 
-          setRemark(matched.Remark || "");
+            setRemark(matched.Remark || "");
+          } else {
+            setUploadedData([]);
+            setHasUploaded(false);
+            setIsEditing(false);
+            setPreviewBase64List([]);
+            setRemark("");
+          }
         } else {
           setUploadedData([]);
           setHasUploaded(false);
@@ -79,24 +86,17 @@ const UploadImagesWithRemark: React.FC<{
           setPreviewBase64List([]);
           setRemark("");
         }
-      } else {
+      } catch (error) {
+        console.error("❌ ดึงข้อมูลไม่สำเร็จ:", error);
         setUploadedData([]);
         setHasUploaded(false);
         setIsEditing(false);
         setPreviewBase64List([]);
         setRemark("");
+      } finally {
+        setInitialLoading(false);
       }
-    } catch (error) {
-      console.error("❌ ดึงข้อมูลไม่สำเร็จ:", error);
-      setUploadedData([]);
-      setHasUploaded(false);
-      setIsEditing(false);
-      setPreviewBase64List([]);
-      setRemark("");
-    } finally {
-      setInitialLoading(false);
-    }
-  }, [keyValue, token]);
+    }, [keyValue, token]);
 
   useEffect(() => {
     fetchUploadedData();
@@ -159,18 +159,18 @@ const UploadImagesWithRemark: React.FC<{
   };
 
   const handleRemovePreviewImage = async (idToRemove: string) => {
-  const confirm = await Swal.fire({
-    icon: "warning",
-    title: "Are you sure you want to delete this image?",
-    showCancelButton: true,
-    confirmButtonText: "Yes, delete it",
-    cancelButtonText: "Cancel",
-  });
+    const confirm = await Swal.fire({
+      icon: "warning",
+      title: "Are you sure you want to delete this image?",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it",
+      cancelButtonText: "Cancel",
+    });
 
-  if (confirm.isConfirmed) {
-    setPreviewBase64List((prev) => prev.filter((img) => img.id !== idToRemove));
-  }
-};
+    if (confirm.isConfirmed) {
+      setPreviewBase64List((prev) => prev.filter((img) => img.id !== idToRemove));
+    }
+  };
 
   const handleSave = async () => {
     if (!uploadedData || !Array.isArray(uploadedData) || uploadedData.length === 0) return;
@@ -244,6 +244,46 @@ const UploadImagesWithRemark: React.FC<{
       });
       return;
     }
+
+    // ✅ ตรวจสอบขนาดแต่ละไฟล์ (ห้ามเกิน 1MB)
+    const oversizedFiles = imageFiles.filter((file) => file.size > 1024 * 1024); // >1MB
+    if (oversizedFiles.length > 0) {
+      Swal.fire({
+        icon: "error",
+        title: "❌ Image too large",
+        text: "Each image must be less than 1MB.",
+        toast: true,
+        position: "top-end",
+        timer: 3000,
+        showConfirmButton: false,
+      });
+      return;
+    }
+
+    // ✅ ตรวจสอบขนาดรวม (ห้ามเกิน 10MB)
+    const existingSize = previewBase64List.reduce((acc, img) => {
+      // base64 size ≈ (string length × 3/4) - padding
+      const sizeInBytes = (img.base64.length * 3) / 4;
+      return acc + sizeInBytes;
+    }, 0);
+
+    const newTotalSize = imageFiles.reduce((acc, file) => acc + file.size, 0);
+    const total = existingSize + newTotalSize;
+
+    if (total > 10 * 1024 * 1024) {
+      Swal.fire({
+        icon: "error",
+        title: "❌ Total size too large",
+        text: "Combined image size must be less than 10MB.",
+        toast: true,
+        position: "top-end",
+        timer: 3000,
+        showConfirmButton: false,
+      });
+      return;
+    }
+
+    // 🧪 แปลงและเพิ่มเข้า preview
     const base64List = await Promise.all(imageFiles.map(fileToBase64));
     const newImages: PreviewImage[] = base64List.map((base64) => ({
       id: generateUniqueId(),
@@ -365,6 +405,9 @@ const UploadImagesWithRemark: React.FC<{
             onChange={handleFileChange}
             className="mb-4"
           />
+          <div className="bg-yellow-50 text-yellow-700 text-sm p-2 rounded-md mb-2 border border-yellow-100">
+            ⚠️ Each image must be smaller than <strong>1MB</strong>, and the total size of all images must not exceed <strong>10MB</strong>.
+          </div>
 
           <div className="flex flex-wrap gap-4 mb-4">
             {previewBase64List.map((img, idx) =>
