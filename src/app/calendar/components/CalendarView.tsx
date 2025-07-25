@@ -97,12 +97,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   calendarApiRef,
 }) => {
   const calendarRef = useRef<FullCalendar>(null);
-  const [icsFilename, setIcsFilename] = useState('dth-calendar.ics');
+  const icsFilename = 'dth-calendar.ics';
 
   // สำหรับกัน fetch ซ้ำ
   const fetchedRangesRef = useRef<string[]>([]);
   // สำหรับ stepwise gotoDate
-  const [pendingTarget, setPendingTarget] = useState<Date | null>(null);
   const [stepTarget, setStepTarget] = useState<Date | null>(null);
   const [isStepping, setIsStepping] = useState(false);
   const stepLockRef = useRef(false);
@@ -113,13 +112,15 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     setIsStepping(true);
   }, []);
 
+
+
   // เมื่อ gotoDate เปลี่ยน ให้เริ่ม stepwiseGotoDate
   useEffect(() => {
     if (!gotoDate) return;
     stepwiseGotoDate(gotoDate);
     // reset fetchedRanges เมื่อเปลี่ยนช่วง
     fetchedRangesRef.current = [];
-  }, [gotoDate]);
+  }, [gotoDate, stepwiseGotoDate]);
 
   const handleDatesSet = useCallback(
     async (arg: DatesSetArg) => {
@@ -149,7 +150,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 
         // รอให้ fetch เสร็จก่อนค่อยไปเดือนถัดไป
         if (!stepLockRef.current) {
-          let nextDate = new Date(currentDate);
+          const nextDate = new Date(currentDate);
           if (
             currentDate.getFullYear() > stepTarget.getFullYear() ||
             (currentDate.getFullYear() === stepTarget.getFullYear() &&
@@ -199,6 +200,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     URL.revokeObjectURL(url);
   };
 
+
+
   // ใน useEffect ที่จัดการ calendarRef:
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -214,25 +217,59 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         calendarApi.changeView(currentViewProp);
       }
 
-    if (gotoDate) {
-      calendarApi.gotoDate(gotoDate);
+      if (gotoDate) {
+        calendarApi.gotoDate(gotoDate);
 
-      onDatesSet?.({
-        start: calendarApi.view.currentStart,
-        end: calendarApi.view.currentEnd,
-        startStr: calendarApi.view.currentStart.toISOString(),
-        endStr: calendarApi.view.currentEnd.toISOString(),
-        timeZone: calendarApi.getOption('timeZone') || 'local',
-        view: calendarApi.view,
+        onDatesSet?.({
+          start: calendarApi.view.currentStart,
+          end: calendarApi.view.currentEnd,
+          startStr: calendarApi.view.currentStart.toISOString(),
+          endStr: calendarApi.view.currentEnd.toISOString(),
+          timeZone: calendarApi.getOption('timeZone') || 'local',
+          view: calendarApi.view,
+        });
+      }
+    }, 0);
+
+    return () => clearTimeout(timeout);
+
+  }, [currentViewProp, gotoDate, calendarApiRef, onDatesSet]);
+
+  useEffect(() => {
+    const disableNavButtons = () => {
+      const prevBtn = document.querySelector('.fc-prev-button') as HTMLButtonElement | null;
+      const nextBtn = document.querySelector('.fc-next-button') as HTMLButtonElement | null;
+      const todayBtn = document.querySelector('.fc-today-button') as HTMLButtonElement | null;
+
+      const shouldDisable = loading || isStepping;
+
+      [prevBtn, nextBtn, todayBtn].forEach((btn) => {
+        if (btn) {
+          btn.disabled = shouldDisable;
+          btn.style.opacity = shouldDisable ? '0.5' : '1';
+          btn.style.pointerEvents = shouldDisable ? 'none' : 'auto';
+          btn.style.cursor = shouldDisable ? 'not-allowed' : 'pointer';
+        }
       });
+    };
+
+    // Run on initial mount and whenever loading/isStepping changes
+    disableNavButtons();
+
+    // Observe DOM changes to reapply button state (important for FC re-renders)
+    const calendarEl = document.querySelector('.fc-header-toolbar');
+    const observer = new MutationObserver(disableNavButtons);
+
+    if (calendarEl) {
+      observer.observe(calendarEl, { childList: true, subtree: true });
     }
-  }, 0); 
 
-  return () => clearTimeout(timeout); 
+    return () => observer.disconnect();
+  }, [loading, isStepping]);
 
-}, [currentViewProp, gotoDate, calendarApiRef, onDatesSet]);
 
-  
+
+
 
   const events = useMemo(() => {
     if (currentViewProp === 'dayGridMonth') {
@@ -498,6 +535,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
           },
         }}
       />
+
     </>
   );
 };
