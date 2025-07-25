@@ -11,7 +11,7 @@ const UploadImagesWithRemark: React.FC<{
   keyValue: number;
   job: Job;
   asmdbValue: string; // เพิ่ม prop นี้เพื่อรับ asmdbValue
-}> = ({ token, keyValue, job,asmdbValue}) => {
+}> = ({ token, keyValue, job, asmdbValue }) => {
   console.log("🔍 asmdbValue received:", asmdbValue);
   const [remark, setRemark] = useState<string>("");
   const [previewBase64List, setPreviewBase64List] = useState<PreviewImage[]>([]);
@@ -23,13 +23,38 @@ const UploadImagesWithRemark: React.FC<{
   const [hasUploaded, setHasUploaded] = useState<boolean>(false);
   const [previewModal, setPreviewModal] = useState<{ base64: string; index: number } | null>(null);
 
+  const imagesPerRow = 4;
+
+  const getImageRowsHtml = (images: PreviewImage[]) => {
+    let rowsHtml = "";
+    for (let i = 0; i < images.length; i += imagesPerRow) {
+      const rowImages = images.slice(i, i + imagesPerRow);
+      const tds = rowImages
+        .map(
+          (img, idx) => `
+          <td style="padding:5px; text-align:center;">
+            <img
+              src="${img.base64}"
+              alt="Image ${i + idx + 1}"
+              style="width: 80px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);"
+            />
+          </td>
+        `
+        )
+        .join("");
+
+      rowsHtml += `<tr>${tds}</tr>`;
+    }
+    return rowsHtml;
+  };
   // สร้าง id แบบ UUID หรือ fallback เป็น timestamp+random
   const generateUniqueId = (): string => {
     return crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
   };
 
   // โหลดข้อมูลที่เคยอัพโหลดมา
-  const fetchUploadedData = useCallback(async () => {
+  const fetchUploadedData = useCallback(
+    async (preserveEditMode: boolean = false) => {
     try {
       const res = await axios.post(`https://operation.dth.travel:7082/api/upload/${keyValue}`, { token });
       if (Array.isArray(res.data)) {
@@ -37,8 +62,7 @@ const UploadImagesWithRemark: React.FC<{
         if (matched) {
           setUploadedData(res.data);
           setHasUploaded(true);
-          setIsEditing(false);
-
+          if (!preserveEditMode) setIsEditing(false); // ✅ เปลี่ยนตรงนี้
           // ตอนโหลดรูปจาก backend ให้ map มาใส่ id ใหม่
           setPreviewBase64List(
             matched.Images.map((img: ImageData) => ({
@@ -130,61 +154,23 @@ const UploadImagesWithRemark: React.FC<{
     });
   };
 
-  const openPreview = (base64: string, index: number) => {
-    setPreviewModal({ base64, index });
-  };
-
   const closePreview = () => {
     setPreviewModal(null);
   };
 
   const handleRemovePreviewImage = async (idToRemove: string) => {
-    // ลบรูปใน previewBase64List
+  const confirm = await Swal.fire({
+    icon: "warning",
+    title: "Are you sure you want to delete this image?",
+    showCancelButton: true,
+    confirmButtonText: "Yes, delete it",
+    cancelButtonText: "Cancel",
+  });
+
+  if (confirm.isConfirmed) {
     setPreviewBase64List((prev) => prev.filter((img) => img.id !== idToRemove));
-
-    // ลบรูปใน uploadedData ด้วย (ถ้ามี)
-    if (!uploadedData.length) return;
-
-    const updatedData = [...uploadedData];
-    const firstGroup = updatedData[0];
-    if (!firstGroup) return;
-
-    const updatedImages = firstGroup.Images.filter((img: ImageData) => {
-      // img.ImageBase64 อันนี้ไม่มี id เลยจับตาม base64 ไม่ได้ตรงเป๊ะ ๆ
-      // ดังนั้นถ้า backend มี Id อยู่ ควรใช้ Id ของ backend แต่ถ้าไม่มี ให้ลองใช้ base64 เทียบก็พอได้
-      // สมมติ backend ยังไม่มี Id ดังนั้นเทียบ base64 แบบง่าย ๆ
-      const previewImg = previewBase64List.find((p) => p.id === idToRemove);
-      return img.ImageBase64 !== previewImg?.base64;
-    });
-
-    updatedData[0] = {
-      ...firstGroup,
-      Images: updatedImages,
-    };
-    setUploadedData(updatedData);
-
-    // ส่งข้อมูลอัพเดตไป backend
-    const payload = {
-      token,
-      data: {
-        key: firstGroup.key,
-        Remark: firstGroup.Remark,
-        BookingAssignmentId: keyValue,
-        UploadBy: firstGroup.UploadBy || "Your Name",
-        UploadDate: new Date().toISOString(),
-        Images: updatedImages,
-      },
-    };
-
-    try {
-      await axios.post(`https://operation.dth.travel:7082/api/upload/${keyValue}/update`, payload);
-      console.log("✅ Deleted image from server");
-      await fetchUploadedData(); // reload data หลังลบ
-    } catch (error) {
-      console.error("❌ Failed to delete image from server", error);
-    }
-  };
-
+  }
+};
 
   const handleSave = async () => {
     if (!uploadedData || !Array.isArray(uploadedData) || uploadedData.length === 0) return;
@@ -292,21 +278,24 @@ const UploadImagesWithRemark: React.FC<{
       setResponseMsg(res.data.message || "Upload สำเร็จ");
       await fetchUploadedData();
       await sendEmail({
-  emails: ["fomexii@hotmail.com"],
-  emails_CC: "",
-  subject: `Upload: ${job.PNR}`,
-  body: `
-    <p><strong>📌 Remark:</strong> ${remark || "-"}</p>
-    <p><strong>📎 Attachments (via URL):</strong></p>
-    ${previewBase64List
-      .map(
-        (_img, idx) =>
-          `<p><a href="https://operation.dth.travel:7082/api/download/image/${asmdbValue}/${_img.id}" target="_blank">📸 View Image ${idx + 1}</a></p>`
-      )
-      .join("")}
-  `,
-});
-
+        emails: ["fomexii@hotmail.com"],
+        emails_CC: "",
+        subject: `Upload: ${job.PNR}`,
+        body: `
+  <p><strong>📌 Remark:</strong> ${remark || "-"}</p>
+  <p><strong>📎 Attachments (preview):</strong></p>
+  <table style="border-collapse: collapse;">
+    ${getImageRowsHtml(previewBase64List)}
+  </table>
+  <p><strong>🔗 View Images (Download URL):</strong></p>
+  ${previewBase64List
+            .map(
+              (_img, idx) =>
+                `<p><a href="https://operation.dth.travel:7082/api/download/image/${asmdbValue}/${_img.id}" target="_blank">📸 View Image ${idx + 1}</a></p>`
+            )
+            .join("")}
+`,
+      });
       setIsEditing(false);
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -343,16 +332,7 @@ const UploadImagesWithRemark: React.FC<{
                       width={80}
                       height={80}
                       className="object-cover rounded-lg border shadow-sm cursor-pointer"
-                      onClick={() => openPreview(img.ImageBase64, imgIdx)}
                     />
-                    <button
-                      type="button"
-                      className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-700"
-                      onClick={() => handleRemovePreviewImage(previewBase64List[imgIdx]?.id)}
-                      title="ลบรูปภาพนี้"
-                    >
-                      ×
-                    </button>
                   </div>
                 ))}
               </div>
@@ -399,7 +379,6 @@ const UploadImagesWithRemark: React.FC<{
                     width={80}
                     height={80}
                     className="object-cover rounded-lg cursor-pointer"
-                    onClick={() => openPreview(img.base64, idx)}
                   />
                   <button
                     type="button"

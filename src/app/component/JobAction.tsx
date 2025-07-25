@@ -78,10 +78,14 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
   const [, setStatusMessage] = useState("");
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [loading, setLoading] = useState(false);
   const handleAccept = async () => {
+    if (loading) return; // ป้องกันคลิกซ้ำ
+    setLoading(true);
     if (onAccept) {
       onAccept(job.key.toString());
       setAccepted(true);
+      setLoading(false);
       return;
     }
     try {
@@ -150,12 +154,17 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
           toast.style.right = '0';
         }
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleReject = async () => {
+    if (loading) return;
+    setLoading(true);
     if (onReject) {
       onReject(job.key.toString());
+      setLoading(false);
       return;
     }
     try {
@@ -230,6 +239,8 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
           toast.style.right = '0';
         }
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -271,6 +282,7 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
       ) : (
         <div className="flex gap-2 w-full">
           <button
+            disabled={loading}
             className="flex-1 py-2 rounded-lg bg-[#95c941] hover:opacity-90 flex items-center justify-center transition"
             onClick={handleAccept}
             title="Accept"
@@ -306,6 +318,7 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
                 Cancel
               </button>
               <button
+                disabled={loading}
                 onClick={async () => {
                   await handleReject();
                   setShowRejectModal(false);
