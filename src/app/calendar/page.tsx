@@ -7,6 +7,7 @@ import { Job } from './components/types';
 import './calendar.css';
 import CssgGuide from '../cssguide';
 import { DatesSetArg } from '@fullcalendar/core/index.js';
+import Cookies from 'js-cookie';
 import type { CalendarApi } from '@fullcalendar/core'; // เพิ่ม type CalendarApi
 
 function addMonths(date: Date, months: number): Date {
@@ -19,22 +20,22 @@ function formatISO(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
-function getDateRanges(start: string, end: string, chunkMonths = 1): { start: string; end: string }[] {
-  const ranges = [];
-  let currentStart = new Date(start);
-  const endDate = new Date(end);
+// function getDateRanges(start: string, end: string, chunkMonths = 1): { start: string; end: string }[] {
+//   const ranges = [];
+//   let currentStart = new Date(start);
+//   const endDate = new Date(end);
 
-  while (currentStart < endDate) {
-    const currentEnd = addMonths(currentStart, chunkMonths);
-    ranges.push({
-      start: formatISO(currentStart),
-      end: formatISO(currentEnd < endDate ? currentEnd : endDate),
-    });
-    currentStart = currentEnd;
-  }
+//   while (currentStart < endDate) {
+//     const currentEnd = addMonths(currentStart, chunkMonths);
+//     ranges.push({
+//       start: formatISO(currentStart),
+//       end: formatISO(currentEnd < endDate ? currentEnd : endDate),
+//     });
+//     currentStart = currentEnd;
+//   }
 
-  return ranges;
-}
+//   return ranges;
+// }
 
 export default function Page() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -56,13 +57,13 @@ export default function Page() {
   const [currentView, setCurrentView] = useState('dayGridMonth');
   const [currentCenterDate, setCurrentCenterDate] = useState<Date | null>(null);
 
-  const [fetchedRanges, setFetchedRanges] = useState<{ start: string; end: string }[]>([]);
+  const [, setFetchedRanges] = useState<{ start: string; end: string }[]>([]);
 
-  const hasFetchedRange = useCallback((start: string, end: string): boolean => {
-    return fetchedRanges.some(
-      (range) => start >= range.start && end <= range.end
-    );
-  }, [fetchedRanges]);
+  // const hasFetchedRange = useCallback((start: string, end: string): boolean => {
+  //   return fetchedRanges.some(
+  //     (range) => start >= range.start && end <= range.end
+  //   );
+  // }, [fetchedRanges]);
 
   const addFetchedRange = useCallback((start: string, end: string) => {
     setFetchedRanges(prev => [...prev, { start, end }]);
@@ -77,7 +78,7 @@ export default function Page() {
   const fetchJobs = useCallback((start: string, end: string, isInitial = false) => {
     abortControllerRef.current?.abort();
 
-    const token = localStorage.getItem('token') || '';
+    const token = Cookies.get('token') || '';
     if (!token) {
       setError('Token not found. Please log in.');
       setLoadingInitial(false);
@@ -100,7 +101,7 @@ export default function Page() {
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    return fetch('https://operation.dth.travel:7082/api/guide/job', {
+    return fetch('https://operation.dth.travel:7082/api/guide/job/confirm', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, startdate: start, enddate: end }),
@@ -220,7 +221,7 @@ export default function Page() {
     loadedEndRef.current = end;
   }, [fetchJobsChunked]);
 
-    // ฟังก์ชันจัดการวันที่ที่ปฏิทินเปลี่ยน
+  // ฟังก์ชันจัดการวันที่ที่ปฏิทินเปลี่ยน
   const handleDatesSet = (arg: DatesSetArg) => {
     if (isFetchingRef.current) return;
 
@@ -238,19 +239,23 @@ export default function Page() {
     const viewStart = formatISO(arg.start);
     const viewEnd = formatISO(arg.end);
 
-    // เปรียบเทียบกับ loaded ref แทน state
-    if (viewEnd > loadedEndRef.current) {
-      const newEnd = formatISO(addMonths(new Date(loadedEndRef.current), 1));
-      fetchJobsChunked(loadedEndRef.current, newEnd);
-      loadedEndRef.current = newEnd;
-    }
+    const loadMoreData = async () => {
+      if (viewEnd > loadedEndRef.current) {
+        const newEnd = formatISO(addMonths(new Date(loadedEndRef.current), 1));
+        await fetchJobsChunked(loadedEndRef.current, newEnd);
+        loadedEndRef.current = newEnd;
+      }
 
-    if (viewStart < loadedStartRef.current) {
-      const newStart = formatISO(addMonths(new Date(loadedStartRef.current), -1));
-      fetchJobsChunked(newStart, loadedStartRef.current);
-      loadedStartRef.current = newStart;
-    }
+      if (viewStart < loadedStartRef.current) {
+        const newStart = formatISO(addMonths(new Date(loadedStartRef.current), -1));
+        await fetchJobsChunked(newStart, loadedStartRef.current);
+        loadedStartRef.current = newStart;
+      }
+    };
+
+    loadMoreData();
   };
+
 
   if (error && jobs.length === 0) return <ErrorMessage error={error} />;
 
@@ -261,7 +266,7 @@ export default function Page() {
           <h1 className="text-2xl font-bold mb-4">Calendar</h1>
           <CalendarView
             jobs={jobs}
-            gotoDate={currentCenterDate}
+            gotoDate={currentCenterDate ? currentCenterDate.toISOString() : null}
             currentViewProp={currentView}
             onDatesSet={handleDatesSet}
             loading={loadingMore}

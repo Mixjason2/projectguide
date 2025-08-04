@@ -1,5 +1,6 @@
 'use client';
 
+import Cookies from 'js-cookie';
 import { useEffect, useMemo, useState } from 'react';
 import CssgGuide from '../cssguide';
 import axios from 'axios';

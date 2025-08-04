@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { FormControl, InputLabel, NativeSelect } from "@mui/material";
 import Swal from 'sweetalert2';
+import Cookies from "js-cookie";
 import './globals.css';
 
 export default function LoginPage() {
@@ -16,7 +17,6 @@ export default function LoginPage() {
   const [, setGuideEmail] = useState("");
   const [, setEmailOP] = useState<{ key: number; Email: string }[]>([]);
 
-
   const connectionOptions = [
     { label: "TH", value: "[AS-DTGTHA]", name: "Thailand", flag: "🇹🇭" },
     { label: "MY", value: "[AS-DTGKUL]", name: "Malaysia", flag: "🇲🇾" },
@@ -27,11 +27,11 @@ export default function LoginPage() {
     // { label: "TH_Test", value: "[AS-DTGTHA]", name: "Thailand (Test)", flag: "🧪🇹🇭" },
   ];
 
-
   useEffect(() => {
-    const savedUsername = localStorage.getItem("savedUsername") || "";
-    const savedPassword = localStorage.getItem("savedPassword") || "";
-    const savedConnection = localStorage.getItem("savedConnection") || "";
+    // อ่านข้อมูลจาก Cookies แทน localStorage
+    const savedUsername = Cookies.get("savedUsername") || "";
+    const savedPassword = Cookies.get("savedPassword") || "";
+    const savedConnection = Cookies.get("savedConnection") || "";
 
     if (savedUsername && savedPassword) {
       setUsername(savedUsername);
@@ -97,7 +97,6 @@ export default function LoginPage() {
       const data = await res.json();
 
       // Show result from API to user
-      // แก้ไขใน handleSubmit ตรงส่วน login สำเร็จ
       if (data.status && data.token) {
         Swal.fire({
           icon: "success",
@@ -107,22 +106,19 @@ export default function LoginPage() {
           showConfirmButton: false,
         });
 
+        // เก็บ token และ refresh token ใน Cookies (หมดอายุ 7 วันถ้า rememberMe หรือ 1 ชั่วโมงถ้าไม่เลือก)
+        const tokenExpireDays = rememberMe ? 7 : 1 / 24; // 1 hour = 1/24 day
+        Cookies.set("token", data.token, { expires: tokenExpireDays });
+        Cookies.set("accessToken", data.token, { expires: tokenExpireDays });
+        Cookies.set("refreshToken", data.refreshToken, { expires: tokenExpireDays });
 
-        // เก็บ token และ refresh token
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("accessToken", data.token);
-        localStorage.setItem("refreshToken", data.refreshToken);
+        // เก็บ asmdb และ connectionOptions ใน Cookies
+        Cookies.set("asmdb", asmdbValue, { expires: tokenExpireDays });
+        Cookies.set("connectionOptions", JSON.stringify(connectionOptions), { expires: tokenExpireDays });
 
-        // เก็บ asmdb (ที่เราสร้างไว้ก่อนส่ง request)
-        localStorage.setItem("asmdb", asmdbValue);
+        setGuideEmail(data.guideEmail);
+        setEmailOP(data.emailOP || []);
 
-        // เก็บ connection options (อาจจะไม่จำเป็นแต่ถ้าต้องการเก็บ)
-        localStorage.setItem("connectionOptions", JSON.stringify(connectionOptions));
-
-        setGuideEmail(data.guideEmail);      // ✅ ดึงจาก API
-        setEmailOP(data.emailOP || []);      // ✅ ดึงจาก API ถ้ามี
-
-        // แก้ให้ log แสดงผลหลัง set state
         console.log("guideEmail:", data.guideEmail);
         (data.emailOP || []).forEach((item: { key: number; Email: string }) => {
           console.log(`key: ${item.key}, Email: ${item.Email}`);
@@ -130,13 +126,13 @@ export default function LoginPage() {
 
         // เก็บ username/password/connection ถ้าเลือก rememberMe
         if (rememberMe) {
-          localStorage.setItem("savedUsername", username);
-          localStorage.setItem("savedPassword", password);
-          localStorage.setItem("savedConnection", connection);
+          Cookies.set("savedUsername", username, { expires: 7 });
+          Cookies.set("savedPassword", password, { expires: 7 });
+          Cookies.set("savedConnection", connection, { expires: 7 });
         } else {
-          localStorage.removeItem("savedUsername");
-          localStorage.removeItem("savedPassword");
-          localStorage.removeItem("savedConnection");
+          Cookies.remove("savedUsername");
+          Cookies.remove("savedPassword");
+          Cookies.remove("savedConnection");
         }
 
         router.push("/home");
@@ -148,7 +144,7 @@ export default function LoginPage() {
         });
       }
     } catch (err) {
-      console.error(err); // ใช้งานตัวแปร err ที่ถูกจับมา
+      console.error(err);
       Swal.fire({
         icon: "error",
         title: "Connection Error",
