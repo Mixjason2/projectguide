@@ -7,6 +7,7 @@ import { Job } from './components/types';
 import './calendar.css';
 import CssgGuide from '../cssguide';
 import { DatesSetArg } from '@fullcalendar/core/index.js';
+import Cookies from 'js-cookie';
 import type { CalendarApi } from '@fullcalendar/core'; // เพิ่ม type CalendarApi
 
 function addMonths(date: Date, months: number): Date {
@@ -77,7 +78,7 @@ export default function Page() {
   const fetchJobs = useCallback((start: string, end: string, isInitial = false) => {
     abortControllerRef.current?.abort();
 
-    const token = localStorage.getItem('token') || '';
+    const token = Cookies.get('token') || '';
     if (!token) {
       setError('Token not found. Please log in.');
       setLoadingInitial(false);
@@ -220,40 +221,40 @@ export default function Page() {
     loadedEndRef.current = end;
   }, [fetchJobsChunked]);
 
-    // ฟังก์ชันจัดการวันที่ที่ปฏิทินเปลี่ยน
-const handleDatesSet = (arg: DatesSetArg) => {
-  if (isFetchingRef.current) return;
+  // ฟังก์ชันจัดการวันที่ที่ปฏิทินเปลี่ยน
+  const handleDatesSet = (arg: DatesSetArg) => {
+    if (isFetchingRef.current) return;
 
-  if (arg.view.type !== currentView) {
-    setCurrentView(arg.view.type);
-  }
-
-  if (
-    !currentCenterDate ||
-    arg.view.currentStart.getTime() !== currentCenterDate.getTime()
-  ) {
-    setCurrentCenterDate(arg.view.currentStart);
-  }
-
-  const viewStart = formatISO(arg.start);
-  const viewEnd = formatISO(arg.end);
-
-  const loadMoreData = async () => {
-    if (viewEnd > loadedEndRef.current) {
-      const newEnd = formatISO(addMonths(new Date(loadedEndRef.current), 1));
-      await fetchJobsChunked(loadedEndRef.current, newEnd);
-      loadedEndRef.current = newEnd;
+    if (arg.view.type !== currentView) {
+      setCurrentView(arg.view.type);
     }
 
-    if (viewStart < loadedStartRef.current) {
-      const newStart = formatISO(addMonths(new Date(loadedStartRef.current), -1));
-      await fetchJobsChunked(newStart, loadedStartRef.current);
-      loadedStartRef.current = newStart;
+    if (
+      !currentCenterDate ||
+      arg.view.currentStart.getTime() !== currentCenterDate.getTime()
+    ) {
+      setCurrentCenterDate(arg.view.currentStart);
     }
+
+    const viewStart = formatISO(arg.start);
+    const viewEnd = formatISO(arg.end);
+
+    const loadMoreData = async () => {
+      if (viewEnd > loadedEndRef.current) {
+        const newEnd = formatISO(addMonths(new Date(loadedEndRef.current), 1));
+        await fetchJobsChunked(loadedEndRef.current, newEnd);
+        loadedEndRef.current = newEnd;
+      }
+
+      if (viewStart < loadedStartRef.current) {
+        const newStart = formatISO(addMonths(new Date(loadedStartRef.current), -1));
+        await fetchJobsChunked(newStart, loadedStartRef.current);
+        loadedStartRef.current = newStart;
+      }
+    };
+
+    loadMoreData();
   };
-
-  loadMoreData();
-};
 
 
   if (error && jobs.length === 0) return <ErrorMessage error={error} />;
@@ -265,7 +266,7 @@ const handleDatesSet = (arg: DatesSetArg) => {
           <h1 className="text-2xl font-bold mb-4">Calendar</h1>
           <CalendarView
             jobs={jobs}
-            gotoDate={currentCenterDate}
+            gotoDate={currentCenterDate ? currentCenterDate.toISOString() : null}
             currentViewProp={currentView}
             onDatesSet={handleDatesSet}
             loading={loadingMore}

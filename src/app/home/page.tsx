@@ -1,5 +1,6 @@
 'use client';
 
+import Cookies from 'js-cookie';
 import { useEffect, useMemo, useState } from 'react';
 import CssgGuide from '../cssguide';
 import axios from 'axios';
@@ -52,23 +53,21 @@ export default function JobsList() {
   const pageSize = 6;
 
 useEffect(() => {
-  // effect ตัวที่ 1: โหลด asmdb จาก localStorage
-  const storedAsmdb = localStorage.getItem('asmdb');
+  // โหลด asmdb จาก Cookie แทน localStorage
+  const storedAsmdb = Cookies.get('asmdb');
   if (storedAsmdb) {
     setAsmdbValue(storedAsmdb);
   }
 }, []);
 
-
-  useEffect(() => {
-  const token = localStorage.getItem('token') || '';
-
+useEffect(() => {
+  // โหลด token จาก Cookie แทน localStorage
+  const token = Cookies.get('token') || '';
   const debouncedFetch = debounce(() => {
     setLoading(true);
     fetchJobs(token, startDate, endDate);
-  }, 800); // รอ 800ms หลัง user หยุดเลือกวันที่ค่อย fetch
+  }, 800);
   debouncedFetch();
-  // ยกเลิก debounce ถ้า startDate หรือ endDate เปลี่ยนก่อนครบเวลา
   return () => {
     debouncedFetch.cancel();
   };

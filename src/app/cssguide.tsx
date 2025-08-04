@@ -2,9 +2,29 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
 
 export default function CssgGuide({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
+
+const handleLogout = () => {
+  // ลบ cookies ทั้งหมดที่เกี่ยวข้อง
+  Cookies.remove('token');
+  Cookies.remove('accessToken');
+  Cookies.remove('refreshToken');
+
+  // ล้าง localStorage ทั้งหมด (ถ้าอยากล้างเฉพาะบาง key ก็แก้ตรงนี้)
+  localStorage.clear();
+
+  // ปิด Drawer
+  setOpen(false);
+
+  // ไปหน้า login หรือ home
+  router.push('/');
+};
+
 
   return (
     <>
@@ -186,29 +206,27 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
               </ul>
 
               {/* Logout button */}
-              <div className="mt-auto pt-4">
-                <Link
-                  href="/"
-                  className="flex w-full items-center py-4 px-3 text-red-600 font-medium rounded-lg hover:bg-[#FDECEA] transition-colors duration-200"
+              <button
+                onClick={handleLogout}
+                className="flex w-full items-center py-4 px-3 text-red-600 font-medium rounded-lg hover:bg-[#FDECEA] transition-colors duration-200"
+              >
+                <svg
+                  className="w-5 h-5 text-red-600 transition duration-75 group-hover:text-red-500"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
-                  <svg
-                    className="w-5 h-5 text-red-600 transition duration-75 group-hover:text-red-500"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
+                  <path
                     stroke="currentColor"
-                  >
-                    <path
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1"
-                    />
-                  </svg>
-                  <span className="ms-3">Log Out</span>
-                </Link>
-              </div>
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1"
+                  />
+                </svg>
+                <span className="ms-3">Log Out</span>
+              </button>
 
             </div>
           </nav>
