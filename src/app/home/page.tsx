@@ -10,6 +10,8 @@ import JobsSummary from '@/app/component/JobsSummary';
 import JobCard from '@/app/component/JobCard';
 import AllJobDetailsModal from "@/app/component/AllJobDetailsModal";
 import debounce from 'lodash.debounce';
+import AuthGuard from "@/app/component/AuthGuard";
+
 
 // Group jobs by their PNRDate
 function groupJobsByPNRDate(jobs: Job[]): Record<string, Job[]> {
@@ -123,6 +125,7 @@ useEffect(() => {
   }, [groupedByPNRDate, page, showConfirmedOnly, showPendingOnly, showAllFilteredJobs, showNewOnly]);
 
   return (
+    <AuthGuard>
     <CssgGuide>
       <div className="flex flex-col items-center py-8 min-h-screen bg-base-200 relative bg-[#9EE4F6]">
         <JobsSummary filteredByDate={filteredByDate} />
@@ -312,5 +315,6 @@ useEffect(() => {
         </div>
       </div>
     </CssgGuide>
+    </AuthGuard>
   );
 }

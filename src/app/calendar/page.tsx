@@ -1,5 +1,6 @@
 'use client';
 
+import AuthGuard from "@/app/component/AuthGuard";
 import React, { useState, useEffect, useCallback, useRef } from 'react'; // ✅ เพิ่ม useRef
 import CalendarView from './components/CalendarView';
 import ErrorMessage from './components/ErrorMessage';
@@ -260,6 +261,7 @@ export default function Page() {
   if (error && jobs.length === 0) return <ErrorMessage error={error} />;
 
   return (
+    <AuthGuard>
     <CssgGuide>
       <div className="min-h-screen bg-white p-4">
         <div className="max-w-4xl mx-auto p-4 overflow-auto">
@@ -295,5 +297,6 @@ export default function Page() {
         </div>
       </div>
     </CssgGuide>
+    </AuthGuard>
   );
 }
