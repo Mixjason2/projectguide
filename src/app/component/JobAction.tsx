@@ -5,6 +5,7 @@ import { CheckCircleIcon, XCircleIcon, ArrowUpTrayIcon } from '@heroicons/react/
 import UploadImagesWithRemark from "./FileToBase64";
 import Swal from "sweetalert2";
 import 'sweetalert2/dist/sweetalert2.min.css';
+import Cookies from "js-cookie";
 
 const customFormatDate = (dateStr: string): string => {
   const date = new Date(dateStr);
@@ -90,7 +91,7 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
     }
     try {
       setStatusMessage("");
-      const token = localStorage.getItem("token") || "";
+      const token = Cookies.get("token") || "";
       const response = await axios.post(
         `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
         { token, data: { isConfirmed: true } }
@@ -169,7 +170,7 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
     }
     try {
       setStatusMessage("");
-      const token = localStorage.getItem("token") || "";
+      const token = Cookies.get("token") || "";
       const response = await axios.post(
         `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
         {
@@ -271,7 +272,7 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
                   ×
                 </button>
                 <UploadImagesWithRemark
-                  token={localStorage.getItem("token") || ""}
+                  token={Cookies.get("token") || ""}
                   keyValue={job.key}
                   job={job} 
                   asmdbValue={asmdbValue}                />
