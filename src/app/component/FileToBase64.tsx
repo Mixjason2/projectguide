@@ -11,7 +11,6 @@ const UploadImagesWithRemark: React.FC<{
   job: Job;
   asmdbValue: string; // เพิ่ม prop นี้เพื่อรับ asmdbValue
 }> = ({ token, keyValue, job, asmdbValue }) => {
-  console.log("🔍 asmdbValue received:", asmdbValue);
   const [remark, setRemark] = useState<string>("");
   const [previewBase64List, setPreviewBase64List] = useState<PreviewImage[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
