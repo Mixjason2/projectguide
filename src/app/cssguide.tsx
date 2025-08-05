@@ -9,22 +9,23 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
-const handleLogout = () => {
-  // ลบ cookies ทั้งหมดที่เกี่ยวข้อง
-  Cookies.remove('token');
-  Cookies.remove('accessToken');
-  Cookies.remove('refreshToken');
+  const handleLogout = () => {
+    // ลบ cookies ที่เกี่ยวข้องกับ token
+    Cookies.remove('token');
+    Cookies.remove('refreshToken');
+    Cookies.remove('accessToken');
 
-  // ล้าง localStorage ทั้งหมด (ถ้าอยากล้างเฉพาะบาง key ก็แก้ตรงนี้)
-  localStorage.clear();
+    // ลบ localStorage ที่เกี่ยวข้อง
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('accessToken');
 
-  // ปิด Drawer
-  setOpen(false);
+    // ปิด drawer ด้วย
+    setOpen(false);
 
-  // ไปหน้า login หรือ home
-  router.push('/');
-};
-
+    // พาไปหน้า home
+    router.push('/');
+  };
 
   return (
     <>
@@ -78,7 +79,7 @@ const handleLogout = () => {
           {/* Drawer panel */}
           <nav
             id="drawer-navigation"
-            className="fixed top-0 left-0 z-40 min-h-screen w-64 bg-[#2D3E92] p-4 flex flex-col text-white"
+            className="fixed top-0 left-0 z-40  min-h-screen w-64 bg-[#2D3E92] p-4 flex flex-col text-white"
             tabIndex={-1}
             aria-labelledby="drawer-navigation-label"
           >
@@ -206,27 +207,29 @@ const handleLogout = () => {
               </ul>
 
               {/* Logout button */}
-              <button
-                onClick={handleLogout}
-                className="flex w-full items-center py-4 px-3 text-red-600 font-medium rounded-lg hover:bg-[#FDECEA] transition-colors duration-200"
-              >
-                <svg
-                  className="w-5 h-5 text-red-600 transition duration-75 group-hover:text-red-500"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+              <div className="mt-auto pt-4 w-full max-w-full box-border">
+                <button
+                  onClick={handleLogout}
+                  className="flex w-full items-center py-5 text-red-600 font-medium rounded-lg hover:bg-[#FDECEA] transition-colors duration-200 box-border"
                 >
-                  <path
+                  <svg
+                    className="w-5 h-5 text-red-600 transition duration-75 group-hover:text-red-500 flex-shrink-0"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
                     stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1"
-                  />
-                </svg>
-                <span className="ms-3">Log Out</span>
-              </button>
+                  >
+                    <path
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1"
+                    />
+                  </svg>
+                  <span className="ms-3 truncate">Log Out</span>
+                </button>
+              </div>
 
             </div>
           </nav>
