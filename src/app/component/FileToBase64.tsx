@@ -317,10 +317,7 @@ const UploadImagesWithRemark: React.FC<{
 
       setTotalCompressedSize(total);
 
-      compressResults.forEach((res, idx) => {
-        const originalKB = (res.originalSize / 1024).toFixed(2);
-        const compressedKB = (res.compressedSize / 1024).toFixed(2);
-        // คุณอาจจะโชว์ popup info แต่จะโชว์ทุกไฟล์ก็จะเยอะ ถ้าไม่ต้องการลบออกได้ครับ
+      compressResults.forEach(() => {
       });
 
       const newImages: PreviewImage[] = compressResults.map(res => ({
