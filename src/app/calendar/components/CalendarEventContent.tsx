@@ -2,7 +2,14 @@ import React from 'react';
 import { EventContentArg } from '@fullcalendar/core';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
+import { Job } from './types'; // ✅ import type ที่ถูกต้อง
+
 dayjs.extend(utc);
+
+type StatusDot = {
+  color: string;
+  label: string;
+};
 
 function CalendarEventContent({
   arg,
@@ -10,11 +17,11 @@ function CalendarEventContent({
   handleDownloadSingleICS,
 }: {
   arg: EventContentArg;
-  getStatusDots: (input: any) => { color: string; label: string }[];
-  handleDownloadSingleICS: (job: any) => void;
+  getStatusDots: (input: Job | Job[]) => StatusDot[]; // ✅ ใช้ type แทน any
+  handleDownloadSingleICS: (job: Job) => void;         // ✅ ใช้ type แทน any
 }) {
-  const job = arg.event.extendedProps?.job;
-  const jobs: any = arg.event.extendedProps?.jobs;
+  const job = arg.event.extendedProps?.job as Job | undefined;
+  const jobs = arg.event.extendedProps?.jobs as Job[] | undefined;
   const statusDots = getStatusDots(job ?? jobs ?? []);
 
   return (
