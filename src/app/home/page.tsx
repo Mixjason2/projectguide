@@ -52,31 +52,26 @@ export default function JobsList() {
   const [asmdbValue, setAsmdbValue] = useState('');
   const pageSize = 6;
 
-  useEffect(() => {
-    // effect ตัวที่ 1: โหลด asmdb จาก localStorage
-    const storedAsmdb = localStorage.getItem('asmdb');
-    if (storedAsmdb) {
-      setAsmdbValue(storedAsmdb);
-    }
-  }, []);
-
-
-  useEffect(() => {
-    const token = localStorage.getItem('token') || '';
-
-    const debouncedFetch = debounce(() => {
-      setPage(1); // <<-- เพิ่มตรงนี้ เพื่อ reset ไปหน้าแรกทุกครั้งที่ fetch
-      setLoading(true);
-      fetchJobs(token, startDate, endDate);
-    }, 800);
-
-    debouncedFetch();
-
-    return () => {
-      debouncedFetch.cancel();
-    };
-  }, [startDate, endDate]);
-
+useEffect(() => {
+  // โหลด asmdb จาก Cookie แทน localStorage
+  const storedAsmdb = Cookies.get('asmdb');
+  if (storedAsmdb) {
+    setAsmdbValue(storedAsmdb);
+  }
+}, []);
+ 
+useEffect(() => {
+  // โหลด token จาก Cookie แทน localStorage
+  const token = Cookies.get('token') || '';
+  const debouncedFetch = debounce(() => {
+    setLoading(true);
+    fetchJobs(token, startDate, endDate);
+  }, 800);
+  debouncedFetch();
+  return () => {
+    debouncedFetch.cancel();
+  };
+}, [startDate, endDate]);
 
   const fetchJobs = async (token: string, startDate: string, endDate: string) => {
     setLoading(true);

@@ -5,7 +5,6 @@ import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 import Image from 'next/image';
 
-
 const UploadImagesWithRemark: React.FC<{
   token: string;
   keyValue: number;
@@ -22,6 +21,7 @@ const UploadImagesWithRemark: React.FC<{
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [hasUploaded, setHasUploaded] = useState<boolean>(false);
   const [previewModal, setPreviewModal] = useState<{ base64: string; index: number } | null>(null);
+  const [totalCompressedSize, setTotalCompressedSize] = useState<number>(0);
 
   const imagesPerRow = 4;
 
@@ -143,14 +143,44 @@ const UploadImagesWithRemark: React.FC<{
     }
   };
 
-  const fileToBase64 = (file: File): Promise<string> => {
+  const compressImageToBase64 = (
+    file: File,
+    maxWidth = 1024,
+    quality = 0.7
+  ): Promise<{ base64: string; originalSize: number; compressedSize: number }> => {
     return new Promise((resolve, reject) => {
+      const image = document.createElement("img");
       const reader = new FileReader();
-      reader.readAsDataURL(file);
+
       reader.onload = () => {
-        resolve(reader.result as string);
+        if (typeof reader.result === "string") {
+          image.src = reader.result;
+        }
       };
-      reader.onerror = (error) => reject(error);
+
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
+
+      image.onload = () => {
+        const canvas = document.createElement("canvas");
+        const scaleFactor = Math.min(1, maxWidth / image.width);
+        canvas.width = image.width * scaleFactor;
+        canvas.height = image.height * scaleFactor;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return reject("Canvas context not available");
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        const compressedBase64 = canvas.toDataURL("image/jpeg", quality);
+        const compressedSize = Math.round((compressedBase64.length * 3) / 4);
+        resolve({
+          base64: compressedBase64,
+          originalSize: file.size,
+          compressedSize,
+        });
+      };
+
+      image.onerror = (err) => reject(err);
     });
   };
 
@@ -245,52 +275,72 @@ const UploadImagesWithRemark: React.FC<{
       return;
     }
 
-    // ✅ ตรวจสอบขนาดแต่ละไฟล์ (ห้ามเกิน 1MB)
-    const oversizedFiles = imageFiles.filter((file) => file.size > 1024 * 1024); // >1MB
-    if (oversizedFiles.length > 0) {
+    try {
+      // บีบอัดก่อนทุกไฟล์
+      const compressResults = await Promise.all(imageFiles.map(file => compressImageToBase64(file)));
+
+      // ตรวจสอบขนาดแต่ละไฟล์หลังบีบ
+      const oversizedFiles = compressResults.filter(res => res.compressedSize > 1024 * 1024);
+      if (oversizedFiles.length > 0) {
+        Swal.fire({
+          icon: "error",
+          title: "❌ Image too large after compression",
+          text: "Each image must be less than 1MB after compression.",
+          toast: true,
+          position: "top-end",
+          timer: 3000,
+          showConfirmButton: false,
+        });
+        return;
+      }
+
+      // ตรวจสอบขนาดรวมหลังบีบ
+      const existingSize = previewBase64List.reduce((acc, img) => {
+        const sizeInBytes = (img.base64.length * 3) / 4;
+        return acc + sizeInBytes;
+      }, 0);
+      const newTotalSize = compressResults.reduce((acc, cur) => acc + cur.compressedSize, 0);
+      const total = existingSize + newTotalSize;
+
+      if (total > 10 * 1024 * 1024) {
+        Swal.fire({
+          icon: "error",
+          title: "❌ Total size too large",
+          text: "Combined image size must be less than 10MB after compression.",
+          toast: true,
+          position: "top-end",
+          timer: 3000,
+          showConfirmButton: false,
+        });
+        return;
+      }
+
+      setTotalCompressedSize(total);
+
+      compressResults.forEach((res, idx) => {
+        const originalKB = (res.originalSize / 1024).toFixed(2);
+        const compressedKB = (res.compressedSize / 1024).toFixed(2);
+        // คุณอาจจะโชว์ popup info แต่จะโชว์ทุกไฟล์ก็จะเยอะ ถ้าไม่ต้องการลบออกได้ครับ
+      });
+
+      const newImages: PreviewImage[] = compressResults.map(res => ({
+        id: generateUniqueId(),
+        base64: res.base64,
+      }));
+
+      setPreviewBase64List((prev) => [...prev, ...newImages]);
+    } catch (error) {
       Swal.fire({
         icon: "error",
-        title: "❌ Image too large",
-        text: "Each image must be less than 1MB.",
+        title: "❌ Compression failed",
+        text: "Failed to compress images.",
         toast: true,
         position: "top-end",
         timer: 3000,
         showConfirmButton: false,
       });
-      return;
+      console.error("Compression error:", error);
     }
-
-    // ✅ ตรวจสอบขนาดรวม (ห้ามเกิน 10MB)
-    const existingSize = previewBase64List.reduce((acc, img) => {
-      // base64 size ≈ (string length × 3/4) - padding
-      const sizeInBytes = (img.base64.length * 3) / 4;
-      return acc + sizeInBytes;
-    }, 0);
-
-    const newTotalSize = imageFiles.reduce((acc, file) => acc + file.size, 0);
-    const total = existingSize + newTotalSize;
-
-    if (total > 10 * 1024 * 1024) {
-      Swal.fire({
-        icon: "error",
-        title: "❌ Total size too large",
-        text: "Combined image size must be less than 10MB.",
-        toast: true,
-        position: "top-end",
-        timer: 3000,
-        showConfirmButton: false,
-      });
-      return;
-    }
-
-    // 🧪 แปลงและเพิ่มเข้า preview
-    const base64List = await Promise.all(imageFiles.map(fileToBase64));
-    const newImages: PreviewImage[] = base64List.map((base64) => ({
-      id: generateUniqueId(),
-      base64,
-    }));
-
-    setPreviewBase64List((prev) => [...prev, ...newImages]);
   };
 
   const handleUpload = async () => {
@@ -405,6 +455,11 @@ const UploadImagesWithRemark: React.FC<{
             onChange={handleFileChange}
             className="mb-4"
           />
+          <div className="text-sm text-gray-600 mb-4">
+            {totalCompressedSize > 0 && (
+              <>🗜️ Total compressed size: {(totalCompressedSize / 1024 / 1024).toFixed(2)} MB</>
+            )}
+          </div>
           <div className="bg-yellow-50 text-yellow-700 text-sm p-2 rounded-md mb-2 border border-yellow-100">
             ⚠️ Each image must be smaller than <strong>1MB</strong>, and the total size of all images must not exceed <strong>10MB</strong>.
           </div>

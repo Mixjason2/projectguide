@@ -40,18 +40,18 @@
         "mysql2": "^3.14.1",
         "next": "^15.3.3",
         "pikaday": "^1.8.2",
-        "react": "^19.1.0",
+        "react": "^18.3.1",
         "react-date-range": "^2.0.1",
         "react-datepicker": "^8.4.0",
         "react-day-picker": "^9.7.0",
-        "react-dom": "^19.1.0",
+        "react-dom": "^18.3.1",
         "react-hot-toast": "^2.5.2",
         "react-icons": "^5.5.0",
         "react-select": "^5.10.1",
         "react-spinners": "^0.17.0",
-        "react-spinners-css": "^2.0.2",
-        "spinner": "^0.3.4",
-        "sweetalert2": "^11.22.2"
+        "react-spinners-css": "^1.2.2",
+        "spinner": "^0.2.4",
+        "sweetalert2": "^11.6.13"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^3",
