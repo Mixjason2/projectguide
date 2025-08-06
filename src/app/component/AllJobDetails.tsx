@@ -2,20 +2,20 @@ import React from "react";
 import { Job } from "@/app/types/job";
 import { JobDetailsProps } from "@/app/types/job";
 
-const AllJobDetails: React.FC<JobDetailsProps> = ({  jobs }) => {
+const AllJobDetails: React.FC<JobDetailsProps> = ({ jobs }) => {
   // ฟังก์ชัน customFormatDate สำหรับการแปลงวันที่ในรูปแบบ DD-MMM-YYYY HH:mm
   const customFormatDate = (dateStr: string): string => {
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
 
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  const month = date.toLocaleString('default', { month: 'short', timeZone: 'UTC' });
-  const year = date.getUTCFullYear();
-  const hours = String(date.getUTCHours()).padStart(2, '0');
-  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const month = date.toLocaleString('default', { month: 'short', timeZone: 'UTC' });
+    const year = date.getUTCFullYear();
+    const hours = String(date.getUTCHours()).padStart(2, '0');
+    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
 
-  return `${day}-${month}-${year} ${hours}:${minutes}`;
-};
+    return `${day}-${month}-${year} ${hours}:${minutes}`;
+  };
 
   // ตัวอย่างกลุ่ม jobs ตาม PNRDate (ตามเดิม)
   const groupedByDate: Record<string, Record<string, Job[]>> = {};
@@ -44,7 +44,14 @@ const AllJobDetails: React.FC<JobDetailsProps> = ({  jobs }) => {
                 jobsForPNR.map((j) => j.serviceTypeName || j.TypeName || "Unknown")
               )
             );
+            const totalAdult = jobsForPNR.reduce((sum, j) => sum + (j.AdultQty || 0), 0);
+            const totalChild = jobsForPNR.reduce((sum, j) => sum + (j.ChildQty || 0), 0);
+            const totalShare = jobsForPNR.reduce((sum, j) => sum + (j.ChildShareQty || 0), 0);
+            const totalInfant = jobsForPNR.reduce((sum, j) => sum + (j.InfantQty || 0), 0);
 
+            const mergedPaxName = Array.from(
+              new Set(jobsForPNR.map(j => j.pax_name).filter(Boolean))
+            ).join(", ");
             return (
               <div
                 key={`${pnrDate}-${pnr}`}
@@ -73,12 +80,11 @@ const AllJobDetails: React.FC<JobDetailsProps> = ({  jobs }) => {
                     <span className="font-bold text-gray-600 w-24 shrink-0">Pickup:</span>
                     <span className="text-gray-800 break-words">
                       {jobsForPNR.map((j, idx) => (
-                        <span key={idx}>
+                        <div key={idx}>
                           <span className="font-Arial">{j.Pickup}</span>
                           {j.Pickup && j.PickupDate ? " / " : ""}
                           <span className="font-Arial font-bold">{j.PickupDate ? customFormatDate(j.PickupDate) : ""}</span>
-                          {idx < jobsForPNR.length - 1 && ", "}
-                        </span>
+                        </div>
                       ))}
                     </span>
                   </div>
@@ -88,12 +94,11 @@ const AllJobDetails: React.FC<JobDetailsProps> = ({  jobs }) => {
                     <span className="font-bold text-gray-600 w-24 shrink-0">Dropoff:</span>
                     <span className="text-gray-800 break-words">
                       {jobsForPNR.map((j, idx) => (
-                        <span key={idx}>
+                        <div key={idx}>
                           <span className="font-Arial">{j.Dropoff}</span>
                           {j.Dropoff && j.DropoffDate ? " / " : ""}
                           <span className="font-Arial font-bold">{j.DropoffDate ? customFormatDate(j.DropoffDate) : ""}</span>
-                          {idx < jobsForPNR.length - 1 && ", "}
-                        </span>
+                        </div>
                       ))}
                     </span>
                   </div>
@@ -121,7 +126,7 @@ const AllJobDetails: React.FC<JobDetailsProps> = ({  jobs }) => {
                   {/* Client Name */}
                   <div className="flex items-start">
                     <span className="font-bold text-gray-600 w-24 shrink-0">Client Name:</span>
-                    <span className="text-gray-800 break-words">{jobsForPNR[0].pax_name}</span>
+                    <span className="text-gray-800 break-words">{mergedPaxName}</span>
                   </div>
 
                   {/* Table */}
@@ -137,10 +142,10 @@ const AllJobDetails: React.FC<JobDetailsProps> = ({  jobs }) => {
                       </thead>
                       <tbody>
                         <tr>
-                          <td className="px-1 py-1 text-left">{jobsForPNR[0].AdultQty || 0}</td>
-                          <td className="px-1 py-1 text-left">{jobsForPNR[0].ChildQty || 0}</td>
-                          <td className="px-1 py-1 text-left">{jobsForPNR[0].ChildShareQty || 0}</td>
-                          <td className="px-1 py-1 text-left">{jobsForPNR[0].InfantQty || 0}</td>
+                          <td className="px-1 py-1 text-left">{totalAdult}</td>
+                          <td className="px-1 py-1 text-left">{totalChild}</td>
+                          <td className="px-1 py-1 text-left">{totalShare}</td>
+                          <td className="px-1 py-1 text-left">{totalInfant}</td>
                         </tr>
                       </tbody>
                     </table>
