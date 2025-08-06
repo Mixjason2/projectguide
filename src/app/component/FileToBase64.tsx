@@ -69,6 +69,11 @@ const UploadImagesWithRemark: React.FC<{
                 base64: img.ImageBase64,
               }))
             );
+            const totalSizeFromBackend = matched.Images.reduce((acc: number, img: ImageData) => {
+              const sizeInBytes = (img.ImageBase64.length * 3) / 4;
+              return acc + sizeInBytes;
+            }, 0);
+            setTotalCompressedSize(totalSizeFromBackend);
 
             setRemark(matched.Remark || "");
           } else {
