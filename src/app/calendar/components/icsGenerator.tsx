@@ -57,7 +57,7 @@ export function generateSingleICS(job: Job): string {
     `DTSTAMP:${dtstamp}`,
     `DTSTART:${startStr}`,
     `DTEND:${endStr}`,
-    `SUMMARY:P: ${job.Pickup} | D: ${job.Dropoff}`,
+    `SUMMARY:Pickup: ${job.Pickup} | Dropoff: ${job.Dropoff}`,
     `DESCRIPTION:${job.PNR ? `PNR: ${job.PNR},  : ` : ''}Pickup: ${job.Pickup}`,
     `LOCATION:${job.Pickup}`,
     'END:VEVENT',
