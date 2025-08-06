@@ -2,20 +2,20 @@ import React from "react";
 import { Job } from "@/app/types/job";
 import { JobDetailsProps } from "@/app/types/job";
 
-const AllJobDetails: React.FC<JobDetailsProps> = ({ jobs }) => {
+const AllJobDetails: React.FC<JobDetailsProps> = ({  jobs }) => {
   // ฟังก์ชัน customFormatDate สำหรับการแปลงวันที่ในรูปแบบ DD-MMM-YYYY HH:mm
   const customFormatDate = (dateStr: string): string => {
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
 
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = date.toLocaleString('default', { month: 'short' });
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const month = date.toLocaleString('default', { month: 'short', timeZone: 'UTC' });
+  const year = date.getUTCFullYear();
+  const hours = String(date.getUTCHours()).padStart(2, '0');
+  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
 
-    return `${day}-${month}-${year} ${hours}:${minutes}`;
-  };
+  return `${day}-${month}-${year} ${hours}:${minutes}`;
+};
 
   // ตัวอย่างกลุ่ม jobs ตาม PNRDate (ตามเดิม)
   const groupedByDate: Record<string, Record<string, Job[]>> = {};
