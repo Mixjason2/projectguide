@@ -78,28 +78,40 @@ const AllJobDetails: React.FC<JobDetailsProps> = ({ jobs }) => {
                   {/* Pickup */}
                   <div className="flex items-start">
                     <span className="font-bold text-gray-600 w-24 shrink-0">Pickup:</span>
-                    <span className="text-gray-800 break-words">
-                      {jobsForPNR.map((j, idx) => (
-                        <div key={idx}>
-                          <span className="font-Arial">{j.Pickup}</span>
-                          {j.Pickup && j.PickupDate ? " / " : ""}
-                          <span className="font-Arial font-bold">{j.PickupDate ? customFormatDate(j.PickupDate) : ""}</span>
-                        </div>
-                      ))}
+                    <span className="text-gray-800 break-words space-y-1">
+                      {jobsForPNR.map((j, idx) => {
+                        const colorClass = idx % 2 === 0 ? "text-green-600" : "text-orange-400"; // สลับสีเขียวกับน้ำเงิน
+                        return (
+                          <div key={idx}>
+                            <span className={`font-Arial font-bold ${colorClass}`}>{idx + 1}. </span>
+                            <span className={`font-Arial ${colorClass}`}>{j.Pickup}</span>
+                            {j.Pickup && j.PickupDate ? " / " : ""}
+                            <span className={`font-Arial font-bold ${colorClass}`}>
+                              {j.PickupDate ? customFormatDate(j.PickupDate) : ""}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </span>
                   </div>
 
                   {/* Dropoff */}
                   <div className="flex items-start">
                     <span className="font-bold text-gray-600 w-24 shrink-0">Dropoff:</span>
-                    <span className="text-gray-800 break-words">
-                      {jobsForPNR.map((j, idx) => (
-                        <div key={idx}>
-                          <span className="font-Arial">{j.Dropoff}</span>
-                          {j.Dropoff && j.DropoffDate ? " / " : ""}
-                          <span className="font-Arial font-bold">{j.DropoffDate ? customFormatDate(j.DropoffDate) : ""}</span>
-                        </div>
-                      ))}
+                    <span className="text-gray-800 break-words space-y-1">
+                      {jobsForPNR.map((j, idx) => {
+                        const colorClass = idx % 2 === 0 ? "text-green-600" : "text-orange-400"; // ใช้สีเดียวกับ Pickup คู่เดียวกัน
+                        return (
+                          <div key={idx}>
+                            <span className={`font-Arial font-bold ${colorClass}`}>{idx + 1}. </span>
+                            <span className={`font-Arial ${colorClass}`}>{j.Dropoff}</span>
+                            {j.Dropoff && j.DropoffDate ? " / " : ""}
+                            <span className={`font-Arial font-bold ${colorClass}`}>
+                              {j.DropoffDate ? customFormatDate(j.DropoffDate) : ""}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </span>
                   </div>
 
