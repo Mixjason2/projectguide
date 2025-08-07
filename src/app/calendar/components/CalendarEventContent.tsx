@@ -2,7 +2,7 @@ import React from 'react';
 import { EventContentArg } from '@fullcalendar/core';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-import { Job } from './types'; // ✅ import type ที่ถูกต้อง
+import { Job } from './types';
 
 dayjs.extend(utc);
 
@@ -15,14 +15,18 @@ function CalendarEventContent({
   arg,
   getStatusDots,
   handleDownloadSingleICS,
+  onDashboardClick, // เปลี่ยนจาก goToDashboard เป็น onDashboardClick ที่รับงาน
 }: {
   arg: EventContentArg;
-  getStatusDots: (input: Job | Job[]) => StatusDot[]; // ✅ ใช้ type แทน any
-  handleDownloadSingleICS: (job: Job) => void;         // ✅ ใช้ type แทน any
+  getStatusDots: (input: Job | Job[]) => StatusDot[];
+  handleDownloadSingleICS: (job: Job) => void;
+  onDashboardClick: (jobOrJobs: Job | Job[]) => void;
 }) {
   const job = arg.event.extendedProps?.job as Job | undefined;
   const jobs = arg.event.extendedProps?.jobs as Job[] | undefined;
   const statusDots = getStatusDots(job ?? jobs ?? []);
+
+  const dashboardData = job ?? jobs ?? [];
 
   return (
     <div
@@ -66,6 +70,36 @@ function CalendarEventContent({
             }}
           />
         ))}
+        {(job || (Array.isArray(jobs) && jobs.length > 0)) && (
+          <div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDashboardClick(dashboardData);
+              }}
+              style={{
+                backgroundColor: 'rgba(0, 128, 0, 0.5)',
+                border: 'none',
+                borderRadius: 5,
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '0.90rem',
+                padding: '4px 6px',
+                lineHeight: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'background-color 0.2s ease',
+              }}
+              title="Go to Dashboard"
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0, 128, 0, 0.7)')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(0, 128, 0, 0.5)')}
+            >
+              📊
+            </button>
+          </div>
+        )}
+
         {job && (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span className="text-neutral-800">P: {job.Pickup}</span>
@@ -102,6 +136,7 @@ function CalendarEventContent({
           📥
         </button>
       )}
+
     </div>
   );
 }
