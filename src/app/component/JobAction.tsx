@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import { JobActionProps } from "@/app/types/job";
 import axios from "axios";
 import { CheckCircleIcon, XCircleIcon, ArrowUpTrayIcon } from '@heroicons/react/24/solid';
@@ -73,13 +73,16 @@ interface ExtendedJobActionProps extends JobActionProps {
   asmdbValue: string;  // เพิ่มบรรทัดนี้ (ถ้าเป็น required ก็เอา ? ออก)
 }
 
-const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, onReject,asmdbValue}) => {
+const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, onReject, asmdbValue }) => {
   const [accepted, setAccepted] = useState(job.IsConfirmed);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [, setStatusMessage] = useState("");
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    setAccepted(job.IsConfirmed);
+  }, [job.IsConfirmed]);
   const handleAccept = async () => {
     if (loading) return; // ป้องกันคลิกซ้ำ
     setLoading(true);
@@ -274,8 +277,8 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
                 <UploadImagesWithRemark
                   token={Cookies.get("token") || ""}
                   keyValue={job.key}
-                  job={job} 
-                  asmdbValue={asmdbValue}                />
+                  job={job}
+                  asmdbValue={asmdbValue} />
               </div>
             </div>
           )}
