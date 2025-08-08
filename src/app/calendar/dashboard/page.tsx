@@ -100,7 +100,7 @@ function DashboardPage() {
               onClick={() => setIsRunning(prev => !prev)}
               className={`px-4 py-2 border rounded-lg flex items-center gap-2 ${isRunning ? 'bg-green-500 text-white' : 'hover:bg-gray-200'}`}
             >
-              🏃 ตัววิ่ง
+              ⇐𝔸
             </button>
 
             <div className="flex items-center gap-2">
