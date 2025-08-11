@@ -11,7 +11,7 @@ import { Job, getTotalPax } from './types';
 import type { CalendarApi } from '@fullcalendar/core';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-import { useRouter } from 'next/navigation';
+
 
 import CalendarEventContent from './CalendarEventContent';
 import { generateICS, generateSingleICS } from './icsGenerator';
@@ -44,56 +44,119 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   const calendarRef = useRef<FullCalendar>(null);
   const icsFilename = 'dth-calendar.ics';
 
-  const fetchedRangesRef = useRef<string[]>([]);
+  // ใช้ Set แทน Array เพื่อป้องกัน key ซ้ำ
+  const fetchedRangesRef = useRef<Set<string>>(new Set());
   const [stepTarget, setStepTarget] = useState<string | null>(null);
   const [isStepping, setIsStepping] = useState(false);
   const stepLockRef = useRef(false);
 
+  // เพิ่ม useRef เก็บสถานะจริงเพื่อช่วยป้องกัน effect loop
+  const stepTargetRef = useRef<string | null>(null);
+  const isSteppingRef = useRef(false);
+
   const stepwiseGotoDate = useCallback((targetDateStr: string) => {
+    console.log('[stepwiseGotoDate] set stepTarget and isStepping true:', targetDateStr);
     setStepTarget(targetDateStr);
+    stepTargetRef.current = targetDateStr;
+
     setIsStepping(true);
+    isSteppingRef.current = true;
   }, []);
 
   useEffect(() => {
+  console.log('stepTarget value changed:', stepTarget);
+}, [stepTarget]);
+
+  useEffect(() => {
     if (!gotoDate) return;
+
+    // ใช้ ref ตรวจสอบเพื่อป้องกัน set ซ้ำ
+    if (isSteppingRef.current && stepTargetRef.current === gotoDate) {
+      console.log('[useEffect gotoDate] skip set stepwise goto (already stepping to this date)', gotoDate);
+      return;
+    }
+
+    console.log('[useEffect gotoDate] set stepwise goto', gotoDate);
     stepwiseGotoDate(gotoDate);
-    fetchedRangesRef.current = [];
+    fetchedRangesRef.current.clear();
   }, [gotoDate, stepwiseGotoDate]);
 
   const handleDatesSet = useCallback(
-    async (arg: DatesSetArg) => {
-      const key = `${arg.startStr}::${arg.endStr}`;
-      if (!fetchedRangesRef.current.includes(key)) {
-        fetchedRangesRef.current.push(key);
-        stepLockRef.current = true;
+  async (arg: DatesSetArg) => {
+    const key = `${arg.startStr}::${arg.endStr}`;
+
+    if (jobs.length === 0 && fetchedRangesRef.current.has(key)) {
+      fetchedRangesRef.current.delete(key);
+    }
+
+    const shouldFetch = !fetchedRangesRef.current.has(key) || jobs.length === 0;
+
+    console.log('[handleDatesSet] computed', { key, shouldFetch });
+    console.log('[handleDatesSet] before fetch:', {
+      isStepping: isSteppingRef.current,
+      stepTarget: stepTargetRef.current,
+      stepLock: stepLockRef.current
+    });
+
+    if (shouldFetch) {
+      if (!fetchedRangesRef.current.has(key)) {
+        fetchedRangesRef.current.add(key);
+        console.log('[handleDatesSet] add key', key);
+      }
+
+      stepLockRef.current = true;
+      try {
+        console.log('[handleDatesSet] before await onDatesSet');
         await onDatesSet?.(arg);
+        console.log('[handleDatesSet] after await onDatesSet');
+      } finally {
         stepLockRef.current = false;
+        console.log('[handleDatesSet] stepLockRef cleared');
+      }
+    }
+
+    
+    if (isSteppingRef.current && stepTargetRef.current) {
+      const calendarApi = calendarApiRef?.current;
+      if (!calendarApi) {
+        console.warn('[handleDatesSet] calendarApi is null');
+        return;
       }
 
-      if (isStepping && stepTarget) {
-        const calendarApi = calendarApiRef?.current;
-        if (!calendarApi) return;
+      const currentDate = dayjs(calendarApi.getDate());
+      const targetDate = dayjs(stepTargetRef.current);
 
-        const currentDate = dayjs(calendarApi.getDate());
-        const targetDate = dayjs(stepTarget);
+      console.log('[handleDatesSet] stepping check', {
+        currentDate: currentDate.format(),
+        targetDate: targetDate.format(),
+        sameMonth: currentDate.isSame(targetDate, 'month'),
+        stepLockRef: stepLockRef.current,
+      });
 
-        if (currentDate.isSame(targetDate, 'month')) {
-          setIsStepping(false);
-          setStepTarget(null);
-          return;
-        }
-
-        if (!stepLockRef.current) {
-          const nextDate = currentDate.isBefore(targetDate)
-            ? currentDate.add(1, 'month')
-            : currentDate.subtract(1, 'month');
-
-          calendarApi.gotoDate(nextDate.toDate());
-        }
+      if (currentDate.isSame(targetDate, 'month')) {
+        console.log('[handleDatesSet] reached target month, stop stepping');
+        setIsStepping(false);
+        isSteppingRef.current = false;
+        setStepTarget(null);
+        stepTargetRef.current = null;
+        return;
       }
-    },
-    [calendarApiRef, isStepping, stepTarget, onDatesSet]
-  );
+
+      if (!stepLockRef.current) {
+        const nextDate = currentDate.isBefore(targetDate)
+          ? currentDate.add(1, 'month')
+          : currentDate.subtract(1, 'month');
+
+        console.log('[handleDatesSet] goto next step date', nextDate.format());
+        calendarApi.gotoDate(nextDate.toDate());
+      } else {
+        console.log('[handleDatesSet] skip gotoDate because stepLock');
+      }
+    }
+  },
+  [calendarApiRef, onDatesSet, jobs.length] 
+);
+
 
   const jobsWithDate: JobWithDate[] = useMemo(() => {
     return jobs.map(job => ({
@@ -147,6 +210,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
       }
 
       if (gotoDate) {
+        console.log('[useEffect] calendarApi.gotoDate', gotoDate);
         calendarApi.gotoDate(gotoDate);
 
         onDatesSet?.({
@@ -165,6 +229,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 
   useEffect(() => {
     const disableNavButtons = () => {
+      console.log('[disableNavButtons]', { loading, isStepping });
       const prevBtn = document.querySelector('.fc-prev-button') as HTMLButtonElement | null;
       const nextBtn = document.querySelector('.fc-next-button') as HTMLButtonElement | null;
       const todayBtn = document.querySelector('.fc-today-button') as HTMLButtonElement | null;
@@ -175,7 +240,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         if (btn) {
           btn.disabled = shouldDisable;
           btn.style.opacity = shouldDisable ? '0.5' : '1';
-          btn.style.pointerEvents = shouldDisable ? 'none' : 'auto';
           btn.style.cursor = shouldDisable ? 'not-allowed' : 'pointer';
         }
       });
@@ -267,16 +331,13 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     URL.revokeObjectURL(url);
   };
 
-  const router = useRouter();
 
 const handleDashboardClick = (jobOrJobs: Job | Job[]) => {
   try {
-    // เก็บข้อมูล job หรือ jobs ลง sessionStorage
     sessionStorage.setItem('dashboardJobsData', JSON.stringify(jobOrJobs));
-    // เปิดหน้า /calendar/dashboard ในแท็บใหม่ (new tab)
-    window.open('/calendar/dashboard', '_blank');
+    window.open('/calendar/dashboard', '_blank');  // เปิดแท็บใหม่
   } catch (error) {
-    console.error('Failed to open new tab or store data:', error);
+    console.error('Failed to store data or open new tab:', error);
   }
 };
 
@@ -292,7 +353,6 @@ const handleDashboardClick = (jobOrJobs: Job | Job[]) => {
         >
           📥 Download ({icsFilename})
         </button>
-
       </div>
 
       <FullCalendar
@@ -319,7 +379,7 @@ const handleDashboardClick = (jobOrJobs: Job | Job[]) => {
             arg={arg}
             getStatusDots={getStatusDots}
             handleDownloadSingleICS={handleDownloadSingleICS}
-            onDashboardClick={handleDashboardClick}  // เปลี่ยนจาก goToDashboard เป็น onDashboardClick
+            onDashboardClick={handleDashboardClick}
           />
         )}
         slotLabelFormat={{ hour: '2-digit', minute: '2-digit', meridiem: false }}
