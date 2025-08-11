@@ -128,12 +128,13 @@ function DashboardPage() {
     setSelectedText(value || null);
   };
 
+  // ฟังก์ชันสลับโหมดพื้นหลังและสีข้อความ
   const toggleBackground = () => {
     if (bgColor === 'white') {
-      setBgColor('#000000ff'); // Dark
+      setBgColor('#000000ff'); // โหมดมืด
       setTextColor('white');
     } else {
-      setBgColor('white'); // Light
+      setBgColor('white'); // โหมดสว่าง
       setTextColor('black');
     }
   };
@@ -184,14 +185,12 @@ function DashboardPage() {
             <button
               onClick={toggleBackground}
               className={`relative inline-flex items-center justify-center w-14 h-8 rounded-full transition-colors duration-300
-    ${bgColor === 'white' ? 'bg-gray-300' : 'bg-yellow-500'}
-  `}
+    ${bgColor === 'white' ? 'bg-gray-300' : 'bg-yellow-500'}`}
               aria-label="Toggle dark mode"
             >
               <span
                 className={`absolute left-1 top-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300
-    ${bgColor === 'white' ? 'translate-x-0' : 'translate-x-6'}
-  `}
+    ${bgColor === 'white' ? 'translate-x-0' : 'translate-x-6'}`}
               />
               <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-700">
                 <MoonIcon className="h-5 w-5" />
@@ -216,14 +215,13 @@ function DashboardPage() {
           </button>
         </div>
 
-
         {/* Content */}
         <div
           className="p-6 transition-all duration-300"
           style={{
             paddingTop: showTopBar
-              ? '80px'  // เพิ่มเผื่อพื้นที่ให้พอสำหรับ TopBar ตอนโชว์
-              : '0px'   // ลดพื้นที่ว่างเมื่อ TopBar ซ่อน
+              ? '80px' // เพิ่มเผื่อพื้นที่ให้พอสำหรับ TopBar ตอนโชว์
+              : '0px' // ลดพื้นที่ว่างเมื่อ TopBar ซ่อน
           }}
         >
           {/* Font Control */}
@@ -267,11 +265,16 @@ function DashboardPage() {
                         backgroundColor: color.value,
                         color: ['white', 'black'].includes(color.value) ? '#000' : '#fff',
                       }}
+                      disabled={
+                        (bgColor === 'white' && color.value === 'white') ||
+                        (bgColor !== 'white' && color.value === 'black')
+                      }
                     >
                       {color.name}
                     </option>
                   ))}
                 </select>
+
               </div>
             </div>
 
@@ -291,7 +294,7 @@ function DashboardPage() {
 
           {/* Selected Text Display */}
           {selectedText && (
-            <div className="mt-6 px-4 w-full pt-[40px]">
+            <div className="h-screen w-screen mt-6 px-4 pt-[40px]">
               <div
                 className={`font-bold text-center uppercase break-words ${isRunning ? 'animate-marquee' : ''
                   }`}
