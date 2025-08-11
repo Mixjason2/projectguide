@@ -177,28 +177,62 @@ function DashboardPage() {
             ))}
           </select>
 
-          {/* Center: Toggle Switch */}
-          <div className="flex justify-center flex-1">
-            <button
-              onClick={toggleBackground}
-              className={`relative inline-flex items-center justify-center w-14 h-8 rounded-full transition-colors duration-300
-    ${bgColor === 'white' ? 'bg-gray-300' : 'bg-yellow-500'}
-  `}
-              aria-label="Toggle dark mode"
-            >
-              <span
-                className={`absolute left-1 top-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300
-    ${bgColor === 'white' ? 'translate-x-0' : 'translate-x-6'}
-  `}
-              />
-              <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-700">
-                <MoonIcon className="h-5 w-5" />
-              </span>
-              <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-yellow-400">
-                <SunIcon className="h-5 w-5" />
-              </span>
-            </button>
-          </div>
+{/* Center: Toggle Switch */}
+<div className="flex justify-center flex-1">
+  <button
+    onClick={toggleBackground}
+    className={`relative inline-flex items-center justify-center w-14 h-8 rounded-full transition-colors duration-300
+      ${bgColor === 'white' ? 'bg-yellow-500' : 'bg-blue-900'}
+    `}
+    aria-label="Toggle dark mode"
+  >
+    {/* ลูกกลิ้งเลื่อน */}
+    <span
+      className={`absolute left-1 top-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300
+        ${bgColor === 'white' ? 'translate-x-0' : 'translate-x-6'}
+      `}
+    />
+
+{/* Sun Icon หรือ Animation ดาว */}
+{bgColor === 'white' ? (
+  <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-yellow-400">
+    <SunIcon className="h-5 w-5" />
+  </span>
+) : (
+  <span className="absolute left-2 top-1/2 w-10 h-6 transform -translate-y-1/2 relative">
+  {/* ดาวแต่ละดวงวางแบบ absolute กระจายทั่วพื้นที่ */}
+  <span
+    className="w-1.5 h-1.5 bg-yellow-300 rounded-full animate-pulse absolute"
+    style={{ top: '4px', left: '2px' }}
+  />
+  <span
+    className="w-1 h-1 bg-yellow-300 rounded-full animate-ping delay-150 absolute"
+    style={{ top: '1px', left: '12px' }}
+  />
+  <span
+    className="w-1.25 h-1.25 bg-yellow-300 rounded-full animate-pulse delay-300 absolute"
+    style={{ top: '2px', left: '7px' }}
+  />
+  <span
+    className="w-0.75 h-0.75 bg-yellow-300 rounded-full animate-ping delay-450 absolute"
+    style={{ top: '0px', left: '16px' }}
+  />
+</span>
+
+)}
+
+    {/* Moon Icon - ปรับ UI */}
+    <span
+      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-indigo-300 drop-shadow-[0_0_4px_rgba(147,197,253,0.7)] hover:text-indigo-100 transition-colors duration-300"
+      title="Dark mode"
+    >
+      <MoonIcon className="h-6 w-5" />
+    </span>
+  </button>
+</div>
+
+
+
 
           {/* Right: Close Button */}
           <button
