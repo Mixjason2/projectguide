@@ -261,14 +261,14 @@ function DashboardPage() {
                     <option
                       key={color.value}
                       value={color.value}
-                      style={{
-                        backgroundColor: color.value,
-                        color: ['white', 'black'].includes(color.value) ? '#000' : '#fff',
-                      }}
                       disabled={
                         (bgColor === 'white' && color.value === 'white') ||
                         (bgColor !== 'white' && color.value === 'black')
                       }
+                      style={{
+                        backgroundColor: color.value,
+                        color: ['white', 'black'].includes(color.value) ? '#000' : '#fff',
+                      }}
                     >
                       {color.name}
                     </option>
