@@ -40,9 +40,6 @@ function DashboardPage() {
     }
   }, [router]);
 
-  // ปรับการแสดงผล TopBar ตาม fontSize
-  // ถ้า fontSize <= 10 ให้ซ่อน TopBar (ย่อ)
-  // ถ้า fontSize > 10 ให้แสดง TopBar
   useEffect(() => {
     if (fontSize <= 10) {
       setShowTopBar(false);
@@ -61,7 +58,7 @@ function DashboardPage() {
           const deltaX = currentX - lastScroll.current.x;
           const deltaY = currentY - lastScroll.current.y;
 
-          const threshold = 3; // กันกระพริบเวลาปัดน้อยๆ
+          const threshold = 3;
 
           if (Math.abs(deltaX) > threshold || Math.abs(deltaY) > threshold) {
             if (deltaX > 0 || deltaY > 0) {
@@ -142,12 +139,13 @@ function DashboardPage() {
     <div className="bg-white min-h-screen font-sans">
       <div
         className="min-h-screen font-sans transition-colors duration-300"
-        style={{ backgroundColor: bgColor, color: textColor }}
+        style={{ backgroundColor: bgColor }} // ลบ color: textColor ออกที่นี่
       >
         {/* Top Bar */}
         <div
-          className={`fixed top-0 left-0 w-full bg-white/90 backdrop-blur-md shadow-lg z-50 px-4 py-3 flex flex-wrap items-center justify-between gap-4 transition-transform duration-300 ease-in-out ${showTopBar ? 'translate-y-0 opacity-100 pointer-events-auto' : '-translate-y-full opacity-0 pointer-events-none'
-            }`}
+          className={`fixed top-0 left-0 w-full bg-white/90 backdrop-blur-md shadow-lg z-50 px-4 py-3 flex flex-wrap items-center justify-between gap-4 transition-transform duration-300 ease-in-out ${
+            showTopBar ? 'translate-y-0 opacity-100 pointer-events-auto' : '-translate-y-full opacity-0 pointer-events-none'
+          }`}
           style={{ height: showTopBar ? '56px' : '0', overflow: 'hidden' }}
         >
           {/* Left: Select */}
@@ -183,15 +181,15 @@ function DashboardPage() {
           <div className="flex justify-center flex-1">
             <button
               onClick={toggleBackground}
-              className={`relative inline-flex items-center justify-center w-14 h-8 rounded-full transition-colors duration-300
-    ${bgColor === 'white' ? 'bg-gray-300' : 'bg-yellow-500'}
-  `}
+              className={`relative inline-flex items-center justify-center w-14 h-8 rounded-full transition-colors duration-300 ${
+                bgColor === 'white' ? 'bg-gray-300 text-black' : 'bg-gray-800 text-white'
+              }`}
               aria-label="Toggle dark mode"
             >
               <span
-                className={`absolute left-1 top-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300
-    ${bgColor === 'white' ? 'translate-x-0' : 'translate-x-6'}
-  `}
+                className={`absolute left-1 top-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${
+                  bgColor === 'white' ? 'translate-x-0' : 'translate-x-6'
+                }`}
               />
               <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-700">
                 <MoonIcon className="h-5 w-5" />
@@ -205,32 +203,30 @@ function DashboardPage() {
           {/* Right: Close Button */}
           <button
             onClick={() => window.close()}
-            className={`px-4 py-2 border rounded-lg transition shadow-sm
-    ${bgColor === 'white'
+            className={`px-4 py-2 border rounded-lg transition shadow-sm ${
+              bgColor === 'white'
                 ? 'bg-gray-50 border-gray-400 hover:bg-gray-200 text-black'
                 : 'bg-gray-800 border-gray-600 hover:bg-gray-700 text-white'
-              }
-  `}
+            }`}
           >
             Close Tab
           </button>
         </div>
 
-
         {/* Content */}
         <div
           className="p-6 transition-all duration-300"
           style={{
-            paddingTop: showTopBar
-              ? '80px'  // เพิ่มเผื่อพื้นที่ให้พอสำหรับ TopBar ตอนโชว์
-              : '0px'   // ลดพื้นที่ว่างเมื่อ TopBar ซ่อน
+            paddingTop: showTopBar ? '80px' : '0px',
           }}
         >
           {/* Font Control */}
           <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
             <button
               onClick={() => setFontSize(prev => Math.max(10, prev - 5))}
-              className="px-4 py-2 text-2xl font-bold border rounded-lg hover:bg-gray-200 transition"
+              className={`px-4 py-2 text-2xl font-bold border rounded-lg hover:bg-gray-200 transition ${
+                bgColor === 'white' ? 'text-black' : 'text-white'
+              }`}
             >
               -
             </button>
@@ -241,14 +237,21 @@ function DashboardPage() {
                   setIsRunning(prev => !prev);
                   if (!showTopBar) setShowTopBar(true);
                 }}
-                className={`px-4 py-2 border rounded-lg flex items-center gap-2 transition ${isRunning ? 'bg-green-500 text-white shadow' : 'hover:bg-gray-200'
-                  }`}
+                className={`px-4 py-2 border rounded-lg flex items-center gap-2 transition ${
+                  isRunning
+                    ? 'bg-green-500 text-white shadow'
+                    : bgColor === 'white'
+                    ? 'text-black hover:bg-gray-200'
+                    : 'text-white hover:bg-gray-700'
+                }`}
               >
                 ⇐𝔸
               </button>
 
               <div className="flex items-center gap-2">
-                <PaintBrushIcon className={`h-5 w-5 ${bgColor === 'white' ? 'text-gray-700' : 'text-gray-300'}`} />
+                <PaintBrushIcon
+                  className={`h-5 w-5 ${bgColor === 'white' ? 'text-gray-700' : 'text-gray-300'}`}
+                />
                 <select
                   value={textColor}
                   onChange={e => setTextColor(e.target.value)}
@@ -287,7 +290,9 @@ function DashboardPage() {
                   return newSize;
                 });
               }}
-              className="px-4 py-2 text-2xl font-bold border rounded-lg hover:bg-gray-200 transition"
+              className={`px-4 py-2 text-2xl font-bold border rounded-lg hover:bg-gray-200 transition ${
+                bgColor === 'white' ? 'text-black' : 'text-white'
+              }`}
             >
               +
             </button>
@@ -295,13 +300,16 @@ function DashboardPage() {
 
           {/* Selected Text Display */}
           {selectedText && (
-            <div className="mt-6 px-4 w-full pt-[40px]">
+            <div
+              className="mt-6 px-4 w-full pt-[40px]"
+              style={{ color: textColor }} // กำหนดสีเฉพาะที่นี่
+            >
               <div
-                className={`font-bold text-center uppercase break-words ${isRunning ? 'animate-marquee' : ''
-                  }`}
+                className={`font-bold text-center uppercase break-words ${
+                  isRunning ? 'animate-marquee' : ''
+                }`}
                 style={{
                   fontSize: `${fontSize}px`,
-                  color: textColor,
                   whiteSpace: isRunning ? 'nowrap' : 'normal',
                   overflow: 'visible',
                 }}
@@ -314,19 +322,19 @@ function DashboardPage() {
 
         {/* Marquee animation */}
         <style jsx>{`
-        @keyframes marquee {
-          0% {
-            transform: translateX(100%);
+          @keyframes marquee {
+            0% {
+              transform: translateX(100%);
+            }
+            100% {
+              transform: translateX(-100%);
+            }
           }
-          100% {
-            transform: translateX(-100%);
+          .animate-marquee {
+            display: inline-block;
+            animation: marquee 10s linear infinite;
           }
-        }
-        .animate-marquee {
-          display: inline-block;
-          animation: marquee 10s linear infinite;
-        }
-      `}</style>
+        `}</style>
       </div>
     </div>
   );
