@@ -180,26 +180,35 @@ function DashboardPage() {
             ))}
           </select>
 
-          {/* Center: Toggle Switch */}
-          <div className="flex justify-center flex-1">
-            <button
-              onClick={toggleBackground}
-              className={`relative inline-flex items-center justify-center w-14 h-8 rounded-full transition-colors duration-300
-    ${bgColor === 'white' ? 'bg-gray-300' : 'bg-yellow-500'}`}
-              aria-label="Toggle dark mode"
-            >
-              <span
-                className={`absolute left-1 top-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300
-    ${bgColor === 'white' ? 'translate-x-0' : 'translate-x-6'}`}
-              />
-              <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-700">
-                <MoonIcon className="h-5 w-5" />
-              </span>
-              <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-yellow-400">
-                <SunIcon className="h-5 w-5" />
-              </span>
-            </button>
-          </div>
+{/* Center: Toggle Switch */}
+<div className="flex justify-center flex-1">
+  <button
+    onClick={toggleBackground}
+    className={`relative inline-flex items-center justify-center w-14 h-8 rounded-full transition-colors duration-300 cursor-pointer
+      ${bgColor === 'white' 
+        ? 'bg-gradient-to-r from-gray-200 via-gray-300 to-gray-400 hover:from-gray-300 hover:via-gray-400 hover:to-gray-500 shadow-inner' 
+        : 'bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 hover:from-yellow-500 hover:via-yellow-600 hover:to-yellow-700 shadow-lg'}`}
+    aria-label="Toggle dark mode"
+    type="button"
+    onMouseDown={e => e.currentTarget.classList.add('active-scale')}
+    onMouseUp={e => e.currentTarget.classList.remove('active-scale')}
+    onMouseLeave={e => e.currentTarget.classList.remove('active-scale')}
+  >
+    <span
+      className={`absolute left-1 top-1 w-6 h-6 bg-white rounded-full shadow-lg transform transition-transform duration-300
+        ${bgColor === 'white' ? 'translate-x-0' : 'translate-x-6'}`}
+      style={{ boxShadow: '0 4px 8px rgba(0,0,0,0.25)' }}
+    />
+    <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-700 drop-shadow-sm">
+      <MoonIcon className="h-5 w-5" />
+    </span>
+    <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-yellow-400 drop-shadow-sm">
+      <SunIcon className="h-5 w-5" />
+    </span>
+  </button>
+</div>
+
+
 
           {/* Right: Close Button */}
           <button
