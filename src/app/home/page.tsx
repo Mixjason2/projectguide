@@ -12,7 +12,6 @@ import AllJobDetailsModal from "@/app/component/AllJobDetailsModal";
 import debounce from 'lodash.debounce';
 import AuthGuard from "@/app/component/AuthGuard";
 
-
 // Group jobs by their PNRDate
 function groupJobsByPNRDate(jobs: Job[]): Record<string, Job[]> {
   return jobs.reduce((acc, job) => {
@@ -65,6 +64,7 @@ useEffect(() => {
 useEffect(() => {
   // โหลด token จาก Cookie แทน localStorage
   const token = Cookies.get('token') || '';
+  setPage(1);
   const debouncedFetch = debounce(() => {
     setLoading(true);
     fetchJobs(token, startDate, endDate);
