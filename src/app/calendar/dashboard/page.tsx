@@ -16,6 +16,8 @@ function DashboardPage() {
   const lastScroll = useRef({ x: 0, y: 0 });
   const ticking = useRef(false);
   const [bgColor, setBgColor] = useState<string>('white');
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [imageSize, setImageSize] = useState<number>(100);
 
   const colorOptions = [
     { value: 'black', name: 'Black' },
@@ -125,20 +127,20 @@ function DashboardPage() {
     return names;
   });
 
-const extractSurname = (fullName: string): string => {
-  let cleanedName = fullName.trim();
+  const extractSurname = (fullName: string): string => {
+    let cleanedName = fullName.trim();
 
-  // ถ้าชื่ออยู่ในวงเล็บทั้งก้อน เช่น (TRIP MANAGER)
-  const bracketMatch = cleanedName.match(/^\(([^)]+)\)$/);
-  if (bracketMatch) {
-    // คืนชื่อเต็มที่อยู่ในวงเล็บเลย
-    return bracketMatch[1].trim();
-  }
+    // ถ้าชื่ออยู่ในวงเล็บทั้งก้อน เช่น (TRIP MANAGER)
+    const bracketMatch = cleanedName.match(/^\(([^)]+)\)$/);
+    if (bracketMatch) {
+      // คืนชื่อเต็มที่อยู่ในวงเล็บเลย
+      return bracketMatch[1].trim();
+    }
 
-  // กรณีอื่น ๆ ใช้ logic แบบเดิม: หา part ที่เป็น uppercase เดี่ยว ๆ
-  const uppercasePart = cleanedName.split(' ').find(part => part === part.toUpperCase());
-  return uppercasePart || cleanedName;
-};
+    // กรณีอื่น ๆ ใช้ logic แบบเดิม: หา part ที่เป็น uppercase เดี่ยว ๆ
+    const uppercasePart = cleanedName.split(' ').find(part => part === part.toUpperCase());
+    return uppercasePart || cleanedName;
+  };
 
 
   const surnameToNameMap = new Map<string, string>();
@@ -161,6 +163,19 @@ const extractSurname = (fullName: string): string => {
     } else {
       setBgColor('white');
       setTextColor('black');
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && (file.type === 'image/jpeg' || file.type === 'image/png')) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setUploadedImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      alert('กรุณาเลือกไฟล์รูป JPEG หรือ PNG เท่านั้น');
     }
   };
 
@@ -204,6 +219,12 @@ const extractSurname = (fullName: string): string => {
               </React.Fragment>
             ))}
           </select>
+          <input
+            type="file"
+            accept="image/jpeg, image/png"
+            onChange={handleImageUpload}
+            className="text-sm file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border file:border-gray-300 file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
+          />
 
           {/* Center: Toggle Switch */}
           <div className="flex justify-center flex-1">
@@ -284,7 +305,10 @@ const extractSurname = (fullName: string): string => {
           {/* Font Control */}
           <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
             <button
-              onClick={() => setFontSize(prev => Math.max(10, prev - 5))}
+              onClick={() => {
+                setFontSize(prev => Math.max(10, prev - 5));
+                setImageSize(prev => Math.max(10, prev - 5)); // ลดขนาดรูปด้วย
+              }}
               className={`px-4 py-2 text-2xl font-bold border rounded-lg hover:bg-gray-200 transition ${bgColor === 'white' ? 'text-black' : 'text-white'
                 }`}
             >
@@ -348,6 +372,7 @@ const extractSurname = (fullName: string): string => {
                   if (!showTopBar) setShowTopBar(true);
                   return newSize;
                 });
+                setImageSize(prev => prev + 5); // เพิ่มขนาดรูปด้วย
               }}
               className={`px-4 py-2 text-2xl font-bold border rounded-lg hover:bg-gray-200 transition ${bgColor === 'white' ? 'text-black' : 'text-white'
                 }`}
@@ -374,6 +399,16 @@ const extractSurname = (fullName: string): string => {
             </div>
           )}
         </div>
+        {uploadedImage && (
+          <div className="mt-6 flex justify-center">
+            <img
+              src={uploadedImage}
+              alt="Uploaded preview"
+              style={{ width: `${imageSize}%`, height: 'auto' }} // ใช้ขนาดตาม state
+              className="rounded-lg shadow-lg"
+            />
+          </div>
+        )}
 
         <style jsx>{`
           @keyframes marquee {
