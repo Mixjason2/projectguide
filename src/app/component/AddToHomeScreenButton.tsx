@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Swal from "sweetalert2";
 
 export default function AddToHomeScreenButton() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -23,12 +24,10 @@ export default function AddToHomeScreenButton() {
       const handler = (e: any) => {
         e.preventDefault();
         setDeferredPrompt(e);
-        // ไม่ต้องตั้ง showButton = true เพราะตอนแรกเราตั้ง true อยู่แล้ว
       };
 
       window.addEventListener("beforeinstallprompt", handler);
 
-      // ลบ event listener ตอน component unmount
       return () => {
         window.removeEventListener("beforeinstallprompt", handler);
       };
@@ -38,7 +37,12 @@ export default function AddToHomeScreenButton() {
   const handleInstallClick = async () => {
     const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
     if (isIOS) {
-      alert("📱 สำหรับ iPhone: กดปุ่ม Share แล้วเลือก 'Add to Home Screen'");
+      Swal.fire({
+        icon: "info",
+        title: "📱 สำหรับ iPhone",
+        text: "กดปุ่ม Share แล้วเลือก 'Add to Home Screen'",
+        confirmButtonText: "ตกลง",
+      });
     } else if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
@@ -49,9 +53,12 @@ export default function AddToHomeScreenButton() {
         setShowButton(false); // ซ่อนปุ่มหลังติดตั้ง
       }
     } else {
-      alert(
-        "📌 สำหรับ Android: กรุณาใช้เมนูของเบราว์เซอร์เพื่อเพิ่มไปที่หน้าจอหลัก"
-      );
+      Swal.fire({
+        icon: "info",
+        title: "📌 สำหรับ Android",
+        text: "กรุณาใช้เมนูของเบราว์เซอร์เพื่อเพิ่มไปที่หน้าจอหลัก",
+        confirmButtonText: "ตกลง",
+      });
     }
   };
 
