@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Job } from '../components/types';
-import { PaintBrushIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline';
+import { PaintBrushIcon, SunIcon, MoonIcon, CloudIcon } from '@heroicons/react/24/outline';
 
 function DashboardPage() {
   const router = useRouter();
@@ -54,10 +54,8 @@ function DashboardPage() {
         window.requestAnimationFrame(() => {
           const currentX = window.scrollX;
           const currentY = window.scrollY;
-
           const deltaX = currentX - lastScroll.current.x;
           const deltaY = currentY - lastScroll.current.y;
-
           const threshold = 3;
 
           if (Math.abs(deltaX) > threshold || Math.abs(deltaY) > threshold) {
@@ -80,7 +78,7 @@ function DashboardPage() {
 
   if (jobs === null)
     return (
-      <div className="flex h-screen justify-center items-center flex-col font-sans text-xl text-gray-600 bg-white text-black">
+      <div className="flex h-screen justify-center items-center flex-col font-sans text-xl text-gray-600 bg-white ">
         <div className="loader mb-4" />
         Loading dashboard...
         <style>{`
@@ -102,15 +100,46 @@ function DashboardPage() {
 
   if (jobs.length === 0) return <div className="text-black">No jobs found.</div>;
 
-  const allPaxNames = jobs.flatMap(job =>
-    typeof job.pax_name === 'string'
-      ? job.pax_name.split(';').map(name => name.trim())
-      : []
-  );
+  // ✅ แก้ฟังก์ชันรวมชื่อให้ดึงข้อมูลใน () แยกออกมาเป็นอีกชื่อ
+  const allPaxNames = jobs.flatMap(job => {
+    if (typeof job.pax_name !== 'string') return [];
 
-  const extractSurname = (fullName: string): string => {
-    return fullName.split(' ').find(part => part === part.toUpperCase()) || fullName;
-  };
+    let names: string[] = [];
+    let workingString = job.pax_name;
+
+    // ดึงข้อมูลในวงเล็บ
+    const bracketMatch = workingString.match(/\(([^)]+)\)/);
+    if (bracketMatch && bracketMatch[1]) {
+      names.push(bracketMatch[1].trim()); // <-- ตอนนี้ดึงมาแค่ข้างใน ()
+      workingString = workingString.replace(bracketMatch[0], '').trim(); // ลบออก
+    }
+
+
+    // แยกชื่อที่เหลือด้วย ;
+    const otherNames = workingString
+      .split(';')
+      .map(n => n.trim())
+      .filter(n => n.length > 0);
+
+    names.push(...otherNames);
+    return names;
+  });
+
+const extractSurname = (fullName: string): string => {
+  let cleanedName = fullName.trim();
+
+  // ถ้าชื่ออยู่ในวงเล็บทั้งก้อน เช่น (TRIP MANAGER)
+  const bracketMatch = cleanedName.match(/^\(([^)]+)\)$/);
+  if (bracketMatch) {
+    // คืนชื่อเต็มที่อยู่ในวงเล็บเลย
+    return bracketMatch[1].trim();
+  }
+
+  // กรณีอื่น ๆ ใช้ logic แบบเดิม: หา part ที่เป็น uppercase เดี่ยว ๆ
+  const uppercasePart = cleanedName.split(' ').find(part => part === part.toUpperCase());
+  return uppercasePart || cleanedName;
+};
+
 
   const surnameToNameMap = new Map<string, string>();
   allPaxNames.forEach(name => {
@@ -125,13 +154,12 @@ function DashboardPage() {
     setSelectedText(value || null);
   };
 
-  // ฟังก์ชันสลับโหมดพื้นหลังและสีข้อความ
   const toggleBackground = () => {
     if (bgColor === 'white') {
-      setBgColor('#000000ff'); // โหมดมืด
+      setBgColor('#000000ff');
       setTextColor('white');
     } else {
-      setBgColor('white'); // โหมดสว่าง
+      setBgColor('white');
       setTextColor('black');
     }
   };
@@ -140,7 +168,7 @@ function DashboardPage() {
     <div className="bg-white min-h-screen font-sans">
       <div
         className="min-h-screen font-sans transition-colors duration-300"
-        style={{ backgroundColor: bgColor }} // ลบ color: textColor ออกที่นี่
+        style={{ backgroundColor: bgColor }}
       >
         {/* Top Bar */}
         <div
@@ -177,69 +205,69 @@ function DashboardPage() {
             ))}
           </select>
 
-{/* Center: Toggle Switch */}
-<div className="flex justify-center flex-1">
-  <button
-    onClick={toggleBackground}
-    className={`relative inline-flex items-center justify-center w-14 h-8 rounded-full transition-colors duration-300
-      ${bgColor === 'white' ? 'bg-yellow-500' : 'bg-blue-900'}
-    `}
-    aria-label="Toggle dark mode"
-  >
-    {/* ลูกกลิ้งเลื่อน */}
-    <span
-      className={`absolute left-1 top-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300
-        ${bgColor === 'white' ? 'translate-x-0' : 'translate-x-6'}
-      `}
-    />
+          {/* Center: Toggle Switch */}
+          <div className="flex justify-center flex-1">
+            <button
+              onClick={toggleBackground}
+              className={`relative inline-flex items-center justify-center w-14 h-8 rounded-full transition-colors duration-300
+                ${bgColor === 'white' ? 'bg-yellow-500' : 'bg-blue-900'}
+              `}
+              aria-label="Toggle dark mode"
+            >
+              <span
+                className={`absolute left-1 top-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300
+                  ${bgColor === 'white' ? 'translate-x-0' : 'translate-x-6'}
+                `}
+              />
 
-{/* Sun Icon หรือ Animation ดาว */}
-{bgColor === 'white' ? (
-  <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-yellow-400">
-    <SunIcon className="h-5 w-5" />
-  </span>
-) : (
-  <span className="absolute left-2 top-1/2 w-10 h-6 transform -translate-y-1/2 relative">
-  {/* ดาวแต่ละดวงวางแบบ absolute กระจายทั่วพื้นที่ */}
-  <span
-    className="w-1.5 h-1.5 bg-yellow-300 rounded-full animate-pulse absolute"
-    style={{ top: '4px', left: '2px' }}
-  />
-  <span
-    className="w-1 h-1 bg-yellow-300 rounded-full animate-ping delay-150 absolute"
-    style={{ top: '1px', left: '12px' }}
-  />
-  <span
-    className="w-1.25 h-1.25 bg-yellow-300 rounded-full animate-pulse delay-300 absolute"
-    style={{ top: '2px', left: '7px' }}
-  />
-  <span
-    className="w-0.75 h-0.75 bg-yellow-300 rounded-full animate-ping delay-450 absolute"
-    style={{ top: '0px', left: '16px' }}
-  />
-</span>
+              {bgColor === 'white' ? (
+                <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-yellow-400">
+                  <SunIcon className="h-5 w-4.5" />
+                </span>
+              ) : (
+                <span className="absolute left-2 top-1/2 w-10 h-6 transform -translate-y-1/2 ">
+                  <span
+                    className="w-1.5 h-1.5 bg-yellow-300 rounded-full animate-pulse absolute"
+                    style={{ top: '9px', left: '3px' }}
+                  />
+                  <span
+                    className="w-1 h-1 bg-yellow-300 rounded-full animate-ping delay-150 absolute"
+                    style={{ top: '3px', left: '16px' }}
+                  />
+                  <span
+                    className="w-1.25 h-1.25 bg-yellow-300 rounded-full animate-pulse delay-300 absolute"
+                    style={{ top: '2px', left: '7px' }}
+                  />
+                  <span
+                    className="w-0.75 h-0.75 bg-yellow-300 rounded-full animate-ping delay-450 absolute"
+                    style={{ top: '5px', left: '16px' }}
+                  />
+                  <span
+                    className="w-1.5 h-1.5 bg-yellow-300 rounded-full animate-pulse absolute"
+                    style={{ top: '-5px', left: '0px' }}
+                  />
+                </span>
+              )}
 
-)}
-
-    {/* Moon Icon - ปรับ UI */}
-    <span
-      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-indigo-300 drop-shadow-[0_0_4px_rgba(147,197,253,0.7)] hover:text-indigo-100 transition-colors duration-300"
-      title="Dark mode"
-    >
-      <MoonIcon className="h-6 w-5" />
-    </span>
-  </button>
-</div>
-
-
-
+              <span
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-indigo-300 drop-shadow-[0_0_4px_rgba(147,197,253,0.7)] hover:text-indigo-100 transition-colors duration-300"
+                title={bgColor === 'white' ? 'Cloud mode' : 'Dark mode'}
+              >
+                {bgColor === 'white' ? (
+                  <CloudIcon className="h-6 w-5" />
+                ) : (
+                  <MoonIcon className="h-6 w-5" />
+                )}
+              </span>
+            </button>
+          </div>
 
           {/* Right: Close Button */}
           <button
             onClick={() => window.close()}
             className={`px-4 py-2 border rounded-lg transition shadow-sm ${bgColor === 'white'
-                ? 'bg-gray-50 border-gray-400 hover:bg-gray-200 text-black'
-                : 'bg-gray-800 border-gray-600 hover:bg-gray-700 text-white'
+              ? 'bg-gray-50 border-gray-400 hover:bg-gray-200 text-black'
+              : 'bg-gray-800 border-gray-600 hover:bg-gray-700 text-white'
               }`}
           >
             Close Tab
@@ -250,9 +278,7 @@ function DashboardPage() {
         <div
           className="p-6 transition-all duration-300"
           style={{
-            paddingTop: showTopBar
-              ? '80px'  // เพิ่มเผื่อพื้นที่ให้พอสำหรับ TopBar ตอนโชว์
-              : '0px'   // ลดพื้นที่ว่างเมื่อ TopBar ซ่อน
+            paddingTop: showTopBar ? '80px' : '0px'
           }}
         >
           {/* Font Control */}
@@ -272,10 +298,10 @@ function DashboardPage() {
                   if (!showTopBar) setShowTopBar(true);
                 }}
                 className={`px-4 py-2 border rounded-lg flex items-center gap-2 transition ${isRunning
-                    ? 'bg-green-500 text-white shadow'
-                    : bgColor === 'white'
-                      ? 'text-black hover:bg-gray-200'
-                      : 'text-white hover:bg-gray-700'
+                  ? 'bg-green-500 text-white shadow'
+                  : bgColor === 'white'
+                    ? 'text-black hover:bg-gray-200'
+                    : 'text-white hover:bg-gray-700'
                   }`}
               >
                 ⇐𝔸
@@ -312,7 +338,6 @@ function DashboardPage() {
                     </option>
                   ))}
                 </select>
-
               </div>
             </div>
 
@@ -350,7 +375,6 @@ function DashboardPage() {
           )}
         </div>
 
-        {/* Marquee animation */}
         <style jsx>{`
           @keyframes marquee {
             0% {
