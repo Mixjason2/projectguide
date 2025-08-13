@@ -1,0 +1,21 @@
+{
+  "name": "DTH Travel",
+  "short_name": "DTH",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#2D3E92",
+  "theme_color": "#2D3E92",
+  "description": "DTH Travel mobile shortcut",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
