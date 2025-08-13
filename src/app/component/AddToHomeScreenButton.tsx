@@ -64,12 +64,12 @@ export default function AddToHomeScreenButton() {
 
   if (!showButton) return null;
 
-  return (
-    <button
-      onClick={handleInstallClick}
-      className="w-full px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
-    >
-      📌 เพิ่มไปที่หน้าจอหลัก
-    </button>
-  );
+//   return (
+//     <button
+//       onClick={handleInstallClick}
+//       className="w-full px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+//     >
+//       📌 เพิ่มไปที่หน้าจอหลัก
+//     </button>
+//   );
 }
