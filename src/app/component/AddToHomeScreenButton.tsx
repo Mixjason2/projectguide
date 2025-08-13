@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 export default function AddToHomeScreenButton() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [showButton, setShowButton] = useState(false);
+  const [showButton, setShowButton] = useState(true); // เริ่มให้ปุ่มแสดงเลย
 
   useEffect(() => {
     const checkIfInstalled = () => {
@@ -13,24 +13,30 @@ export default function AddToHomeScreenButton() {
         (isIOS && (window.navigator as any).standalone === true);
 
       if (isStandalone) {
-        setShowButton(false); // ซ่อนปุ่มถ้าติดตั้งแล้ว
+        setShowButton(false); // ซ่อนปุ่มถ้าติดตั้งแล้ว (เปิดจาก shortcut)
         return true;
       }
       return false;
     };
 
     if (!checkIfInstalled()) {
-      window.addEventListener("beforeinstallprompt", (e) => {
+      const handler = (e: any) => {
         e.preventDefault();
         setDeferredPrompt(e);
-        setShowButton(true);
-      });
+        // ไม่ต้องตั้ง showButton = true เพราะตอนแรกเราตั้ง true อยู่แล้ว
+      };
+
+      window.addEventListener("beforeinstallprompt", handler);
+
+      // ลบ event listener ตอน component unmount
+      return () => {
+        window.removeEventListener("beforeinstallprompt", handler);
+      };
     }
   }, []);
 
   const handleInstallClick = async () => {
     const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-
     if (isIOS) {
       alert("📱 สำหรับ iPhone: กดปุ่ม Share แล้วเลือก 'Add to Home Screen'");
     } else if (deferredPrompt) {
@@ -42,6 +48,10 @@ export default function AddToHomeScreenButton() {
       if (outcome === "accepted") {
         setShowButton(false); // ซ่อนปุ่มหลังติดตั้ง
       }
+    } else {
+      alert(
+        "📌 สำหรับ Android: กรุณาใช้เมนูของเบราว์เซอร์เพื่อเพิ่มไปที่หน้าจอหลัก"
+      );
     }
   };
 
