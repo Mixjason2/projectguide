@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Job } from '../components/types';
 import FadeButtons from './fadeButtons';
 import { PaintBrushIcon, SunIcon, MoonIcon, CloudIcon } from '@heroicons/react/24/outline';
+import Image from 'next/image';
 
 function DashboardPage() {
   const router = useRouter();
@@ -109,13 +110,14 @@ function DashboardPage() {
   const allPaxNames = jobs.flatMap(job => {
     if (typeof job.pax_name !== 'string') return [];
 
-    let names: string[] = [];
+    const names: string[] = [];
     let workingString = job.pax_name;
 
-    const bracketMatch = workingString.match(/\(([^)]+)\)/);
-    if (bracketMatch && bracketMatch[1]) {
-      names.push(bracketMatch[1].trim());
-      workingString = workingString.replace(bracketMatch[0], '').trim();
+    // ตัดชื่อแรกออกจากวงเล็บ ถ้ามี
+    const firstSplit = workingString.split(';');
+    if (firstSplit.length > 0) {
+      firstSplit[0] = firstSplit[0].replace(/\(([^)]+)\)\s*/, '').trim();
+      workingString = firstSplit.join(';');
     }
 
     const otherNames = workingString
@@ -128,7 +130,7 @@ function DashboardPage() {
   });
 
   const extractSurname = (fullName: string): string => {
-    let cleanedName = fullName.trim();
+    const cleanedName = fullName.trim();
     const bracketMatch = cleanedName.match(/^\(([^)]+)\)$/);
     if (bracketMatch) return bracketMatch[1].trim();
     const uppercasePart = cleanedName.split(' ').find(part => part === part.toUpperCase());
@@ -213,9 +215,21 @@ function DashboardPage() {
               {jobs.map((job, index) => (
                 <React.Fragment key={index}>
                   {job.PNR && <option value={job.PNR}>PNR: {job.PNR}</option>}
-                  {<option value={job.agentName}> AgentName: {job.agentName}</option>}
+
+
+                  <option
+                    value={job.agentName}
+                  >
+                    AgentName: {job.agentName.toLowerCase()}
+                  </option>
+
+
                   {typeof job.Booking_Name === 'string' && (
-                    <option value={job.Booking_Name}>{job.Booking_Name}</option>
+                    <option
+                      value={job.Booking_Name.split('/').slice(0, 2).map(s => s.trim()).join('  ')}
+                    >
+                      {job.Booking_Name.split('/').slice(0, 2).map(s => s.trim()).join('  ')}
+                    </option>
                   )}
                 </React.Fragment>
               ))}
@@ -414,16 +428,20 @@ function DashboardPage() {
           )}
         </div>
 
+
         {uploadedImage && (
-          <div className="mt-6 flex justify-center">
-            <img
+          <div className="mt-6 flex justify-center relative w-full" style={{ height: 'auto', minHeight: '200px' }}>
+            <Image
               src={uploadedImage}
               alt="Uploaded preview"
-              style={{ width: `${imageSize}%`, height: 'auto' }}
+              width={imageSize * 10} // ปรับให้เหมาะกับขนาดจริง
+              height={imageSize * 6} // อัตราส่วนประมาณ
               className="rounded-lg shadow-lg"
+              style={{ objectFit: 'contain' }}
             />
           </div>
         )}
+
 
         <style jsx>{`
           @keyframes marquee {

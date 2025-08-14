@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
-import AddToHomeScreenButton from "./component/AddToHomeScreenButton";
+// import AddToHomeScreenButton from "./component/AddToHomeScreenButton";
 
 export default function CssgGuide({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -115,10 +115,9 @@ export default function CssgGuide({ children }: { children: React.ReactNode }) {
                   />
                 </svg>
               </button>
-              <div className="p-4">
-                {/* เมนูอื่น ๆ */}
+              {/* <div className="p-4">
                 <AddToHomeScreenButton />
-              </div>
+              </div> */}
             </div>
 
             {/* Menu items and logout */}
