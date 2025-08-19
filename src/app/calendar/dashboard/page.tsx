@@ -220,9 +220,8 @@ function DashboardPage() {
                   <option
                     value={job.agentName}
                   >
-                    AgentName: {job.agentName.toLowerCase()}
+                    AgentName: {typeof job.agentName === 'string' ? job.agentName.toLowerCase() : job.agentName ?? ''}
                   </option>
-
 
                   {typeof job.Booking_Name === 'string' && (
                     <option
