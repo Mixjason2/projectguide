@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Job } from '../components/types';
+import type { Job } from '../components/types';
 import FadeButtons from './fadeButtons';
+import DraggableResizableBox from './DraggableResizableBox';
 import { PaintBrushIcon, SunIcon, MoonIcon, CloudIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 
@@ -55,33 +56,33 @@ function DashboardPage() {
     }
   }, [fontSize]);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!ticking.current) {
-        window.requestAnimationFrame(() => {
-          const currentX = window.scrollX;
-          const currentY = window.scrollY;
-          const deltaX = currentX - lastScroll.current.x;
-          const deltaY = currentY - lastScroll.current.y;
-          const threshold = 3;
+  // useEffect(() => {
+  //   const handleScroll = () => {
+  //     if (!ticking.current) {
+  //       window.requestAnimationFrame(() => {
+  //         const currentX = window.scrollX;
+  //         const currentY = window.scrollY;
+  //         const deltaX = currentX - lastScroll.current.x;
+  //         const deltaY = currentY - lastScroll.current.y;
+  //         const threshold = 3;
 
-          if (Math.abs(deltaX) > threshold || Math.abs(deltaY) > threshold) {
-            if (deltaX > 0 || deltaY > 0) {
-              if (showTopBar) setShowTopBar(false);
-            } else if (deltaX < 0 || deltaY < 0) {
-              if (!showTopBar) setShowTopBar(true);
-            }
-            lastScroll.current = { x: currentX, y: currentY };
-          }
-          ticking.current = false;
-        });
-        ticking.current = true;
-      }
-    };
+  //         if (Math.abs(deltaX) > threshold || Math.abs(deltaY) > threshold) {
+  //           if (deltaX > 0 || deltaY > 0) {
+  //             if (showTopBar) setShowTopBar(false);
+  //           } else if (deltaX < 0 || deltaY < 0) {
+  //             if (!showTopBar) setShowTopBar(true);
+  //           }
+  //           lastScroll.current = { x: currentX, y: currentY };
+  //         }
+  //         ticking.current = false;
+  //       });
+  //       ticking.current = true;
+  //     }
+  //   };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [showTopBar]);
+  //   window.addEventListener('scroll', handleScroll, { passive: true });
+  //   return () => window.removeEventListener('scroll', handleScroll);
+  // }, [showTopBar]);
 
   if (jobs === null)
     return (
@@ -216,19 +217,14 @@ function DashboardPage() {
                 <React.Fragment key={index}>
                   {job.PNR && <option value={job.PNR}>PNR: {job.PNR}</option>}
 
-
-                  <option
-                    value={job.agentName}
-                  >
-                    AgentName: {job.agentName.toLowerCase()}
+                  <option key={job.key} value={job.agentName ?? ''}>
+                    AgentName: {job.agentName?.toLowerCase() ?? 'N/A'}
                   </option>
-
 
                   {typeof job.Booking_Name === 'string' && (
                     <option
-                      value={job.Booking_Name.split('/').slice(0, 2).map(s => s.trim()).join('  ')}
-                    >
-                      {job.Booking_Name.split('/').slice(0, 2).map(s => s.trim()).join('  ')}
+                      value={job.Booking_Name}>
+                      BookingName:{job.Booking_Name.split('/').slice(0, 2).map(s => s.trim()).join('  ')}
                     </option>
                   )}
                 </React.Fragment>
@@ -413,34 +409,50 @@ function DashboardPage() {
           {selectedText && (
             <div className="mt-6 px-4 w-full pt-[40px]">
               <div
-                className={`font-bold text-center uppercase break-words ${isRunning ? 'animate-marquee' : ''}`}
-                style={{
-                  fontSize: `${fontSize}px`,
-                  whiteSpace: isRunning ? 'nowrap' : 'normal',
-                  overflow: 'visible',
-                  color: textColor,
-                  paddingTop: '125px',
-                }}
+                className="w-full flex justify-center items-center" // ปรับความสูงให้พอสำหรับการจัดกลาง
               >
-                {selectedText}
+                <DraggableResizableBox
+                  minWidth={fontSize * (selectedText?.length || 1) * 0.6}
+                  minHeight={fontSize * 1.2}
+                  lockAspectRatio={false}
+                >
+                  <div
+                    className={`font-bold text-center uppercase break-words ${isRunning ? 'animate-marquee' : ''}`}
+                    style={{
+                      fontSize: `${fontSize}px`,
+                      whiteSpace: 'nowrap',
+                      overflow: 'visible',
+                      color: textColor,
+                      padding: '0px',
+                      textAlign: 'center',
+                    }}
+                  >
+                    {selectedText}
+                  </div>
+                </DraggableResizableBox>
               </div>
             </div>
           )}
         </div>
 
+{uploadedImage && (
+  <div className="mt-6 relative w-full" style={{ minHeight: '200px' }}>
+    <DraggableResizableBox
+      defaultWidth={500}
+      defaultHeight={300}
+    >
+      <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+        <Image
+          src={uploadedImage}
+          alt="Uploaded preview"
+          fill // ใช้แทน width/height
+          style={{ objectFit: 'contain' }} // หรือ 'cover' ตามต้องการ
+        />
+      </div>
+    </DraggableResizableBox>
+  </div>
+)}
 
-        {uploadedImage && (
-          <div className="mt-6 flex justify-center relative w-full" style={{ height: 'auto', minHeight: '200px' }}>
-            <Image
-              src={uploadedImage}
-              alt="Uploaded preview"
-              width={imageSize * 10} // ปรับให้เหมาะกับขนาดจริง
-              height={imageSize * 6} // อัตราส่วนประมาณ
-              className="rounded-lg shadow-lg"
-              style={{ objectFit: 'contain' }}
-            />
-          </div>
-        )}
 
 
         <style jsx>{`

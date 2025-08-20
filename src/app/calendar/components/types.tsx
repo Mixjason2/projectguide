@@ -16,6 +16,7 @@ export type Job = {
   InfantQty: number;
   pax_name: ReactNode;
   Booking_Name: ReactNode;
+  agentName?: string; 
   serviceProductName: ReactNode;
 };
 
@@ -29,3 +30,4 @@ export const getToday = () => new Date().toISOString().slice(0, 10);
 
 export const getEndOfMonth = () =>
   new Date(new Date().setMonth(new Date().getMonth() + 1, 0)).toISOString().slice(0, 10);
+
