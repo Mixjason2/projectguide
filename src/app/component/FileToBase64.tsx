@@ -233,15 +233,19 @@ const UploadImagesWithRemark: React.FC<{
         emails_CC: "",
         subject: `Updated: ${job.PNR}`,
         body: `
-    <p><strong>📌 Remark:</strong> ${remark || "-"}</p>
-    <p><strong>📎 Attachments (via URL):</strong></p>
-    ${previewBase64List
+  <p><strong>📌 Remark:</strong> ${remark || "-"}</p>
+  <p><strong>📎 Attachments (preview):</strong></p>
+  <table style="border-collapse: collapse;">
+    ${getImageRowsHtml(previewBase64List)}
+  </table>
+  <p><strong>🔗 View Images (Download URL):</strong></p>
+  ${previewBase64List
             .map(
               (_img, idx) =>
                 `<p><a href="https://operation.dth.travel:7082/api/download/image/${asmdbValue}/${_img.id}" target="_blank">📸 View Image ${idx + 1}</a></p>`
             )
             .join("")}
-  `,
+`,
       });
 
       setIsEditing(false);

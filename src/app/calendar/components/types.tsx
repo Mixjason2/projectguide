@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 export type Job = {
+  agentName: string | number | readonly string[] | undefined;
   isNew: unknown;
   IsConfirmed: unknown;
   isChange: boolean;

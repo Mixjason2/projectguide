@@ -218,7 +218,7 @@ function DashboardPage() {
                   {job.PNR && <option value={job.PNR}>PNR: {job.PNR}</option>}
 
                   <option key={job.key} value={job.agentName ?? ''}>
-                    AgentName: {job.agentName?.toLowerCase() ?? 'N/A'}
+                    AgentName: {job.agentName ? String(job.agentName).toLowerCase() : 'N/A'}
                   </option>
 
                   {typeof job.Booking_Name === 'string' && (
@@ -435,25 +435,24 @@ function DashboardPage() {
           )}
         </div>
 
-{uploadedImage && (
-  <div className="mt-6 relative w-full" style={{ minHeight: '200px' }}>
-    <DraggableResizableBox
-      defaultWidth={500}
-      defaultHeight={300}
-    >
-      <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-        <Image
-          src={uploadedImage}
-          alt="Uploaded preview"
-          fill // ใช้แทน width/height
-          style={{ objectFit: 'contain' }} // หรือ 'cover' ตามต้องการ
-        />
-      </div>
-    </DraggableResizableBox>
-  </div>
-)}
+        {uploadedImage && (
+          <div className="mt-6 relative w-full" style={{ minHeight: '200px' }}>
+            <DraggableResizableBox
+              defaultWidth={500}
+              defaultHeight={300}
+            >
+              <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                <Image
+                  src={uploadedImage}
+                  alt="Uploaded preview"
+                  fill
+                  style={{ objectFit: 'contain' }} // ยืด image ตามกล่อง แต่ไม่บิด
+                />
+              </div>
+            </DraggableResizableBox>
 
-
+          </div>
+        )}
 
         <style jsx>{`
           @keyframes marquee {
