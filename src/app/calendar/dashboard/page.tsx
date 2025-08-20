@@ -93,14 +93,32 @@ function DashboardPage() {
     if (!surnameToNameMap.has(surname)) surnameToNameMap.set(surname, name);
   });
 
-  // ฟังก์ชัน toggle สำหรับ checkbox
+  // คืนค่านามสกุล สำหรับชื่อเต็ม (fallback -> extractSurname)
+  const getSurnameByFullName = (fullName: string): string => {
+    for (const [surname, name] of surnameToNameMap.entries()) {
+      if (name === fullName) return surname;
+    }
+    return extractSurname(fullName);
+  };
+
+  // toggle checkbox ใน dropdown (เก็บเป็นชื่อเต็ม)
   const handleCheckboxChange = (value: string) => {
     setSelectedTexts(prev =>
-      prev.includes(value)
-        ? prev.filter(v => v !== value)
-        : [...prev, value]
+      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
     );
   };
+
+  // เลือกจาก <select> ให้เพิ่มเข้า selectedTexts (ถ้าเป็นรายการแบบ single-option)
+  const handleSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    if (!value) return;
+    // ถ้า value เป็นนามสกุล ให้แปลงกลับเป็นชื่อเต็ม (ถ้ามี)
+    const maybeFull = surnameToNameMap.get(value) ?? value;
+    if (!selectedTexts.includes(maybeFull)) setSelectedTexts(prev => [...prev, maybeFull]);
+  };
+
+  // ปิด/เปิด dropdown helper
+  const toggleDropdown = () => setShowDropdown(prev => !prev);
 
   const toggleBackground = () => {
     if (bgColor === 'white') {
@@ -173,95 +191,100 @@ function DashboardPage() {
               transition: 'opacity 0.3s ease',
             }}
           >
-{/* Multi-select Dropdown (replaces single select) */}
-<div className="relative w-fit max-w-[250px]">
-  <button
-    className={`px-4 py-2 text-base border rounded-lg shadow-sm w-full text-left focus:ring-2 focus:ring-blue-400 transition
+            {/* Multi-select Dropdown (replaces single select) */}
+            <div className="relative w-fit max-w-[250px]">
+              <button
+                className={`px-4 py-2 text-base border rounded-lg shadow-sm w-full text-left focus:ring-2 focus:ring-blue-400 transition
       ${bgColor === 'white' ? 'bg-white text-black border-gray-300' : 'bg-gray-800 text-white border-gray-600'}
       truncate whitespace-nowrap overflow-hidden`}
-    onClick={() => setShowDropdown(prev => !prev)}
-    title={selectedTexts.length > 0 ? selectedTexts.join(', ') : 'Select passengers'}
-  >
-    {selectedTexts.length > 0
-      ? selectedTexts.join(', ')
-      : 'Select passengers'}
-  </button>
-{showDropdown && (
-  <div
-    className="absolute mt-1 w-full bg-white border rounded-lg shadow-lg overflow-y-auto z-60"
-    style={{ maxHeight: '400px', overflowY: 'auto' }} // ให้สูงสุด 400px แต่ถ้าไม่ถึงก็ไม่ scroll
-  >
-    {[...surnameToNameMap.entries()].map(([surname, name]) => (
-      <label
-        key={surname}
-        className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer"
-      >
-        <input
-          type="checkbox"
-          className="mr-2"
-          checked={selectedTexts.includes(name)}
-          onChange={() => handleCheckboxChange(name)}
-        />
-        <span className="truncate" style={{ display: 'block', maxWidth: 'calc(100% - 24px)' }}>
-          {name}
-        </span>
-      </label>
-    ))}
-    {/* job items */}
-    {jobs.map((job, index) => {
-      const bookingText: string | null = typeof job.Booking_Name === 'string'
-        ? job.Booking_Name.split('/').slice(0, 2).map(s => s.trim()).join('  ')
-        : null;
-
-      return (
-        <React.Fragment key={`job-${index}`}>
-          {job.PNR && (
-            <label className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer">
-              <input
-                type="checkbox"
-                className="mr-2"
-                checked={selectedTexts.includes(`PNR: ${job.PNR}`)}
-                onChange={() => handleCheckboxChange(`PNR: ${job.PNR}`)}
-              />
-              <span className="truncate" style={{ display: 'block', maxWidth: 'calc(100% - 24px)' }}>
-                PNR: {job.PNR}
-              </span>
-            </label>
-          )}
-
-          <label className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer">
-            <input
-              type="checkbox"
-              className="mr-2"
-              checked={selectedTexts.includes(`AgentName: ${job.agentName ?? 'N/A'}`)}
-              onChange={() => handleCheckboxChange(`AgentName: ${job.agentName ?? 'N/A'}`)}
-            />
-            <span className="truncate" style={{ display: 'block', maxWidth: 'calc(100% - 24px)' }}>
-              AgentName: {job.agentName ? String(job.agentName).toLowerCase() : 'N/A'}
-            </span>
-          </label>
-
-          {bookingText && (
-            <label className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer">
-              <input
-                type="checkbox"
-                className="mr-2"
-                checked={selectedTexts.includes(`BookingName: ${bookingText}`)}
-                onChange={() => handleCheckboxChange(`BookingName: ${bookingText}`)}
-              />
-              <span className="truncate" style={{ display: 'block', maxWidth: 'calc(100% - 24px)' }}>
-                BookingName: {bookingText}
-              </span>
-            </label>
-          )}
-        </React.Fragment>
-      );
-    })}
-  </div>
-)}
+                onClick={() => setShowDropdown(prev => !prev)}
+                title={selectedTexts.length > 0 ? selectedTexts.join(', ') : 'Select passengers'}
+              >
+                {selectedTexts.length > 0
+                  ? selectedTexts.join(', ')
+                  : 'Select passengers'}
+              </button>
+              {showDropdown && (
+                <div
+                  className="absolute mt-1 w-full bg-white border rounded-lg shadow-lg overflow-y-auto z-60"
+                  style={{ maxHeight: '400px', overflowY: 'auto' }}
+                >
+                  {[...surnameToNameMap.entries()].map(([surname, fullName]) => (
+                    <label
+                      key={surname}
+                      className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        className="mr-2"
+                        checked={selectedTexts.includes(surname)}   // ✅ ใช้ surname (เก็บคำแรก)
+                        onChange={() => handleCheckboxChange(surname)} // ✅ เวลาเลือกก็ส่ง surname
+                      />
+                      <span
+                        className="truncate"
+                        style={{ display: 'block', maxWidth: 'calc(100% - 24px)' }}
+                      >
+                        {fullName} {/* ✅ โชว์ชื่อเต็ม */}
+                      </span>
+                    </label>
+                  ))}
 
 
-</div>
+                  {jobs.map((job, index) => {
+                    const bookingText: string | null = typeof job.Booking_Name === 'string'
+                      ? job.Booking_Name.split('/').slice(0, 2).map(s => s.trim()).join('  ')
+                      : null;
+
+                    return (
+                      <React.Fragment key={`job-${index}`}>
+                        {job.PNR && (
+                          <label className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="mr-2"
+                              checked={selectedTexts.includes(job.PNR)} // <-- ใช้แค่ค่าล้วน
+                              onChange={() => handleCheckboxChange(job.PNR)} // <-- ใช้แค่ค่าล้วน
+                            />
+                            <span className="truncate" style={{ display: 'block', maxWidth: 'calc(100% - 24px)' }}>
+                              PNR: {job.PNR} {/* <-- แสดงแบบมี prefix */}
+                            </span>
+                          </label>
+                        )}
+
+                        <label className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="mr-2"
+                            checked={selectedTexts.includes(String(job.agentName ?? 'N/A'))}
+                            onChange={() => handleCheckboxChange(String(job.agentName ?? 'N/A'))}
+                          />
+                          <span className="truncate" style={{ display: 'block', maxWidth: 'calc(100% - 24px)' }}>
+                            AgentName: {job.agentName ? String(job.agentName).toLowerCase() : 'N/A'}
+                          </span>
+                        </label>
+
+                        {bookingText && (
+                          <label className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="mr-2"
+                              checked={selectedTexts.includes(bookingText)}
+                              onChange={() => handleCheckboxChange(bookingText)}
+                            />
+                            <span className="truncate" style={{ display: 'block', maxWidth: 'calc(100% - 24px)' }}>
+                              BookingName: {bookingText}
+                            </span>
+                          </label>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
+              )}
+
+
+
+            </div>
 
 
             <input
@@ -346,10 +369,9 @@ function DashboardPage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
-
         {/* Content */}
         <div
-          className="p-6 transition-all duration-300"
+          className="p-6 transition-all duration-300 flex flex-col items-center"
           style={{
             paddingTop: showTopBar ? `${expandedHeight + 24}px` : `${collapsedHeight + 24}px`,
           }}
@@ -357,7 +379,7 @@ function DashboardPage() {
           {/* Wrapper สำหรับ fade effect */}
           <FadeButtons>
             {/* Font Control */}
-            <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+            <div className="flex items-center justify-between mb-8 flex-wrap gap-4 w-full max-w-4xl">
               <button
                 onClick={() => {
                   setFontSize(prev => Math.max(10, prev - 5));
@@ -437,41 +459,42 @@ function DashboardPage() {
           </FadeButtons>
 
           {/* Selected Texts Display */}
-          <div className="mt-6 px-4 w-full pt-[40px]">
-            <div className="w-full flex flex-col items-center gap-4">
-              {selectedTexts.length === 0 && (
-                <div className="text-sm text-gray-500">No passenger selected.</div>
-              )}
+          <div className="mt-6 px-4 w-full max-w-4xl flex flex-col items-center">
+            {selectedTexts.length === 0 && (
+              <div className="text-sm text-gray-500 text-center"></div>
+            )}
 
-              {selectedTexts.map((text, idx) => (
-                <div key={idx} className="w-full flex justify-center items-center">
-                  <DraggableResizableBox
-                    minWidth={fontSize * (text?.length || 1) * 0.6}
-                    minHeight={fontSize * 1.2}
-                    lockAspectRatio={false}
-                    borderWidth={2}
+            {selectedTexts.map((text, idx) => (
+              <div key={idx} className="w-full flex justify-center items-center">
+                <DraggableResizableBox
+                  minWidth={fontSize * (text?.length || 1) * 0.6}
+                  minHeight={fontSize * 1.2}
+                  lockAspectRatio={false}
+                  borderWidth={2}
+                >
+                  <div
+                    className={`font-bold text-center uppercase break-words ${isRunning ? 'animate-marquee' : ''}`}
+                    style={{
+                      fontSize: `${fontSize}px`,
+                      color: textColor,
+                      padding: '8px 12px',         // เพิ่ม padding ให้เว้นที่สวย
+                      lineHeight: 1.4,             // เพิ่มระยะบรรทัด
+                      textAlign: 'center',
+                      maxWidth: '100%',
+                      overflowWrap: 'break-word',
+                      wordBreak: 'break-word',
+                      whiteSpace: 'pre-wrap',
+                    }}
                   >
-                    <div
-                      className={`font-bold text-center uppercase break-words ${isRunning ? 'animate-marquee' : ''}`}
-                      style={{
-                        fontSize: `${fontSize}px`,
-                        whiteSpace: 'nowrap',
-                        overflow: 'visible',
-                        color: textColor,
-                        padding: '0px',
-                        textAlign: 'center',
-                      }}
-                    >
-                      {text}
-                    </div>
-                  </DraggableResizableBox>
-                </div>
-              ))}
-            </div>
+                    {text}
+                  </div>
+                </DraggableResizableBox>
+              </div>
+            ))}
           </div>
 
           {uploadedImage && (
-            <div className="mt-6 relative w-full" style={{ minHeight: '200px' }}>
+            <div className="mt-6 w-full flex justify-center" style={{ minHeight: '200px' }}>
               <DraggableResizableBox
                 defaultWidth={500}
                 defaultHeight={300}
@@ -492,16 +515,17 @@ function DashboardPage() {
           )}
 
           <style jsx>{`
-            @keyframes marquee {
-              0% { transform: translateX(100%); }
-              100% { transform: translateX(-100%); }
-            }
-            .animate-marquee {
-              display: inline-block;
-              animation: marquee 10s linear infinite;
-            }
-          `}</style>
+    @keyframes marquee {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+    .animate-marquee {
+      display: inline-block;
+      animation: marquee 10s linear infinite;
+    }
+  `}</style>
         </div>
+
       </div>
     </div>
   );

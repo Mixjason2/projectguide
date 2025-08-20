@@ -21,27 +21,28 @@ const UploadImagesWithRemark: React.FC<{
   const [hasUploaded, setHasUploaded] = useState<boolean>(false);
   const [previewModal, setPreviewModal] = useState<{ base64: string; index: number } | null>(null);
   const [totalCompressedSize, setTotalCompressedSize] = useState<number>(0);
+  const [beforeRemark, setBeforeRemark] = useState<string>("");
+  const [beforeImages, setBeforeImages] = useState<PreviewImage[]>([]);
 
   const imagesPerRow = 4;
 
-  const getImageRowsHtml = (images: PreviewImage[]) => {
+  const getImageRowsHtml = (images: PreviewImage[], imagesPerRow = 4) => {
     let rowsHtml = "";
     for (let i = 0; i < images.length; i += imagesPerRow) {
       const rowImages = images.slice(i, i + imagesPerRow);
       const tds = rowImages
         .map(
           (img, idx) => `
-          <td style="padding:5px; text-align:center;">
-            <img
-              src="${img.base64}"
-              alt="Image ${i + idx + 1}"
-              style="width: 80px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);"
-            />
-          </td>
-        `
+        <td style="padding:5px; text-align:center;">
+          <img
+            src="${img.base64}"
+            alt="Image ${i + idx + 1}"
+            style="width: 100px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);"
+          />
+        </td>
+      `
         )
         .join("");
-
       rowsHtml += `<tr>${tds}</tr>`;
     }
     return rowsHtml;
@@ -61,14 +62,24 @@ const UploadImagesWithRemark: React.FC<{
           if (matched) {
             setUploadedData(res.data);
             setHasUploaded(true);
-            if (!preserveEditMode) setIsEditing(false); // ✅ เปลี่ยนตรงนี้
-            // ตอนโหลดรูปจาก backend ให้ map มาใส่ id ใหม่
+            if (!preserveEditMode) setIsEditing(false);
+
+            // ✅ แก้ตรงนี้: set beforeRemark และ beforeImages
+            setBeforeRemark(matched.Remark || "");
+            setBeforeImages(
+              matched.Images.map((img: ImageData) => ({
+                id: generateUniqueId(), // หรือ img.Id ถ้าอยากใช้ id เดิม
+                base64: img.ImageBase64,
+              }))
+            );
+
             setPreviewBase64List(
               matched.Images.map((img: ImageData) => ({
                 id: generateUniqueId(),
                 base64: img.ImageBase64,
               }))
             );
+
             const totalSizeFromBackend = matched.Images.reduce((acc: number, img: ImageData) => {
               const sizeInBytes = (img.ImageBase64.length * 3) / 4;
               return acc + sizeInBytes;
@@ -82,6 +93,8 @@ const UploadImagesWithRemark: React.FC<{
             setIsEditing(false);
             setPreviewBase64List([]);
             setRemark("");
+            setBeforeRemark("");
+            setBeforeImages([]);
           }
         } else {
           setUploadedData([]);
@@ -89,6 +102,8 @@ const UploadImagesWithRemark: React.FC<{
           setIsEditing(false);
           setPreviewBase64List([]);
           setRemark("");
+          setBeforeRemark("");
+          setBeforeImages([]);
         }
       } catch (error) {
         console.error("❌ ดึงข้อมูลไม่สำเร็จ:", error);
@@ -97,10 +112,14 @@ const UploadImagesWithRemark: React.FC<{
         setIsEditing(false);
         setPreviewBase64List([]);
         setRemark("");
+        setBeforeRemark("");
+        setBeforeImages([]);
       } finally {
         setInitialLoading(false);
       }
-    }, [keyValue, token]);
+    },
+    [keyValue, token]
+  );
 
   useEffect(() => {
     fetchUploadedData();
@@ -233,13 +252,30 @@ const UploadImagesWithRemark: React.FC<{
         emails_CC: "",
         subject: `Updated: ${job.PNR}`,
         body: `
-  <p><strong>📌 Remark:</strong> ${remark || "-"}</p>
-  <p><strong>📎 Attachments (preview):</strong></p>
-  <table style="border-collapse: collapse;">
-    ${getImageRowsHtml(previewBase64List)}
-  </table>
-  <p><strong>🔗 View Images (Download URL):</strong></p>
-  ${previewBase64List
+<h3>📌 Remark Changes</h3>
+<p><strong>Before:</strong> ${beforeRemark || "-"}</p>
+<p><strong>After:</strong> ${remark || "-"}</p>
+
+<h3>📎 Attachments (Preview Only)</h3>
+<table style="width:100%; border-collapse: collapse;">
+  <tr>
+    <td style="width:50%; vertical-align:top; padding:5px;">
+      <h4>Before</h4>
+      <table style="border-collapse: collapse;">
+        ${getImageRowsHtml(beforeImages, 3)}
+      </table>
+    </td>
+    <td style="width:50%; vertical-align:top; padding:5px;">
+      <h4>After</h4>
+      <table style="border-collapse: collapse;">
+        ${getImageRowsHtml(previewBase64List, 3)}
+      </table>
+    </td>
+  </tr>
+</table>
+
+<p><strong>🔗 View Images (Download URL):</strong></p>
+${previewBase64List
             .map(
               (_img, idx) =>
                 `<p><a href="https://operation.dth.travel:7082/api/download/image/${asmdbValue}/${_img.id}" target="_blank">📸 View Image ${idx + 1}</a></p>`
@@ -247,7 +283,6 @@ const UploadImagesWithRemark: React.FC<{
             .join("")}
 `,
       });
-
       setIsEditing(false);
     } catch (error: unknown) {
       if (error instanceof Error) {

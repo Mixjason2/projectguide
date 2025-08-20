@@ -28,7 +28,6 @@ const DraggableResizableBox: React.FC<DraggableResizableBoxProps> = ({
     width: typeof defaultWidth === "number" ? defaultWidth : 200,
     height: typeof defaultHeight === "number" ? defaultHeight : 100,
   });
-
   const [position, setPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const childRef = useRef<HTMLDivElement>(null);
 
@@ -40,6 +39,9 @@ const DraggableResizableBox: React.FC<DraggableResizableBoxProps> = ({
       if (img) {
         w = defaultWidth === "auto" ? img.naturalWidth || 200 : (defaultWidth as number);
         h = defaultHeight === "auto" ? img.naturalHeight || 100 : (defaultHeight as number);
+      } else {
+        w = defaultWidth === "auto" ? 500 : (defaultWidth as number);
+        h = defaultHeight === "auto" ? 100 : (defaultHeight as number);
       }
       const offsetY = -250;
       setSize({ width: w, height: h });
@@ -72,20 +74,18 @@ const DraggableResizableBox: React.FC<DraggableResizableBoxProps> = ({
 
   const renderChildren = () => {
     if (React.isValidElement(children)) {
+      // สำหรับ NextImage
       if ((children.type as any) === NextImage) {
         const imgElement = children as React.ReactElement<ImageProps>;
         return React.cloneElement(imgElement, {
           style: {
-            width: '100%',
-            height: '100%',
             objectFit: 'contain',
             display: 'block',
-            touchAction: 'none',
             userSelect: 'none',
+            touchAction: 'none',
             ...imgElement.props.style,
           },
           draggable: false,
-          key: `${size.width}x${size.height}`,
         });
       } else if (children.type === 'img') {
         const imgElement = children as React.ReactElement<React.ImgHTMLAttributes<HTMLImageElement>>;
@@ -95,8 +95,8 @@ const DraggableResizableBox: React.FC<DraggableResizableBoxProps> = ({
             height: '100%',
             objectFit: 'contain',
             display: 'block',
-            touchAction: 'none',
             userSelect: 'none',
+            touchAction: 'none',
             ...imgElement.props.style,
           },
           draggable: false,
@@ -107,10 +107,9 @@ const DraggableResizableBox: React.FC<DraggableResizableBoxProps> = ({
   };
 
   const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-  const handleSize = isTouchDevice ? 30 : 15;
+  const handleSize = isTouchDevice ? 25 : 15;
   const handlePadding = isTouchDevice ? 10 : 0;
 
-  // --- แก้ตรงนี้: แสดง resize handle เฉพาะ image/div เท่านั้น ---
   const isResizableContent = React.isValidElement(children) && (
     (children.type as any) === NextImage || children.type === 'img' || children.type === 'div'
   );
@@ -270,7 +269,7 @@ const DraggableResizableBox: React.FC<DraggableResizableBoxProps> = ({
     ),
   } : {};
 
-  return (
+ return (
     <Rnd
       size={{ width: size.width, height: size.height }}
       position={{ x: position.x, y: position.y }}
@@ -345,9 +344,14 @@ const DraggableResizableBox: React.FC<DraggableResizableBoxProps> = ({
       <div
         ref={childRef}
         style={{
-          width: size.width,
-          height: size.height,
-          position: 'relative',
+          width: '100%',         // ✅ แก้ตรงนี้
+          height: '100%',        // ✅
+          minWidth: minWidth,
+          minHeight: minHeight,
+          position: 'relative',  // สำหรับ Image fill
+          overflow: 'hidden',
+          whiteSpace: 'normal',
+          overflowWrap: 'break-word',
           touchAction: 'none',
           userSelect: 'none',
         }}
