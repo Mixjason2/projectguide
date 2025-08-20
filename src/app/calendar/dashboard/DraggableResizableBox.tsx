@@ -11,6 +11,7 @@ interface DraggableResizableBoxProps {
   minWidth?: number;
   minHeight?: number;
   lockAspectRatio?: boolean;
+  borderWidth?: number;
 }
 
 const DraggableResizableBox: React.FC<DraggableResizableBoxProps> = ({
@@ -20,6 +21,7 @@ const DraggableResizableBox: React.FC<DraggableResizableBoxProps> = ({
   minWidth = 20,
   minHeight = 20,
   lockAspectRatio = false,
+  borderWidth = 2,
 }) => {
   const [isSelected, setIsSelected] = useState(false);
   const [size, setSize] = useState<{ width: number; height: number }>({
@@ -30,7 +32,6 @@ const DraggableResizableBox: React.FC<DraggableResizableBoxProps> = ({
   const [position, setPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const childRef = useRef<HTMLDivElement>(null);
 
-  // กึ่งกลางตอนโหลด พร้อมปรับให้พอดีกับรูป
   useEffect(() => {
     if (childRef.current) {
       const img = childRef.current.querySelector('img');
@@ -49,7 +50,6 @@ const DraggableResizableBox: React.FC<DraggableResizableBoxProps> = ({
     }
   }, [defaultWidth, defaultHeight]);
 
-  // hide handles เมื่อ click ข้างนอก + timeout 10 วินาที
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent | TouchEvent) => {
       if (childRef.current && !(childRef.current as any).contains(e.target)) {
@@ -78,10 +78,13 @@ const DraggableResizableBox: React.FC<DraggableResizableBoxProps> = ({
           style: {
             width: '100%',
             height: '100%',
-            objectFit: 'contain', // จะใช้ 'cover' ก็ได้
+            objectFit: 'contain',
             display: 'block',
+            touchAction: 'none',
+            userSelect: 'none',
             ...imgElement.props.style,
           },
+          draggable: false,
           key: `${size.width}x${size.height}`,
         });
       } else if (children.type === 'img') {
@@ -90,10 +93,13 @@ const DraggableResizableBox: React.FC<DraggableResizableBoxProps> = ({
           style: {
             width: '100%',
             height: '100%',
-            objectFit: 'contain', // จะใช้ 'cover' ก็ได้
+            objectFit: 'contain',
             display: 'block',
+            touchAction: 'none',
+            userSelect: 'none',
             ...imgElement.props.style,
           },
+          draggable: false,
         });
       }
     }
@@ -101,120 +107,167 @@ const DraggableResizableBox: React.FC<DraggableResizableBoxProps> = ({
   };
 
   const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  const handleSize = isTouchDevice ? 30 : 15;
+  const handlePadding = isTouchDevice ? 10 : 0;
 
-  // เพิ่ม hit area ใหญ่ขึ้นสำหรับ touch02
-  const handleSize = isTouchDevice ? 32 : 10; // ปรับขนาด handle ให้เล็กลง
-  const handleOffset = handleSize / 2;
+  // --- แก้ตรงนี้: แสดง resize handle เฉพาะ image/div เท่านั้น ---
+  const isResizableContent = React.isValidElement(children) && (
+    (children.type as any) === NextImage || children.type === 'img' || children.type === 'div'
+  );
 
-  const resizeHandleComponent = isSelected ? {
-    top: <div style={{
-      width: '100%',
-      height: handleSize,
-      top: 0,
-      left: 0,
-      cursor: 'ns-resize',
-      position: 'absolute',
-      zIndex: 10000,
-      touchAction: isTouchDevice ? 'auto' : 'none',
-      pointerEvents: 'all',
-      background: 'rgba(0,0,0,0.08)',
-      boxSizing: 'border-box',
-    }} />,
-    right: <div style={{
-      width: handleSize,
-      height: '100%',
-      top: 0,
-      right: 0,
-      cursor: 'ew-resize',
-      position: 'absolute',
-      zIndex: 10000,
-      touchAction: isTouchDevice ? 'auto' : 'none',
-      pointerEvents: 'all',
-      background: 'rgba(0,0,0,0.08)',
-      boxSizing: 'border-box',
-    }} />,
-    bottom: <div style={{
-      width: '100%',
-      height: handleSize,
-      bottom: 0,
-      left: 0,
-      cursor: 'ns-resize',
-      position: 'absolute',
-      zIndex: 10000,
-      touchAction: isTouchDevice ? 'auto' : 'none',
-      pointerEvents: 'all',
-      background: 'rgba(0,0,0,0.08)',
-      boxSizing: 'border-box',
-    }} />,
-    left: <div style={{
-      width: handleSize,
-      height: '100%',
-      top: 0,
-      left: 0,
-      cursor: 'ew-resize',
-      position: 'absolute',
-      zIndex: 10000,
-      touchAction: isTouchDevice ? 'auto' : 'none',
-      pointerEvents: 'all',
-      background: 'rgba(0,0,0,0.08)',
-      boxSizing: 'border-box',
-    }} />,
-    topLeft: <div style={{
-      width: handleSize,
-      height: handleSize,
-      top: 0,
-      left: 0,
-      cursor: 'nwse-resize',
-      position: 'absolute',
-      zIndex: 10000,
-      touchAction: isTouchDevice ? 'auto' : 'none',
-      pointerEvents: 'all',
-      background: 'rgba(0,0,0,0.18)',
-      borderRadius: '50%',
-      boxSizing: 'border-box',
-    }} />,
-    topRight: <div style={{
-      width: handleSize,
-      height: handleSize,
-      top: 0,
-      right: 0,
-      cursor: 'nesw-resize',
-      position: 'absolute',
-      zIndex: 10000,
-      touchAction: isTouchDevice ? 'auto' : 'none',
-      pointerEvents: 'all',
-      background: 'rgba(0,0,0,0.18)',
-      borderRadius: '50%',
-      boxSizing: 'border-box',
-    }} />,
-    bottomLeft: <div style={{
-      width: handleSize,
-      height: handleSize,
-      bottom: 0,
-      left: 0,
-      cursor: 'nesw-resize',
-      position: 'absolute',
-      zIndex: 10000,
-      touchAction: isTouchDevice ? 'auto' : 'none',
-      pointerEvents: 'all',
-      background: 'rgba(0,0,0,0.18)',
-      borderRadius: '50%',
-      boxSizing: 'border-box',
-    }} />,
-    bottomRight: <div style={{
-      width: handleSize,
-      height: handleSize,
-      bottom: 0,
-      right: 0,
-      cursor: 'nwse-resize',
-      position: 'absolute',
-      zIndex: 10000,
-      touchAction: isTouchDevice ? 'auto' : 'none',
-      pointerEvents: 'all',
-      background: 'rgba(0,0,0,0.18)',
-      borderRadius: '50%',
-      boxSizing: 'border-box',
-    }} />,
+  const resizeHandleComponent = isSelected && isResizableContent ? {
+    top: (
+      <div
+        style={{
+          position: 'absolute',
+          top: -handlePadding,
+          left: handleSize / 2,
+          right: handleSize / 2,
+          height: handleSize + handlePadding * 2,
+          cursor: 'ns-resize',
+          zIndex: 10000,
+          background: 'rgba(0,0,0,0.06)',
+          borderRadius: 8,
+          pointerEvents: 'all',
+          touchAction: 'auto',
+        }}
+        onTouchStart={() => setIsSelected(true)}
+        onTouchMove={() => setIsSelected(true)}
+      />
+    ),
+    bottom: (
+      <div
+        style={{
+          position: 'absolute',
+          bottom: -handlePadding,
+          left: handleSize / 2,
+          right: handleSize / 2,
+          height: handleSize + handlePadding * 2,
+          cursor: 'ns-resize',
+          zIndex: 10000,
+          background: 'rgba(0,0,0,0.06)',
+          borderRadius: 8,
+          pointerEvents: 'all',
+          touchAction: 'auto',
+        }}
+        onTouchStart={() => setIsSelected(true)}
+        onTouchMove={() => setIsSelected(true)}
+      />
+    ),
+    left: (
+      <div
+        style={{
+          position: 'absolute',
+          top: handleSize / 2,
+          bottom: handleSize / 2,
+          left: -handlePadding,
+          width: handleSize + handlePadding * 2,
+          cursor: 'ew-resize',
+          zIndex: 10000,
+          background: 'rgba(0,0,0,0.06)',
+          borderRadius: 8,
+          pointerEvents: 'all',
+          touchAction: 'auto',
+        }}
+        onTouchStart={() => setIsSelected(true)}
+        onTouchMove={() => setIsSelected(true)}
+      />
+    ),
+    right: (
+      <div
+        style={{
+          position: 'absolute',
+          top: handleSize / 2,
+          bottom: handleSize / 2,
+          right: -handlePadding,
+          width: handleSize + handlePadding * 2,
+          cursor: 'ew-resize',
+          zIndex: 10000,
+          background: 'rgba(0,0,0,0.06)',
+          borderRadius: 8,
+          pointerEvents: 'all',
+          touchAction: 'auto',
+        }}
+        onTouchStart={() => setIsSelected(true)}
+        onTouchMove={() => setIsSelected(true)}
+      />
+    ),
+    topLeft: (
+      <div
+        style={{
+          position: 'absolute',
+          top: -handlePadding,
+          left: -handlePadding,
+          width: handleSize + handlePadding * 2,
+          height: handleSize + handlePadding * 2,
+          cursor: 'nwse-resize',
+          zIndex: 10001,
+          background: 'rgba(0,0,0,0.16)',
+          borderRadius: 6,
+          pointerEvents: 'all',
+          touchAction: 'auto',
+        }}
+        onTouchStart={() => setIsSelected(true)}
+        onTouchMove={() => setIsSelected(true)}
+      />
+    ),
+    topRight: (
+      <div
+        style={{
+          position: 'absolute',
+          top: -handlePadding,
+          right: -handlePadding,
+          width: handleSize + handlePadding * 2,
+          height: handleSize + handlePadding * 2,
+          cursor: 'nesw-resize',
+          zIndex: 10001,
+          background: 'rgba(0,0,0,0.16)',
+          borderRadius: 6,
+          pointerEvents: 'all',
+          touchAction: 'auto',
+        }}
+        onTouchStart={() => setIsSelected(true)}
+        onTouchMove={() => setIsSelected(true)}
+      />
+    ),
+    bottomLeft: (
+      <div
+        style={{
+          position: 'absolute',
+          bottom: -handlePadding,
+          left: -handlePadding,
+          width: handleSize + handlePadding * 2,
+          height: handleSize + handlePadding * 2,
+          cursor: 'nesw-resize',
+          zIndex: 10001,
+          background: 'rgba(0,0,0,0.16)',
+          borderRadius: 6,
+          pointerEvents: 'all',
+          touchAction: 'auto',
+        }}
+        onTouchStart={() => setIsSelected(true)}
+        onTouchMove={() => setIsSelected(true)}
+      />
+    ),
+    bottomRight: (
+      <div
+        style={{
+          position: 'absolute',
+          bottom: -handlePadding,
+          right: -handlePadding,
+          width: handleSize + handlePadding * 2,
+          height: handleSize + handlePadding * 2,
+          cursor: 'nwse-resize',
+          zIndex: 10001,
+          background: 'rgba(0,0,0,0.16)',
+          borderRadius: 6,
+          pointerEvents: 'all',
+          touchAction: 'auto',
+        }}
+        onTouchStart={() => setIsSelected(true)}
+        onTouchMove={() => setIsSelected(true)}
+      />
+    ),
   } : {};
 
   return (
@@ -223,9 +276,9 @@ const DraggableResizableBox: React.FC<DraggableResizableBoxProps> = ({
       position={{ x: position.x, y: position.y }}
       minWidth={minWidth}
       minHeight={minHeight}
-      maxWidth={window.innerWidth}
-      maxHeight={window.innerHeight}
-      lockAspectRatio={lockAspectRatio} // ใช้ตาม props
+      maxWidth={typeof window !== 'undefined' ? window.innerWidth : 1000}
+      maxHeight={typeof window !== 'undefined' ? window.innerHeight : 1000}
+      lockAspectRatio={lockAspectRatio}
       bounds="window"
       enableResizing={{
         top: true, right: true, bottom: true, left: true,
@@ -233,7 +286,7 @@ const DraggableResizableBox: React.FC<DraggableResizableBoxProps> = ({
       }}
       resizeHandleComponent={resizeHandleComponent}
       style={{
-        border: isSelected ? '2px dashed #777' : 'none',
+        border: isSelected ? `${borderWidth}px dashed #777` : 'none',
         borderRadius: '6px',
         display: 'inline-flex',
         alignItems: 'flex-start',
@@ -242,25 +295,51 @@ const DraggableResizableBox: React.FC<DraggableResizableBoxProps> = ({
         boxSizing: 'border-box',
         zIndex: isSelected ? 9999 : 1,
         touchAction: 'none',
+        userSelect: 'none',
       }}
-      onMouseDown={(e: any) => {
-        if (!(e.target as HTMLElement).className.includes('rnd-resize-handle')) {
-          setIsSelected(true);
-        }
-      }}
-      onTouchStart={(e: any) => {
-        if (!(e.target as HTMLElement).className.includes('rnd-resize-handle')) {
-          setIsSelected(true);
-        }
-      }}
+      onMouseDown={() => setIsSelected(true)}
+      onTouchStart={() => setIsSelected(true)}
+      onDragStart={() => setIsSelected(true)}
+      onResizeStart={() => setIsSelected(true)}
+      onTouchMove={() => setIsSelected(true)}
       onDragStop={(e, d) => setPosition({ x: d.x, y: d.y })}
-      onResize={(_e, _direction, ref, _delta, pos) => {
-        setSize({ width: ref.offsetWidth, height: ref.offsetHeight });
-        setPosition(pos);
+      onResize={(_e, _direction, ref, _delta) => {
+        const centerX = position.x + size.width / 2;
+        const centerY = position.y + size.height / 2;
+        let newWidth = ref.offsetWidth;
+        let newHeight = ref.offsetHeight;
+
+        if (lockAspectRatio) {
+          const ratio = size.width / size.height;
+          if (_direction.includes('right') || _direction.includes('left')) {
+            newHeight = newWidth / ratio;
+          } else {
+            newWidth = newHeight * ratio;
+          }
+        }
+
+        setSize({ width: newWidth, height: newHeight });
+        setPosition({ x: centerX - newWidth / 2, y: centerY - newHeight / 2 });
+        setIsSelected(true);
       }}
-      onResizeStop={(_e, _direction, ref, _delta, pos) => {
-        setSize({ width: ref.offsetWidth, height: ref.offsetHeight });
-        setPosition(pos);
+      onResizeStop={(_e, _direction, ref, _delta) => {
+        const centerX = position.x + size.width / 2;
+        const centerY = position.y + size.height / 2;
+        let newWidth = ref.offsetWidth;
+        let newHeight = ref.offsetHeight;
+
+        if (lockAspectRatio) {
+          const ratio = size.width / size.height;
+          if (_direction.includes('right') || _direction.includes('left')) {
+            newHeight = newWidth / ratio;
+          } else {
+            newWidth = newHeight * ratio;
+          }
+        }
+
+        setSize({ width: newWidth, height: newHeight });
+        setPosition({ x: centerX - newWidth / 2, y: centerY - newHeight / 2 });
+        setIsSelected(true);
       }}
     >
       <div
@@ -270,6 +349,7 @@ const DraggableResizableBox: React.FC<DraggableResizableBoxProps> = ({
           height: size.height,
           position: 'relative',
           touchAction: 'none',
+          userSelect: 'none',
         }}
       >
         {renderChildren()}

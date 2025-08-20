@@ -11,7 +11,7 @@ import Image from 'next/image';
 function DashboardPage() {
   const router = useRouter();
   const [jobs, setJobs] = useState<Job[] | null>(null);
-  const [selectedText, setSelectedText] = useState<string | null>(null);
+  const [selectedTexts, setSelectedTexts] = useState<string[]>([]); // เปลี่ยนเป็น array
   const [fontSize, setFontSize] = useState<number>(80);
   const [textColor, setTextColor] = useState<string>('black');
   const [isRunning, setIsRunning] = useState<boolean>(false);
@@ -21,6 +21,7 @@ function DashboardPage() {
   const [bgColor, setBgColor] = useState<string>('white');
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [imageSize, setImageSize] = useState<number>(100);
+  const [showDropdown, setShowDropdown] = useState<boolean>(false);
 
   const colorOptions = [
     { value: 'black', name: 'Black' },
@@ -56,59 +57,7 @@ function DashboardPage() {
     }
   }, [fontSize]);
 
-  // useEffect(() => {
-  //   const handleScroll = () => {
-  //     if (!ticking.current) {
-  //       window.requestAnimationFrame(() => {
-  //         const currentX = window.scrollX;
-  //         const currentY = window.scrollY;
-  //         const deltaX = currentX - lastScroll.current.x;
-  //         const deltaY = currentY - lastScroll.current.y;
-  //         const threshold = 3;
-
-  //         if (Math.abs(deltaX) > threshold || Math.abs(deltaY) > threshold) {
-  //           if (deltaX > 0 || deltaY > 0) {
-  //             if (showTopBar) setShowTopBar(false);
-  //           } else if (deltaX < 0 || deltaY < 0) {
-  //             if (!showTopBar) setShowTopBar(true);
-  //           }
-  //           lastScroll.current = { x: currentX, y: currentY };
-  //         }
-  //         ticking.current = false;
-  //       });
-  //       ticking.current = true;
-  //     }
-  //   };
-
-  //   window.addEventListener('scroll', handleScroll, { passive: true });
-  //   return () => window.removeEventListener('scroll', handleScroll);
-  // }, [showTopBar]);
-
-  if (jobs === null)
-    return (
-      <div className="flex h-screen justify-center items-center flex-col font-sans text-xl text-gray-600 bg-white">
-        <div className="loader mb-4" />
-        Loading dashboard...
-        <style>{`
-          .loader {
-            border: 8px solid #f3f3f3;
-            border-top: 8px solid #555;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            animation: spin 1s linear infinite;
-          }
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
-      </div>
-    );
-
-  if (jobs.length === 0) return <div className="text-black">No jobs found.</div>;
-
-  const allPaxNames = jobs.flatMap(job => {
+  const allPaxNames = jobs?.flatMap(job => {
     if (typeof job.pax_name !== 'string') return [];
 
     const names: string[] = [];
@@ -128,7 +77,7 @@ function DashboardPage() {
 
     names.push(...otherNames);
     return names;
-  });
+  }) || [];
 
   const extractSurname = (fullName: string): string => {
     const cleanedName = fullName.trim();
@@ -144,9 +93,13 @@ function DashboardPage() {
     if (!surnameToNameMap.has(surname)) surnameToNameMap.set(surname, name);
   });
 
-  const handleSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    setSelectedText(value || null);
+  // ฟังก์ชัน toggle สำหรับ checkbox
+  const handleCheckboxChange = (value: string) => {
+    setSelectedTexts(prev =>
+      prev.includes(value)
+        ? prev.filter(v => v !== value)
+        : [...prev, value]
+    );
   };
 
   const toggleBackground = () => {
@@ -172,6 +125,30 @@ function DashboardPage() {
 
   const toggleTopBar = () => setShowTopBar(prev => !prev);
 
+  if (jobs === null)
+    return (
+      <div className="flex h-screen justify-center items-center flex-col font-sans text-xl text-gray-600 bg-white">
+        <div className="loader mb-4" />
+        Loading dashboard...
+        <style>{`
+          .loader {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #555;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+          }
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+
+  if (jobs.length === 0) return <div className="text-black">No jobs found.</div>;
+
   return (
     <div className="bg-white min-h-screen font-sans">
       <div
@@ -183,7 +160,7 @@ function DashboardPage() {
           className="fixed top-0 left-0 w-full bg-white/90 backdrop-blur-md shadow-lg z-50 px-4 flex flex-wrap items-center justify-between gap-4 transition-all duration-300 ease-in-out"
           style={{
             height: showTopBar ? expandedHeight : collapsedHeight,
-            overflow: 'hidden',
+            overflow: showTopBar ? 'visible' : 'hidden', // changed: allow dropdown to overflow when bar expanded
             position: 'relative',
           }}
         >
@@ -196,40 +173,96 @@ function DashboardPage() {
               transition: 'opacity 0.3s ease',
             }}
           >
-            {/* Left: Select */}
-            <select
-              onChange={handleSelect}
-              defaultValue=""
-              className="px-4 py-2 text-base border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 transition w-fit max-w-[250px]"
-              style={{
-                backgroundColor: bgColor === 'white' ? 'white' : '#333333',
-                color: bgColor === 'white' ? 'black' : 'white',
-                borderColor: bgColor === 'white' ? '#d1d5db' : '#555555',
-              }}
-            >
-              <option value="" disabled>
-                Select a passenger
-              </option>
-              {[...surnameToNameMap.entries()].map(([surname, name]) => (
-                <option key={surname} value={surname}>{name}</option>
-              ))}
-              {jobs.map((job, index) => (
-                <React.Fragment key={index}>
-                  {job.PNR && <option value={job.PNR}>PNR: {job.PNR}</option>}
+{/* Multi-select Dropdown (replaces single select) */}
+<div className="relative w-fit max-w-[250px]">
+  <button
+    className={`px-4 py-2 text-base border rounded-lg shadow-sm w-full text-left focus:ring-2 focus:ring-blue-400 transition
+      ${bgColor === 'white' ? 'bg-white text-black border-gray-300' : 'bg-gray-800 text-white border-gray-600'}
+      truncate whitespace-nowrap overflow-hidden`}
+    onClick={() => setShowDropdown(prev => !prev)}
+    title={selectedTexts.length > 0 ? selectedTexts.join(', ') : 'Select passengers'}
+  >
+    {selectedTexts.length > 0
+      ? selectedTexts.join(', ')
+      : 'Select passengers'}
+  </button>
+{showDropdown && (
+  <div
+    className="absolute mt-1 w-full bg-white border rounded-lg shadow-lg overflow-y-auto z-60"
+    style={{ maxHeight: '400px', overflowY: 'auto' }} // ให้สูงสุด 400px แต่ถ้าไม่ถึงก็ไม่ scroll
+  >
+    {[...surnameToNameMap.entries()].map(([surname, name]) => (
+      <label
+        key={surname}
+        className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer"
+      >
+        <input
+          type="checkbox"
+          className="mr-2"
+          checked={selectedTexts.includes(name)}
+          onChange={() => handleCheckboxChange(name)}
+        />
+        <span className="truncate" style={{ display: 'block', maxWidth: 'calc(100% - 24px)' }}>
+          {name}
+        </span>
+      </label>
+    ))}
+    {/* job items */}
+    {jobs.map((job, index) => {
+      const bookingText: string | null = typeof job.Booking_Name === 'string'
+        ? job.Booking_Name.split('/').slice(0, 2).map(s => s.trim()).join('  ')
+        : null;
 
-                  <option key={job.key} value={job.agentName ?? ''}>
-                    AgentName: {job.agentName ? String(job.agentName).toLowerCase() : 'N/A'}
-                  </option>
+      return (
+        <React.Fragment key={`job-${index}`}>
+          {job.PNR && (
+            <label className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer">
+              <input
+                type="checkbox"
+                className="mr-2"
+                checked={selectedTexts.includes(`PNR: ${job.PNR}`)}
+                onChange={() => handleCheckboxChange(`PNR: ${job.PNR}`)}
+              />
+              <span className="truncate" style={{ display: 'block', maxWidth: 'calc(100% - 24px)' }}>
+                PNR: {job.PNR}
+              </span>
+            </label>
+          )}
 
-                  {typeof job.Booking_Name === 'string' && (
-                    <option
-                      value={job.Booking_Name}>
-                      BookingName:{job.Booking_Name.split('/').slice(0, 2).map(s => s.trim()).join('  ')}
-                    </option>
-                  )}
-                </React.Fragment>
-              ))}
-            </select>
+          <label className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer">
+            <input
+              type="checkbox"
+              className="mr-2"
+              checked={selectedTexts.includes(`AgentName: ${job.agentName ?? 'N/A'}`)}
+              onChange={() => handleCheckboxChange(`AgentName: ${job.agentName ?? 'N/A'}`)}
+            />
+            <span className="truncate" style={{ display: 'block', maxWidth: 'calc(100% - 24px)' }}>
+              AgentName: {job.agentName ? String(job.agentName).toLowerCase() : 'N/A'}
+            </span>
+          </label>
+
+          {bookingText && (
+            <label className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer">
+              <input
+                type="checkbox"
+                className="mr-2"
+                checked={selectedTexts.includes(`BookingName: ${bookingText}`)}
+                onChange={() => handleCheckboxChange(`BookingName: ${bookingText}`)}
+              />
+              <span className="truncate" style={{ display: 'block', maxWidth: 'calc(100% - 24px)' }}>
+                BookingName: {bookingText}
+              </span>
+            </label>
+          )}
+        </React.Fragment>
+      );
+    })}
+  </div>
+)}
+
+
+</div>
+
 
             <input
               type="file"
@@ -288,7 +321,6 @@ function DashboardPage() {
         </div>
 
         {/* ปุ่มพับ/ขยาย ลอยออกมานอกบาร์ */}
-        {/* ปุ่มพับ/ขยาย ล็อคติดกับ Top Bar */}
         <button
           onClick={toggleTopBar}
           aria-label={showTopBar ? 'Collapse top bar' : 'Expand top bar'}
@@ -298,8 +330,8 @@ function DashboardPage() {
             boxShadow: '0 0 8px rgba(0,0,0,0.12)',
             borderColor: '#ddd',
             zIndex: 60,
-            top: showTopBar ? `${expandedHeight - 13}px` : `${collapsedHeight - 6}px`, // <-- ล๊อคติดกับขอบล่างของ Top Bar
-            transition: 'top 0.3s ease', // เพิ่ม transition ให้ smooth เวลาย่อ/ขยาย
+            top: showTopBar ? `${expandedHeight - 13}px` : `${collapsedHeight - 6}px`,
+            transition: 'top 0.3s ease',
           }}
         >
           <svg
@@ -314,7 +346,6 @@ function DashboardPage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
-
 
         {/* Content */}
         <div
@@ -405,65 +436,72 @@ function DashboardPage() {
             </div>
           </FadeButtons>
 
-          {/* Selected Text Display */}
-          {selectedText && (
-            <div className="mt-6 px-4 w-full pt-[40px]">
-              <div
-                className="w-full flex justify-center items-center" // ปรับความสูงให้พอสำหรับการจัดกลาง
-              >
-                <DraggableResizableBox
-                  minWidth={fontSize * (selectedText?.length || 1) * 0.6}
-                  minHeight={fontSize * 1.2}
-                  lockAspectRatio={false}
-                >
-                  <div
-                    className={`font-bold text-center uppercase break-words ${isRunning ? 'animate-marquee' : ''}`}
-                    style={{
-                      fontSize: `${fontSize}px`,
-                      whiteSpace: 'nowrap',
-                      overflow: 'visible',
-                      color: textColor,
-                      padding: '0px',
-                      textAlign: 'center',
-                    }}
+          {/* Selected Texts Display */}
+          <div className="mt-6 px-4 w-full pt-[40px]">
+            <div className="w-full flex flex-col items-center gap-4">
+              {selectedTexts.length === 0 && (
+                <div className="text-sm text-gray-500">No passenger selected.</div>
+              )}
+
+              {selectedTexts.map((text, idx) => (
+                <div key={idx} className="w-full flex justify-center items-center">
+                  <DraggableResizableBox
+                    minWidth={fontSize * (text?.length || 1) * 0.6}
+                    minHeight={fontSize * 1.2}
+                    lockAspectRatio={false}
+                    borderWidth={2}
                   >
-                    {selectedText}
-                  </div>
-                </DraggableResizableBox>
-              </div>
+                    <div
+                      className={`font-bold text-center uppercase break-words ${isRunning ? 'animate-marquee' : ''}`}
+                      style={{
+                        fontSize: `${fontSize}px`,
+                        whiteSpace: 'nowrap',
+                        overflow: 'visible',
+                        color: textColor,
+                        padding: '0px',
+                        textAlign: 'center',
+                      }}
+                    >
+                      {text}
+                    </div>
+                  </DraggableResizableBox>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {uploadedImage && (
+            <div className="mt-6 relative w-full" style={{ minHeight: '200px' }}>
+              <DraggableResizableBox
+                defaultWidth={500}
+                defaultHeight={300}
+                minWidth={100}
+                minHeight={100}
+                lockAspectRatio={false}
+              >
+                <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                  <Image
+                    src={uploadedImage}
+                    alt="Uploaded preview"
+                    fill
+                    style={{ objectFit: 'contain' }}
+                  />
+                </div>
+              </DraggableResizableBox>
             </div>
           )}
+
+          <style jsx>{`
+            @keyframes marquee {
+              0% { transform: translateX(100%); }
+              100% { transform: translateX(-100%); }
+            }
+            .animate-marquee {
+              display: inline-block;
+              animation: marquee 10s linear infinite;
+            }
+          `}</style>
         </div>
-
-        {uploadedImage && (
-          <div className="mt-6 relative w-full" style={{ minHeight: '200px' }}>
-            <DraggableResizableBox
-              defaultWidth={500}
-              defaultHeight={300}
-            >
-              <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                <Image
-                  src={uploadedImage}
-                  alt="Uploaded preview"
-                  fill
-                  style={{ objectFit: 'contain' }} // ยืด image ตามกล่อง แต่ไม่บิด
-                />
-              </div>
-            </DraggableResizableBox>
-
-          </div>
-        )}
-
-        <style jsx>{`
-          @keyframes marquee {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
-          }
-          .animate-marquee {
-            display: inline-block;
-            animation: marquee 10s linear infinite;
-          }
-        `}</style>
       </div>
     </div>
   );
