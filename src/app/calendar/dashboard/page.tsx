@@ -16,11 +16,9 @@ function DashboardPage() {
   const [textColor, setTextColor] = useState<string>('black');
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [showTopBar, setShowTopBar] = useState(true);
-  const lastScroll = useRef({ x: 0, y: 0 });
-  const ticking = useRef(false);
   const [bgColor, setBgColor] = useState<string>('white');
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [imageSize, setImageSize] = useState<number>(100);
+  const [, setImageSize] = useState<number>(100); // ✅ เก็บไว้แต่ ESLint ไม่เตือน
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
 
   const colorOptions = [
@@ -31,6 +29,8 @@ function DashboardPage() {
     { value: '#16a34a', name: 'Green' },
     { value: '#f59e0b', name: 'Orange' },
   ];
+
+  
 
   const expandedHeight = 56;
   const collapsedHeight = 0;
@@ -93,13 +93,6 @@ function DashboardPage() {
     if (!surnameToNameMap.has(surname)) surnameToNameMap.set(surname, name);
   });
 
-  // คืนค่านามสกุล สำหรับชื่อเต็ม (fallback -> extractSurname)
-  const getSurnameByFullName = (fullName: string): string => {
-    for (const [surname, name] of surnameToNameMap.entries()) {
-      if (name === fullName) return surname;
-    }
-    return extractSurname(fullName);
-  };
 
   // toggle checkbox ใน dropdown (เก็บเป็นชื่อเต็ม)
   const handleCheckboxChange = (value: string) => {
@@ -108,17 +101,6 @@ function DashboardPage() {
     );
   };
 
-  // เลือกจาก <select> ให้เพิ่มเข้า selectedTexts (ถ้าเป็นรายการแบบ single-option)
-  const handleSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    if (!value) return;
-    // ถ้า value เป็นนามสกุล ให้แปลงกลับเป็นชื่อเต็ม (ถ้ามี)
-    const maybeFull = surnameToNameMap.get(value) ?? value;
-    if (!selectedTexts.includes(maybeFull)) setSelectedTexts(prev => [...prev, maybeFull]);
-  };
-
-  // ปิด/เปิด dropdown helper
-  const toggleDropdown = () => setShowDropdown(prev => !prev);
 
   const toggleBackground = () => {
     if (bgColor === 'white') {
@@ -142,6 +124,24 @@ function DashboardPage() {
   };
 
   const toggleTopBar = () => setShowTopBar(prev => !prev);
+
+  // เพิ่มด้านบน: useRef สำหรับ dropdown
+const dropdownRef = useRef<HTMLDivElement>(null);
+
+// ใช้ useEffect เพื่อตรวจสอบ click outside
+useEffect(() => {
+  function handleClickOutside(event: MouseEvent) {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      setShowDropdown(false);
+    }
+  }
+
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => {
+    document.removeEventListener('mousedown', handleClickOutside);
+  };
+}, [dropdownRef]);
+
 
   if (jobs === null)
     return (
@@ -206,6 +206,7 @@ function DashboardPage() {
               </button>
               {showDropdown && (
                 <div
+                 ref={dropdownRef}
                   className="absolute mt-1 w-full bg-white border rounded-lg shadow-lg overflow-y-auto z-60"
                   style={{ maxHeight: '400px', overflowY: 'auto' }}
                 >
@@ -369,9 +370,10 @@ function DashboardPage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
+
         {/* Content */}
         <div
-          className="p-6 transition-all duration-300 flex flex-col items-center"
+          className="p-6 transition-all duration-300"
           style={{
             paddingTop: showTopBar ? `${expandedHeight + 24}px` : `${collapsedHeight + 24}px`,
           }}
@@ -379,7 +381,7 @@ function DashboardPage() {
           {/* Wrapper สำหรับ fade effect */}
           <FadeButtons>
             {/* Font Control */}
-            <div className="flex items-center justify-between mb-8 flex-wrap gap-4 w-full max-w-4xl">
+            <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
               <button
                 onClick={() => {
                   setFontSize(prev => Math.max(10, prev - 5));
@@ -459,42 +461,44 @@ function DashboardPage() {
           </FadeButtons>
 
           {/* Selected Texts Display */}
-          <div className="mt-6 px-4 w-full max-w-4xl flex flex-col items-center">
-            {selectedTexts.length === 0 && (
-              <div className="text-sm text-gray-500 text-center"></div>
-            )}
+          <div className="mt-6 px-4 w-full pt-[40px]">
+            <div className="w-full flex flex-col items-center gap-4">
+              {selectedTexts.length === 0 && (
+                <div className="text-sm text-gray-500"></div>
+              )}
 
-            {selectedTexts.map((text, idx) => (
-              <div key={idx} className="w-full flex justify-center items-center">
-                <DraggableResizableBox
-                  minWidth={fontSize * (text?.length || 1) * 0.6}
-                  minHeight={fontSize * 1.2}
-                  lockAspectRatio={false}
-                  borderWidth={2}
-                >
-                  <div
-                    className={`font-bold text-center uppercase break-words ${isRunning ? 'animate-marquee' : ''}`}
-                    style={{
-                      fontSize: `${fontSize}px`,
-                      color: textColor,
-                      padding: '8px 12px',         // เพิ่ม padding ให้เว้นที่สวย
-                      lineHeight: 1.4,             // เพิ่มระยะบรรทัด
-                      textAlign: 'center',
-                      maxWidth: '100%',
-                      overflowWrap: 'break-word',
-                      wordBreak: 'break-word',
-                      whiteSpace: 'pre-wrap',
-                    }}
+              {selectedTexts.map((text, idx) => (
+                <div key={idx} className="w-full flex justify-center items-center">
+                  <DraggableResizableBox
+                    minWidth={50}
+                    minHeight={fontSize * 1.2}
+                    lockAspectRatio={false}
+                    borderWidth={2}
                   >
-                    {text}
-                  </div>
-                </DraggableResizableBox>
-              </div>
-            ))}
+                    <div
+                      className="font-bold text-center uppercase"
+                      style={{
+                        fontSize: `${fontSize}px`,
+                        color: textColor,
+                        padding: '4px',
+                        textAlign: 'center',
+                        wordBreak: 'break-word',
+                        whiteSpace: 'pre-wrap',
+                        overflowWrap: 'break-word',
+                        width: 'auto',
+                        display: 'block',
+                      }}
+                    >
+                      {text}
+                    </div>
+                  </DraggableResizableBox>
+                </div>
+              ))}
+            </div>
           </div>
 
           {uploadedImage && (
-            <div className="mt-6 w-full flex justify-center" style={{ minHeight: '200px' }}>
+            <div className="mt-6 relative w-full" style={{ minHeight: '200px' }}>
               <DraggableResizableBox
                 defaultWidth={500}
                 defaultHeight={300}
@@ -515,17 +519,16 @@ function DashboardPage() {
           )}
 
           <style jsx>{`
-    @keyframes marquee {
-      0% { transform: translateX(100%); }
-      100% { transform: translateX(-100%); }
-    }
-    .animate-marquee {
-      display: inline-block;
-      animation: marquee 10s linear infinite;
-    }
-  `}</style>
+            @keyframes marquee {
+              0% { transform: translateX(100%); }
+              100% { transform: translateX(-100%); }
+            }
+            .animate-marquee {
+              display: inline-block;
+              animation: marquee 10s linear infinite;
+            }
+          `}</style>
         </div>
-
       </div>
     </div>
   );

@@ -24,8 +24,6 @@ const UploadImagesWithRemark: React.FC<{
   const [beforeRemark, setBeforeRemark] = useState<string>("");
   const [beforeImages, setBeforeImages] = useState<PreviewImage[]>([]);
 
-  const imagesPerRow = 4;
-
   const getImageRowsHtml = (images: PreviewImage[], imagesPerRow = 4) => {
     let rowsHtml = "";
     for (let i = 0; i < images.length; i += imagesPerRow) {
