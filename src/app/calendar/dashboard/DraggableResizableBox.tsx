@@ -12,6 +12,7 @@ interface DraggableResizableBoxProps {
   minHeight?: number;
   lockAspectRatio?: boolean;
   borderWidth?: number;
+  style?: React.CSSProperties;
 }
 
 const DraggableResizableBox: React.FC<DraggableResizableBoxProps> = ({
@@ -30,27 +31,66 @@ const DraggableResizableBox: React.FC<DraggableResizableBoxProps> = ({
   });
   const [position, setPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const childRef = useRef<HTMLDivElement>(null);
+  const positionInitializedRef = useRef(false);
 
-  useEffect(() => {
-    if (childRef.current) {
-      const img = childRef.current.querySelector('img');
-      let w = 200;
-      let h = 100;
-      if (img) {
-        w = defaultWidth === "auto" ? img.naturalWidth || 200 : (defaultWidth as number);
-        h = defaultHeight === "auto" ? img.naturalHeight || 100 : (defaultHeight as number);
-      } else {
-        w = defaultWidth === "auto" ? 500: (defaultWidth as number);
-        h = defaultHeight === "auto" ? 100 : (defaultHeight as number);
+const initialChildrenRef = useRef(children);
+
+useEffect(() => {
+  if (positionInitializedRef.current) return;
+  if (!childRef.current) return;
+
+  const img = childRef.current.querySelector('img');
+  let w = 200;
+  let h = 100;
+
+  if (img) {
+    w = defaultWidth === "auto" ? (img as HTMLImageElement).naturalWidth || 200 : (defaultWidth as number);
+    h = defaultHeight === "auto" ? (img as HTMLImageElement).naturalHeight || 100 : (defaultHeight as number);
+  } else {
+    w = defaultWidth === "auto" ? 500 : (defaultWidth as number);
+    h = defaultHeight === "auto" ? 100 : (defaultHeight as number);
+  }
+
+  setSize({ width: w, height: h });
+
+  const xPos = window.innerWidth / 2 - w / 2;
+  let yPos = 0;
+
+  // ใช้ ref แทน children
+  const childElement = initialChildrenRef.current;
+  let childType: string | React.ElementType | undefined = undefined;
+  let childSrc: string = '';
+
+  if (React.isValidElement(childElement)) {
+    childType = childElement.type as string | React.ElementType;
+    if (
+      childElement.props &&
+      typeof childElement.props === 'object' &&
+      'src' in childElement.props
+    ) {
+      const srcProp = (childElement.props as { src?: string }).src;
+      if (typeof srcProp === 'string') {
+        childSrc = srcProp;
       }
-      const offsetY = -250;
-      setSize({ width: w, height: h });
-      setPosition({
-        x: window.innerWidth / 2 - w / 2,
-        y: window.innerHeight / 2 - h / 2 + offsetY,
-      });
     }
-  }, [defaultWidth, defaultHeight]);
+  }
+
+  if (
+    childType === NextImage ||
+    childType === 'img' ||
+    /\.(png|jpe?g|gif)$/i.test(childSrc)
+  ) {
+    yPos = 20;
+  } else {
+    yPos = window.innerHeight - h - 20;
+  }
+
+  setPosition({ x: xPos, y: yPos });
+  positionInitializedRef.current = true;
+}, [defaultWidth, defaultHeight]); // children ไม่ต้องใส่เพราะเราใช้ ref
+
+
+
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent | TouchEvent) => {
@@ -72,40 +112,53 @@ const DraggableResizableBox: React.FC<DraggableResizableBoxProps> = ({
     };
   }, [isSelected]);
 
-  const renderChildren = () => {
-    if (React.isValidElement(children)) {
-      // สำหรับ NextImage
-      if ((children.type as React.ElementType) === NextImage) {
-        const imgElement = children as React.ReactElement<ImageProps>;
-        return React.cloneElement(imgElement, {
-          style: {
-            objectFit: 'contain',
-            display: 'block',
-            userSelect: 'none',
-            touchAction: 'none',
-            ...imgElement.props.style,
-          },
-          draggable: false,
-        });
-      } else if ((children.type as React.ElementType) === 'img') {
-        const imgElement = children as React.ReactElement<React.ImgHTMLAttributes<HTMLImageElement>>;
-        return React.cloneElement(imgElement, {
-          style: {
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-            display: 'block',
-            userSelect: 'none',
-            touchAction: 'none',
-            ...imgElement.props.style,
-          },
-          draggable: false,
-        });
-      }
-    }
-    return children;
-  };
+const renderChildren = () => {
+  if (!React.isValidElement(children)) return children;
 
+  const childElement = children as React.ReactElement;
+
+  if (childElement.type === NextImage) {
+    const imgElement = childElement as React.ReactElement<ImageProps>;
+    return React.cloneElement(imgElement, {
+      style: {
+        objectFit: 'contain',
+        display: 'block',
+        userSelect: 'none',
+        touchAction: 'none',
+        ...imgElement.props.style,
+      },
+      draggable: false,
+    });
+  }
+
+  const childType = childElement.type;
+  const childSrc =
+    childElement.props &&
+    typeof childElement.props === 'object' &&
+    'src' in childElement.props
+      ? (childElement.props as { src?: string }).src ?? ''
+      : '';
+
+  if (childType === 'img' || childSrc.endsWith('.png')) {
+    const imgElement = childElement as React.ReactElement<
+      React.ImgHTMLAttributes<HTMLImageElement>
+    >;
+    return React.cloneElement(imgElement, {
+      style: {
+        width: '100%',
+        height: '100%',
+        objectFit: 'contain',
+        display: 'block',
+        userSelect: 'none',
+        touchAction: 'none',
+        ...imgElement.props.style,
+      },
+      draggable: false,
+    });
+  }
+
+  return children;
+};
 
   const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
   const handleSize = isTouchDevice ? 15 : 15;
@@ -328,24 +381,24 @@ const DraggableResizableBox: React.FC<DraggableResizableBoxProps> = ({
 
       onResizeStop={(_e, _direction, ref) => {
 
-  const centerX = position.x + size.width / 2;
-  const centerY = position.y + size.height / 2;
-  let newWidth = ref.offsetWidth;
-  let newHeight = ref.offsetHeight;
+        const centerX = position.x + size.width / 2;
+        const centerY = position.y + size.height / 2;
+        let newWidth = ref.offsetWidth;
+        let newHeight = ref.offsetHeight;
 
-  if (lockAspectRatio) {
-    const ratio = size.width / size.height;
-    if (_direction.includes('right') || _direction.includes('left')) {
-      newHeight = newWidth / ratio;
-    } else {
-      newWidth = newHeight * ratio;
-    }
-  }
+        if (lockAspectRatio) {
+          const ratio = size.width / size.height;
+          if (_direction.includes('right') || _direction.includes('left')) {
+            newHeight = newWidth / ratio;
+          } else {
+            newWidth = newHeight * ratio;
+          }
+        }
 
-  setSize({ width: newWidth, height: newHeight });
-  setPosition({ x: centerX - newWidth / 2, y: centerY - newHeight / 2 });
-  setIsSelected(true);
-}}
+        setSize({ width: newWidth, height: newHeight });
+        setPosition({ x: centerX - newWidth / 2, y: centerY - newHeight / 2 });
+        setIsSelected(true);
+      }}
 
     >
       <div

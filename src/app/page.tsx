@@ -5,6 +5,7 @@ import { FormControl, InputLabel, NativeSelect } from "@mui/material";
 import Swal from 'sweetalert2';
 import Cookies from "js-cookie";
 import './globals.css';
+import { cookies } from "next/headers";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function LoginPage() {
   const [, setGuideEmail] = useState("");
   const [, setEmailOP] = useState<{ key: number; Email: string }[]>([]);
 
+
   const connectionOptions = [
     { label: "TH", value: "[AS-DTGTHA]", name: "Thailand", flag: "🇹🇭" },
     { label: "MY", value: "[AS-DTGKUL]", name: "Malaysia", flag: "🇲🇾" },
@@ -27,161 +29,182 @@ export default function LoginPage() {
     // { label: "TH_Test", value: "[AS-DTGTHA]", name: "Thailand (Test)", flag: "🧪🇹🇭" },
   ];
 
-  useEffect(() => {
-    // อ่านข้อมูลจาก Cookies แทน localStorage
-    const savedUsername = Cookies.get("savedUsername") || "";
-    const savedPassword = Cookies.get("savedPassword") || "";
-    const savedConnection = Cookies.get("savedConnection") || "";
 
-    if (savedUsername && savedPassword) {
-      setUsername(savedUsername);
-      setPassword(savedPassword);
-      setRememberMe(true);
-    }
 
-    if (savedConnection) {
-      setConnection(savedConnection);
-    }
-  }, []);
-
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setMessage("");
-
-  // Validate username/password (only a-z, A-Z, 0-9)
-  const validPattern = /^[a-zA-Z0-9]+$/;
-  if (!validPattern.test(username)) {
-    Swal.fire({
-      icon: "warning",
-      title: "Invalid Username",
-      text: "Username must contain only letters or numbers.",
-    });
-    return;
-  }
-  if (!validPattern.test(password)) {
-    Swal.fire({
-      icon: "warning",
-      title: "Invalid Password",
-      text: "Password must contain only letters or numbers.",
-    });
-    return;
+useEffect(() => {
+  // ถ้า Cookies มี token ให้ไปหน้า /home เลย
+  const token = Cookies.get("token");
+  if (token) {
+    router.push("/home");
   }
 
-  // ✅ ใช้ .find() กับ array
-  const selectedOption = connectionOptions.find((opt) => opt.value === connection);
-  if (!selectedOption) {
-    Swal.fire({
-      icon: "error",
-      title: "Invalid Connection",
-      text: "Invalid connection selected.",
-    });
-    return;
+  // อ่านข้อมูลจาก Cookies แทน localStorage
+  const savedUsername = Cookies.get("savedUsername") || "";
+  const savedPassword = Cookies.get("savedPassword") || "";
+  const savedConnection = Cookies.get("savedConnection") || "";
+
+  if (savedUsername && savedPassword) {
+    setUsername(savedUsername);
+    setPassword(savedPassword);
+    setRememberMe(true);
   }
 
-  const selectedLabel = selectedOption.label || "TH";
-  const asmdbValue = `Assignment_${selectedLabel}`;
-  console.log("asmdbValue:", asmdbValue);
-  setLoading(true);
-  try {
-    // Send data to API
-    const res = await fetch("https://operation.dth.travel:7082/api/guide/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        Username: username,
-        Password: password,
-        asmdb: asmdbValue,
-        connection: connection
-      }),
-    });
-    const data = await res.json();
+  if (savedConnection) {
+    setConnection(savedConnection);
+  }
+}, [router]);
 
-    // Show result from API to user
-    if (data.status && data.token) {
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage("");
+
+    // Validate username/password (only a-z, A-Z, 0-9)
+    const validPattern = /^[a-zA-Z0-9]+$/;
+    if (!validPattern.test(username)) {
       Swal.fire({
-        icon: "success",
-        title: "Login successful!",
-        text: "You have successfully logged in.",
-        timer: 1500,
-        showConfirmButton: false,
+        icon: "warning",
+        title: "Invalid Username",
+        text: "Username must contain only letters or numbers.",
       });
-
-      // เก็บ token และ refresh token ใน Cookies (หมดอายุ 7 วันถ้า rememberMe หรือ 1 ชั่วโมงถ้าไม่เลือก)
-      const tokenExpireDays = rememberMe ? 7 : 1 / 24; // 1 hour = 1/24 day
-      Cookies.set("token", data.token, { expires: tokenExpireDays });
-      Cookies.set("accessToken", data.token, { expires: tokenExpireDays });
-      Cookies.set("refreshToken", data.refreshToken, { expires: tokenExpireDays });
-
-      // เก็บ asmdb และ connectionOptions ใน Cookies
-      Cookies.set("asmdb", asmdbValue, { expires: tokenExpireDays });
-      Cookies.set("connectionOptions", JSON.stringify(connectionOptions), { expires: tokenExpireDays });
-
-      setGuideEmail(data.guideEmail);
-      setEmailOP(data.emailOP || []);
-
-      console.log("guideEmail:", data.guideEmail);
-      (data.emailOP || []).forEach((item: { key: number; Email: string }) => {
-        console.log(`key: ${item.key}, Email: ${item.Email}`);
+      return;
+    }
+    if (!validPattern.test(password)) {
+      Swal.fire({
+        icon: "warning",
+        title: "Invalid Password",
+        text: "Password must contain only letters or numbers.",
       });
+      return;
+    }
 
-      // เก็บ username/password/connection ถ้าเลือก rememberMe
-      if (rememberMe) {
-        Cookies.set("savedUsername", username, { expires: 7 });
-        Cookies.set("savedPassword", password, { expires: 7 });
-        Cookies.set("savedConnection", connection, { expires: 7 });
-      } else {
-        Cookies.remove("savedUsername");
-        Cookies.remove("savedPassword");
-        Cookies.remove("savedConnection");
-      }
-
-      router.push("/home");
-    } else {
+    // ✅ ใช้ .find() กับ array
+    const selectedOption = connectionOptions.find((opt) => opt.value === connection);
+    if (!selectedOption) {
       Swal.fire({
         icon: "error",
-        title: "Login Failed",
-        text: "Incorrect username or password.",
+        title: "Invalid Connection",
+        text: "Invalid connection selected.",
       });
+      return;
+    }
 
-      // ❌ ถ้าไม่สำเร็จ มาตรวจเงื่อนไขด้านล่างนี้
-      if (!data.status) {
-        if (data.reason === "invalid_username") {
-          Swal.fire({
-            icon: "error",
-            title: "Login Failed",
-            text: "The username you entered is incorrect.",
-          });
-        } else if (data.reason === "invalid_password") {
-          Swal.fire({
-            icon: "error",
-            title: "Login Failed",
-            text: "The password you entered is incorrect.",
-          });
-        } else if (data.reason === "invalid_connection") {
-          Swal.fire({
-            icon: "error",
-            title: "Login Failed",
-            text: "The selected connection is invalid.",
-          });
+    const selectedLabel = selectedOption.label || "TH";
+    const asmdbValue = `Assignment_${selectedLabel}`;
+    console.log("asmdbValue:", asmdbValue);
+    setLoading(true);
+    try {
+      const link7082 = process.env.NEXT_PUBLIC_BASE_URL || "";
+      console.log("LinkUrl_7082 from env:", link7082);
+
+      if (!link7082) {
+        throw new Error("Base URL is not defined in environment variables.");
+      }
+      // Send data to API
+      const res = await fetch(`${link7082}/api/guide/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          Username: username,
+          Password: password,
+          asmdb: asmdbValue,
+          connection: connection
+        }),
+      });
+      const data = await res.json();
+
+      // Show result from API to user
+      if (data.status && data.token) {
+        Swal.fire({
+          icon: "success",
+          title: "Login successful!",
+          text: "You have successfully logged in.",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+
+        // เก็บ token และ refresh token ใน Cookies (หมดอายุ 7 วันถ้า rememberMe หรือ 1 ชั่วโมงถ้าไม่เลือก)
+        const tokenExpireDays = rememberMe ? 7 : 1 / 24; // 1 hour = 1/24 day
+        Cookies.set("token", data.token, { expires: tokenExpireDays });
+        Cookies.set("accessToken", data.token, { expires: tokenExpireDays });
+        Cookies.set("refreshToken", data.refreshToken, { expires: tokenExpireDays });
+
+        // เก็บ asmdb และ connectionOptions ใน Cookies
+        Cookies.set("asmdb", asmdbValue, { expires: tokenExpireDays });
+        Cookies.set("connectionOptions", JSON.stringify(connectionOptions), { expires: tokenExpireDays });
+
+        setGuideEmail(data.guideEmail || "");
+        setEmailOP(data.emailOP || []);
+        Cookies.set("guideEmail", data.guideEmail || "", { expires: tokenExpireDays });
+        Cookies.set("emailOP", JSON.stringify(data.emailOP || []), { expires: tokenExpireDays });
+
+
+
+        console.log("guideEmail:", data.guideEmail);
+        (data.emailOP || []).forEach((item: { key: number; Email: string }) => {
+          console.log(`key: ${item.key}, Email: ${item.Email}`);
+        });
+
+
+
+        // เก็บ username/password/connection ถ้าเลือก rememberMe
+        if (rememberMe) {
+          Cookies.set("savedUsername", username, { expires: 7 });
+          Cookies.set("savedPassword", password, { expires: 7 });
+          Cookies.set("savedConnection", connection, { expires: 7 });
         } else {
-          Swal.fire({
-            icon: "error",
-            title: "Login Failed",
-            text: "Incorrect username or password.",
-          });
+          Cookies.remove("savedUsername");
+          Cookies.remove("savedPassword");
+          Cookies.remove("savedConnection");
+        }
+
+        router.push("/home");
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Login Failed",
+          text: "Incorrect username or password.",
+        });
+
+        // ❌ ถ้าไม่สำเร็จ มาตรวจเงื่อนไขด้านล่างนี้
+        if (!data.status) {
+          if (data.reason === "invalid_username") {
+            Swal.fire({
+              icon: "error",
+              title: "Login Failed",
+              text: "The username you entered is incorrect.",
+            });
+          } else if (data.reason === "invalid_password") {
+            Swal.fire({
+              icon: "error",
+              title: "Login Failed",
+              text: "The password you entered is incorrect.",
+            });
+          } else if (data.reason === "invalid_connection") {
+            Swal.fire({
+              icon: "error",
+              title: "Login Failed",
+              text: "The selected connection is invalid.",
+            });
+          } else {
+            Swal.fire({
+              icon: "error",
+              title: "Login Failed",
+              text: "Incorrect username or password.",
+            });
+          }
         }
       }
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: "error",
+        title: "Connection Error",
+        text: "Failed to connect to the server. Please check your username and password, and ensure you have a stable internet connection.",
+      });
     }
-  } catch (err) {
-    console.error(err);
-    Swal.fire({
-      icon: "error",
-      title: "Connection Error",
-      text: "Failed to connect to the server. Please check your username and password, and ensure you have a stable internet connection.",
-    });
-  }
-  setLoading(false);
-};
+    setLoading(false);
+  };
 
 
   return (
