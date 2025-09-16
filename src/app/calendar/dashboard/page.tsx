@@ -6,6 +6,7 @@ import type { Job } from '../components/types';
 import FadeButtons from './fadeButtons';
 import DraggableResizableBox from './DraggableResizableBox';
 import { PaintBrushIcon, SunIcon, MoonIcon, CloudIcon } from '@heroicons/react/24/outline';
+import { createPortal } from 'react-dom';
 import Image from 'next/image';
 
 function DashboardPage() {
@@ -20,6 +21,8 @@ function DashboardPage() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [, setImageSize] = useState<number>(100); // ✅ เก็บไว้แต่ ESLint ไม่เตือน
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
+  const dropdownButtonRef = useRef<HTMLButtonElement | null>(null);
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null);
 
   const colorOptions = [
     { value: 'black', name: 'Black' },
@@ -30,7 +33,7 @@ function DashboardPage() {
     { value: '#f59e0b', name: 'Orange' },
   ];
 
-  
+
 
   const expandedHeight = 56;
   const collapsedHeight = 0;
@@ -126,21 +129,61 @@ function DashboardPage() {
   const toggleTopBar = () => setShowTopBar(prev => !prev);
 
   // เพิ่มด้านบน: useRef สำหรับ dropdown
-const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-// ใช้ useEffect เพื่อตรวจสอบ click outside
-useEffect(() => {
-  function handleClickOutside(event: MouseEvent) {
-    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-      setShowDropdown(false);
+  // ใช้ useEffect เพื่อตรวจสอบ click outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(target) &&
+        !(dropdownButtonRef.current && dropdownButtonRef.current.contains(target))
+      ) {
+        setShowDropdown(false);
+      }
     }
-  }
 
-  document.addEventListener('mousedown', handleClickOutside);
-  return () => {
-    document.removeEventListener('mousedown', handleClickOutside);
-  };
-}, [dropdownRef]);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dropdownRef, dropdownButtonRef]);
+
+  // keep dropdown positioned when window scrolls/resizes
+  useEffect(() => {
+    if (!showDropdown) return;
+    const updatePos = () => {
+      const btn = dropdownButtonRef.current;
+      if (!btn) return;
+      const r = btn.getBoundingClientRect();
+      setDropdownPos({ top: Math.round(r.bottom + 6), left: Math.round(r.left) });
+    };
+    updatePos();
+    window.addEventListener('resize', updatePos);
+    window.addEventListener('scroll', updatePos, true);
+    return () => {
+      window.removeEventListener('resize', updatePos);
+      window.removeEventListener('scroll', updatePos, true);
+    };
+  }, [showDropdown]);
+
+  // prevent page scroll / layout shift when the dropdown is open
+  useEffect(() => {
+    if (!showDropdown) return;
+    const prevOverflow = document.body.style.overflow;
+    const prevPaddingRight = document.body.style.paddingRight || '';
+    // ชดเชยความกว้างของ scrollbar เพื่อไม่ให้เนื้อหา shift เมื่อซ่อน scrollbar
+    const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+    if (scrollBarWidth > 0) {
+      document.body.style.paddingRight = `${scrollBarWidth}px`;
+    }
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow || '';
+      document.body.style.paddingRight = prevPaddingRight || '';
+    };
+  }, [showDropdown]);
 
 
   if (jobs === null)
@@ -192,101 +235,122 @@ useEffect(() => {
             }}
           >
             {/* Multi-select Dropdown (replaces single select) */}
-            <div className="relative w-fit max-w-[250px]">
+            <div className="relative w-fit"> {/* เอา max-w ออกเพื่อให้ dropdown ขยายได้ */}
               <button
+                ref={dropdownButtonRef}
                 className={`px-4 py-2 text-base border rounded-lg shadow-sm w-full text-left focus:ring-2 focus:ring-blue-400 transition
-      ${bgColor === 'white' ? 'bg-white text-black border-gray-300' : 'bg-gray-800 text-white border-gray-600'}
-      truncate whitespace-nowrap overflow-hidden`}
-                onClick={() => setShowDropdown(prev => !prev)}
+        ${bgColor === 'white' ? 'bg-white text-black border-gray-300' : 'bg-gray-800 text-white border-gray-600'}
+        truncate whitespace-nowrap overflow-hidden`}
+                onClick={e => {
+                  // toggle and compute fixed position for portal-like overlay
+                  const btn = e.currentTarget as HTMLElement;
+                  const r = btn.getBoundingClientRect();
+                  setDropdownPos({ top: Math.round(r.bottom + 6), left: Math.round(r.left) });
+                  setShowDropdown(prev => !prev);
+                  btn.blur();
+                }}
                 title={selectedTexts.length > 0 ? selectedTexts.join(', ') : 'Select passengers'}
               >
                 {selectedTexts.length > 0
                   ? selectedTexts.join(', ')
                   : 'Select passengers'}
               </button>
-              {showDropdown && (
-                <div
-                 ref={dropdownRef}
-                  className="absolute mt-1 w-full bg-white border rounded-lg shadow-lg overflow-y-auto z-60"
-                  style={{ maxHeight: '400px', overflowY: 'auto' }}
-                >
-                  {[...surnameToNameMap.entries()].map(([surname, fullName]) => (
-                    <label
-                      key={surname}
-                      className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        className="mr-2"
-                        checked={selectedTexts.includes(surname)}   // ✅ ใช้ surname (เก็บคำแรก)
-                        onChange={() => handleCheckboxChange(surname)} // ✅ เวลาเลือกก็ส่ง surname
-                      />
-                      <span
-                        className="truncate"
-                        style={{ display: 'block', maxWidth: 'calc(100% - 24px)' }}
+              {showDropdown &&
+                createPortal(
+                  <div
+                    ref={dropdownRef}
+                    className="bg-white border rounded-lg shadow-lg overflow-y-auto"
+                    style={{
+                      position: 'fixed',
+                      top: dropdownPos ? `${dropdownPos.top}px` : '0px',
+                      left: dropdownPos ? `${dropdownPos.left}px` : '0px',
+                      minWidth: 'max-content',
+                      maxWidth: 'min(90vw, 900px)',
+                      maxHeight: '400px',
+                      overflowY: 'auto',
+                      zIndex: 9999,
+                      pointerEvents: 'auto',
+                    }}
+                  >
+                    {[...surnameToNameMap.entries()].map(([surname, fullName]) => (
+                      <label
+                        key={surname}
+                        className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer"
+                        style={{ whiteSpace: 'nowrap' }}
                       >
-                        {fullName} {/* ✅ โชว์ชื่อเต็ม */}
-                      </span>
-                    </label>
-                  ))}
+                        <input
+                          type="checkbox"
+                          className="mr-2"
+                          checked={selectedTexts.includes(surname)}
+                          onChange={() => handleCheckboxChange(surname)}
+                        />
+                        <span
+                          className="truncate"
+                          style={{ display: 'inline-block', maxWidth: 'calc(90vw - 80px)', verticalAlign: 'middle' }}
+                          title={fullName}
+                        >
+                          {fullName}
+                        </span>
+                      </label>
+                    ))}
 
+                    {jobs.map((job, index) => {
+                      const bookingText: string | null = typeof job.Booking_Name === 'string'
+                        ? job.Booking_Name.split('/').slice(0, 2).map(s => s.trim()).join('  ')
+                        : null;
 
-                  {jobs.map((job, index) => {
-                    const bookingText: string | null = typeof job.Booking_Name === 'string'
-                      ? job.Booking_Name.split('/').slice(0, 2).map(s => s.trim()).join('  ')
-                      : null;
+                      return (
+                        <React.Fragment key={`job-${index}`}>
+                          {job.PNR && (
+                            <label className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer" style={{ whiteSpace: 'nowrap' }}>
+                              <input
+                                type="checkbox"
+                                className="mr-2"
+                                checked={selectedTexts.includes(job.PNR)}
+                                onChange={() => handleCheckboxChange(job.PNR)}
+                              />
+                              <span className="truncate" style={{ display: 'inline-block', maxWidth: 'calc(90vw - 80px)', verticalAlign: 'middle' }}>
+                                PNR: {job.PNR}
+                              </span>
+                            </label>
+                          )}
 
-                    return (
-                      <React.Fragment key={`job-${index}`}>
-                        {job.PNR && (
-                          <label className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer">
+                          <label className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer" style={{ whiteSpace: 'nowrap' }}>
                             <input
                               type="checkbox"
                               className="mr-2"
-                              checked={selectedTexts.includes(job.PNR)} // <-- ใช้แค่ค่าล้วน
-                              onChange={() => handleCheckboxChange(job.PNR)} // <-- ใช้แค่ค่าล้วน
+                              checked={selectedTexts.includes(String(job.agentName ?? 'N/A'))}
+                              onChange={() => handleCheckboxChange(String(job.agentName ?? 'N/A'))}
                             />
-                            <span className="truncate" style={{ display: 'block', maxWidth: 'calc(100% - 24px)' }}>
-                              PNR: {job.PNR} {/* <-- แสดงแบบมี prefix */}
+                            <span className="truncate" style={{ display: 'inline-block', maxWidth: 'calc(90vw - 80px)', verticalAlign: 'middle' }}>
+                              AgentName: {job.agentName ? String(job.agentName).toLowerCase() : 'N/A'}
                             </span>
                           </label>
-                        )}
 
-                        <label className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            className="mr-2"
-                            checked={selectedTexts.includes(String(job.agentName ?? 'N/A'))}
-                            onChange={() => handleCheckboxChange(String(job.agentName ?? 'N/A'))}
-                          />
-                          <span className="truncate" style={{ display: 'block', maxWidth: 'calc(100% - 24px)' }}>
-                            AgentName: {job.agentName ? String(job.agentName).toLowerCase() : 'N/A'}
-                          </span>
-                        </label>
-
-                        {bookingText && (
-                          <label className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              className="mr-2"
-                              checked={selectedTexts.includes(bookingText)}
-                              onChange={() => handleCheckboxChange(bookingText)}
-                            />
-                            <span className="truncate" style={{ display: 'block', maxWidth: 'calc(100% - 24px)' }}>
-                              BookingName: {bookingText}
-                            </span>
-                          </label>
-                        )}
-                      </React.Fragment>
-                    );
-                  })}
-                </div>
-              )}
+                          {bookingText && (
+                            <label className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer" style={{ whiteSpace: 'nowrap' }}>
+                              <input
+                                type="checkbox"
+                                className="mr-2"
+                                checked={selectedTexts.includes(bookingText)}
+                                onChange={() => handleCheckboxChange(bookingText)}
+                              />
+                              <span className="truncate" style={{ display: 'inline-block', maxWidth: 'calc(90vw - 80px)', verticalAlign: 'middle' }}>
+                                BookingName: {bookingText}
+                              </span>
+                            </label>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </div>,
+                  document.body
+                )
+              }
 
 
 
             </div>
-
 
             <input
               type="file"
@@ -381,7 +445,7 @@ useEffect(() => {
           {/* Wrapper สำหรับ fade effect */}
           <FadeButtons>
             {/* Font Control */}
-            <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+            <div className="flex items-center justify-between mb-0 flex-wrap gap-4">
               <button
                 onClick={() => {
                   setFontSize(prev => Math.max(10, prev - 5));
@@ -461,7 +525,11 @@ useEffect(() => {
           </FadeButtons>
 
           {/* Selected Texts Display */}
-          <div className="mt-6 px-4 w-full pt-[40px]">
+          <div
+            className="mt-6 px-4 w-full pt-[40px] relative"
+            // ถ้ามีรูป ให้ลด minHeight ลงเพื่อไม่ให้กันพื้นที่ (รูปวางแบบ absolute จะไม่ถูกดัน)
+            style={{ minHeight: uploadedImage ? '0' : '400px' }}
+          >
             <div className="w-full flex flex-col items-center gap-4">
               {selectedTexts.length === 0 && (
                 <div className="text-sm text-gray-500"></div>
@@ -474,6 +542,13 @@ useEffect(() => {
                     minHeight={fontSize * 1.2}
                     lockAspectRatio={false}
                     borderWidth={2}
+                    style={{
+                      position: 'fixed',
+                      top: '80px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      zIndex: 11000,
+                    }}
                   >
                     <div
                       className="font-bold text-center uppercase"
@@ -481,12 +556,13 @@ useEffect(() => {
                         fontSize: `${fontSize}px`,
                         color: textColor,
                         padding: '4px',
-                        textAlign: 'center',
-                        wordBreak: 'break-word',
-                        whiteSpace: 'pre-wrap',
-                        overflowWrap: 'break-word',
-                        width: 'auto',
-                        display: 'block',
+                        whiteSpace: 'normal',        // เปลี่ยนจาก 'nowrap' -> 'normal'
+                        display: 'inline-block',
+                        wordBreak: 'break-word',     // เพิ่มเพื่อให้ตัดบรรทัด
+                        overflowWrap: 'break-word',  // เพิ่มเพื่อให้ตัดบรรทัด
+                        animation: isRunning
+                          ? 'marquee 5s linear infinite'
+                          : 'none',
                       }}
                     >
                       {text}
@@ -494,31 +570,34 @@ useEffect(() => {
                   </DraggableResizableBox>
                 </div>
               ))}
-            </div>
-          </div>
 
-          {uploadedImage && (
-            <div className="mt-6 relative w-full" style={{ minHeight: '200px' }}>
-              <DraggableResizableBox
-                defaultWidth={500}
-                defaultHeight={300}
-                minWidth={100}
-                minHeight={100}
-                lockAspectRatio={false}
-              >
-                <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                  <Image
-                    src={uploadedImage}
-                    alt="Uploaded preview"
-                    fill
-                    style={{ objectFit: 'contain' }}
-                  />
-                </div>
-              </DraggableResizableBox>
-            </div>
-          )}
+              {/* ใส่ CSS สำหรับ marquee */}
 
-          <style jsx>{`
+
+
+              {uploadedImage && (
+                <DraggableResizableBox
+                  defaultWidth={500}
+                  defaultHeight={300}
+                  minWidth={100}
+                  minHeight={100}
+                  lockAspectRatio={false}
+                  style={{ position: 'absolute', top: 0, left: 0, zIndex: 1 }}
+                >
+                  <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                    <Image
+                      src={uploadedImage}
+                      alt="Uploaded preview"
+                      fill
+                      style={{ objectFit: 'contain' }}
+                    />
+                  </div>
+                </DraggableResizableBox>
+              )}
+            </div>
+
+
+            <style jsx>{`
             @keyframes marquee {
               0% { transform: translateX(100%); }
               100% { transform: translateX(-100%); }
@@ -528,6 +607,7 @@ useEffect(() => {
               animation: marquee 10s linear infinite;
             }
           `}</style>
+          </div>
         </div>
       </div>
     </div>

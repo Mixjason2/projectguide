@@ -102,7 +102,9 @@ export default function Page() {
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    return fetch('https://operation.dth.travel:7082/api/guide/job/confirm', {
+    const link7082 = process.env.NEXT_PUBLIC_BASE_URL || "";
+
+    return fetch(`${link7082}/api/guide/job/confirm`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, startdate: start, enddate: end }),
