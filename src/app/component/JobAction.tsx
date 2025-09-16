@@ -28,7 +28,8 @@ const sendEmail = async ({
   body: string;
 }) => {
   try {
-    const res = await axios.post("https://onlinedt.diethelmtravel.com:5281/api/EmailSender", {
+    const altBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL_ALT;
+    const res = await axios.post(`${altBaseUrl}/api/EmailSender`, {
       emails,
       emails_CC,
       subject,
@@ -95,8 +96,9 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
     try {
       setStatusMessage("");
       const token = Cookies.get("token") || "";
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
       const response = await axios.post(
-        `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
+        `${baseUrl}/api/guide/job/${job.key}/update`,
         { token, data: { isConfirmed: true } }
       );
       const result = response.data;
@@ -174,8 +176,9 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
     try {
       setStatusMessage("");
       const token = Cookies.get("token") || "";
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
       const response = await axios.post(
-        `https://operation.dth.travel:7082/api/guide/job/${job.key}/update`,
+        `${baseUrl}/api/guide/job/${job.key}/update`,
         {
           token,
           data: { isCancel: true, reason: rejectReason },

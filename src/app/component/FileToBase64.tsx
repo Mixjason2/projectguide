@@ -54,7 +54,8 @@ const UploadImagesWithRemark: React.FC<{
   const fetchUploadedData = useCallback(
     async (preserveEditMode: boolean = false) => {
       try {
-        const res = await axios.post(`https://operation.dth.travel:7082/api/upload/${keyValue}`, { token });
+        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+        const res = await axios.post(`${baseUrl}/api/upload/${keyValue}`, { token });
         if (Array.isArray(res.data)) {
           const matched = res.data.find((item: UploadGroup) => item.BookingAssignmentId === keyValue);
           if (matched) {
@@ -135,7 +136,8 @@ const UploadImagesWithRemark: React.FC<{
     body: string;
   }) => {
     try {
-      const res = await axios.post("https://onlinedt.diethelmtravel.com:5281/api/EmailSender", {
+      const altBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL_ALT;
+      const res = await axios.post(`${altBaseUrl}/api/EmailSender`, {
         emails,
         emails_CC,
         subject,
@@ -242,7 +244,8 @@ const UploadImagesWithRemark: React.FC<{
       },
     };
     try {
-      const res = await axios.post(`https://operation.dth.travel:7082/api/upload/${keyValue}/update`, payload);
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const res = await axios.post(`${baseUrl}/api/upload/${keyValue}/update`, payload);
       setResponseMsg(res.data.message || "อัปเดตสำเร็จ");
       await fetchUploadedData();
       await sendEmail({
@@ -276,7 +279,7 @@ const UploadImagesWithRemark: React.FC<{
 ${previewBase64List
             .map(
               (_img, idx) =>
-                `<p><a href="https://operation.dth.travel:7082/api/download/image/${asmdbValue}/${_img.id}" target="_blank">📸 View Image ${idx + 1}</a></p>`
+                `<p><a href="${baseUrl}/api/download/image/${asmdbValue}/${_img.id}" target="_blank">📸 View Image ${idx + 1}</a></p>`
             )
             .join("")}
 `,
@@ -402,7 +405,8 @@ ${previewBase64List
         },
       };
       console.log("📤 Upload Payload:", payload);  // <-- log ตรงนี้
-      const res = await axios.post(`https://operation.dth.travel:7082/api/upload/`, payload);
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const res = await axios.post(`${baseUrl}/api/upload/`, payload);
       setResponseMsg(res.data.message || "Upload สำเร็จ");
       await fetchUploadedData();
       await sendEmail({
@@ -419,7 +423,7 @@ ${previewBase64List
   ${previewBase64List
             .map(
               (_img, idx) =>
-                `<p><a href="https://operation.dth.travel:7082/api/download/image/${asmdbValue}/${_img.id}" target="_blank">📸 View Image ${idx + 1}</a></p>`
+                `<p><a href="${baseUrl}/api/download/image/${asmdbValue}/${_img.id}" target="_blank">📸 View Image ${idx + 1}</a></p>`
             )
             .join("")}
 `,
