@@ -144,6 +144,7 @@ const UploadImagesWithRemark: React.FC<{
     subject: string;
     body: string;
   }) => {
+    console.log("Sending email to:", emails);
     try {
       const altBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL_ALT;
       const res = await axios.post(`${altBaseUrl}/api/EmailSender`, {
