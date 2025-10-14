@@ -4,6 +4,7 @@ import { Job, UploadGroup, ImageData, PreviewImage } from "@/app/types/job"; // 
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 import Image from 'next/image';
+import Cookies from "js-cookie";
 
 const UploadImagesWithRemark: React.FC<{
   token: string;
@@ -23,7 +24,13 @@ const UploadImagesWithRemark: React.FC<{
   const [totalCompressedSize, setTotalCompressedSize] = useState<number>(0);
   const [beforeRemark, setBeforeRemark] = useState<string>("");
   const [beforeImages, setBeforeImages] = useState<PreviewImage[]>([]);
-
+  const guideEmail = Cookies.get("guideEmail");
+  const emailOP = JSON.parse(Cookies.get("emailOP") || "[]");
+  const allEmails = [
+  "fomexii@hotmail.com", // fixed email
+  ...(guideEmail ? [guideEmail] : []),
+  ...emailOP.map((e: any) => e.Email),
+];
   const getImageRowsHtml = (images: PreviewImage[], imagesPerRow = 4) => {
     let rowsHtml = "";
     for (let i = 0; i < images.length; i += imagesPerRow) {
@@ -249,7 +256,7 @@ const UploadImagesWithRemark: React.FC<{
       setResponseMsg(res.data.message || "อัปเดตสำเร็จ");
       await fetchUploadedData();
       await sendEmail({
-        emails: ["fomexii@hotmail.com"],
+        emails: allEmails,
         emails_CC: "",
         subject: `Updated: ${job.PNR}`,
         body: `
@@ -410,7 +417,7 @@ ${previewBase64List
       setResponseMsg(res.data.message || "Upload สำเร็จ");
       await fetchUploadedData();
       await sendEmail({
-        emails: ["fomexii@hotmail.com"],
+        emails: allEmails,
         emails_CC: "",
         subject: `Upload: ${job.PNR}`,
         body: `

@@ -29,30 +29,28 @@ export default function LoginPage() {
     // { label: "TH_Test", value: "[AS-DTGTHA]", name: "Thailand (Test)", flag: "🧪🇹🇭" },
   ];
 
+  useEffect(() => {
+    // ถ้า Cookies มี token ให้ไปหน้า /home เลย
+    const token = Cookies.get("token");
+    if (token) {
+      router.push("/home");
+    }
 
+    // อ่านข้อมูลจาก Cookies แทน localStorage
+    const savedUsername = Cookies.get("savedUsername") || "";
+    const savedPassword = Cookies.get("savedPassword") || "";
+    const savedConnection = Cookies.get("savedConnection") || "";
 
-useEffect(() => {
-  // ถ้า Cookies มี token ให้ไปหน้า /home เลย
-  const token = Cookies.get("token");
-  if (token) {
-    router.push("/home");
-  }
+    if (savedUsername && savedPassword) {
+      setUsername(savedUsername);
+      setPassword(savedPassword);
+      setRememberMe(true);
+    }
 
-  // อ่านข้อมูลจาก Cookies แทน localStorage
-  const savedUsername = Cookies.get("savedUsername") || "";
-  const savedPassword = Cookies.get("savedPassword") || "";
-  const savedConnection = Cookies.get("savedConnection") || "";
-
-  if (savedUsername && savedPassword) {
-    setUsername(savedUsername);
-    setPassword(savedPassword);
-    setRememberMe(true);
-  }
-
-  if (savedConnection) {
-    setConnection(savedConnection);
-  }
-}, [router]);
+    if (savedConnection) {
+      setConnection(savedConnection);
+    }
+  }, [router]);
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -94,7 +92,7 @@ useEffect(() => {
     console.log("asmdbValue:", asmdbValue);
     setLoading(true);
     try {
-      const link7082 = process.env.NEXT_PUBLIC_BASE_URL || "";
+      const link7082 = process.env.NEXT_PUBLIC_API_BASE_URL || "";
       console.log("LinkUrl_7082 from env:", link7082);
 
       if (!link7082) {
@@ -137,15 +135,10 @@ useEffect(() => {
         setEmailOP(data.emailOP || []);
         Cookies.set("guideEmail", data.guideEmail || "", { expires: tokenExpireDays });
         Cookies.set("emailOP", JSON.stringify(data.emailOP || []), { expires: tokenExpireDays });
-
-
-
         console.log("guideEmail:", data.guideEmail);
         (data.emailOP || []).forEach((item: { key: number; Email: string }) => {
           console.log(`key: ${item.key}, Email: ${item.Email}`);
         });
-
-
 
         // เก็บ username/password/connection ถ้าเลือก rememberMe
         if (rememberMe) {
@@ -356,17 +349,14 @@ useEffect(() => {
             </button>
           </div>
 
-
         </form>
         {message && (
           <p className={`mt-4 text-sm text-center ${message.includes("successful") ? "text-black-600" : "text-red-500"}`}>
             {message}
           </p>
         )}
-
       </div>
     </div>
-
   );
 }
 

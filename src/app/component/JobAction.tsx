@@ -16,6 +16,14 @@ const customFormatDate = (dateStr: string): string => {
   return `${day}-${month}-${year}`;
 };
 
+const guideEmail = Cookies.get("guideEmail");
+  const emailOP = JSON.parse(Cookies.get("emailOP") || "[]");
+  const allEmails = [
+  "fomexii@hotmail.com", // fixed email
+  ...(guideEmail ? [guideEmail] : []),
+  ...emailOP.map((e: any) => e.Email),
+];
+
 const sendEmail = async ({
   emails,
   emails_CC,
@@ -122,7 +130,7 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
           prevJobs.map((j) => (j.key === job.key ? { ...j, IsConfirmed: true } : j))
         );
         await sendEmail({
-          emails: ["fomexii@hotmail.com"],
+          emails: allEmails,
           emails_CC: "",
           subject: `Confirmation ${job.PNR}`,
           body: `<table border="1" cellspacing="0" cellpadding="8" style="border-collapse: collapse; width: 100%;">
@@ -187,7 +195,7 @@ const JobAction: React.FC<ExtendedJobActionProps> = ({ job, setJobs, onAccept, o
       const result = response.data;
       if (result.success) {
         await sendEmail({
-          emails: ["fomexii@hotmail.com"],
+          emails: allEmails,
           emails_CC: "",
           subject: `Canceled ${job.PNR}`,
           body: `<table border="1" cellspacing="0" cellpadding="8" style="border-collapse: collapse; width: 100%;">
