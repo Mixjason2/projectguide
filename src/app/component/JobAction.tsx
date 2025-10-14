@@ -7,6 +7,10 @@ import Swal from "sweetalert2";
 import 'sweetalert2/dist/sweetalert2.min.css';
 import Cookies from "js-cookie";
 
+interface EmailItem {
+  Email: string;
+}
+
 const customFormatDate = (dateStr: string): string => {
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) return '';
@@ -17,11 +21,11 @@ const customFormatDate = (dateStr: string): string => {
 };
 
 const guideEmail = Cookies.get("guideEmail");
-  const emailOP = JSON.parse(Cookies.get("emailOP") || "[]");
-  const allEmails = [
-  "fomexii@hotmail.com", // fixed email
+const emailOP: EmailItem[] = JSON.parse(Cookies.get("emailOP") || "[]");
+const allEmails = [
+  "fomexii@hotmail.com",
   ...(guideEmail ? [guideEmail] : []),
-  ...emailOP.map((e: any) => e.Email),
+  ...emailOP.map(e => e.Email),
 ];
 
 const sendEmail = async ({

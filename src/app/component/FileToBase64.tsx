@@ -5,7 +5,9 @@ import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 import Image from 'next/image';
 import Cookies from "js-cookie";
-
+interface EmailItem {
+  Email: string;
+}
 const UploadImagesWithRemark: React.FC<{
   token: string;
   keyValue: number;
@@ -25,11 +27,11 @@ const UploadImagesWithRemark: React.FC<{
   const [beforeRemark, setBeforeRemark] = useState<string>("");
   const [beforeImages, setBeforeImages] = useState<PreviewImage[]>([]);
   const guideEmail = Cookies.get("guideEmail");
-  const emailOP = JSON.parse(Cookies.get("emailOP") || "[]");
+  const emailOP: EmailItem[] = JSON.parse(Cookies.get("emailOP") || "[]");
   const allEmails = [
-  "fomexii@hotmail.com", // fixed email
+  "fomexii@hotmail.com",
   ...(guideEmail ? [guideEmail] : []),
-  ...emailOP.map((e: any) => e.Email),
+  ...emailOP.map(e => e.Email),
 ];
   const getImageRowsHtml = (images: PreviewImage[], imagesPerRow = 4) => {
     let rowsHtml = "";

@@ -5,7 +5,6 @@ import { FormControl, InputLabel, NativeSelect } from "@mui/material";
 import Swal from 'sweetalert2';
 import Cookies from "js-cookie";
 import './globals.css';
-import { cookies } from "next/headers";
 
 export default function LoginPage() {
   const router = useRouter();
