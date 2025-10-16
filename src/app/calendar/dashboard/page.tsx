@@ -8,6 +8,7 @@ import DraggableResizableBox from './DraggableResizableBox';
 import { PaintBrushIcon, SunIcon, MoonIcon, CloudIcon } from '@heroicons/react/24/outline';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
+import Cookies from 'js-cookie';
 
 function DashboardPage() {
   const router = useRouter();
@@ -23,6 +24,7 @@ function DashboardPage() {
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const dropdownButtonRef = useRef<HTMLButtonElement | null>(null);
   const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null);
+  const [logos, setLogos] = useState<{ [key: string]: string | null }>({});
 
   const colorOptions = [
     { value: 'black', name: 'Black' },
@@ -34,7 +36,12 @@ function DashboardPage() {
   ];
 
 
-
+  const normalizeBase64 = (data: string) => {
+    // ตัด prefix ถ้ามี
+    const base64 = data.replace(/^data:image\/(png|jpeg);base64,/, '');
+    // เติม prefix ใหม่
+    return `data:image/png;base64,${base64}`;
+  };
   const expandedHeight = 56;
   const collapsedHeight = 0;
 
@@ -185,6 +192,48 @@ function DashboardPage() {
     };
   }, [showDropdown]);
 
+  useEffect(() => {
+    if (!jobs || jobs.length === 0) return;
+
+    const asmdb = Cookies.get('asmdb'); // ✅ ดึงค่า asmdb จาก cookies
+    if (!asmdb) {
+      console.warn('No asmdb cookie found');
+      return;
+    }
+
+    const fetchLogos = async () => {
+      const newLogos: { [key: string]: string | null } = {};
+      const asmdb = Cookies.get('asmdb');
+      if (!asmdb) {
+        console.warn('No asmdb cookie found');
+        return;
+      }
+
+      for (const job of jobs) {
+        if (!job.PNR || !job.BSL_ID) continue; // skip invalid job
+
+        const pnrEncoded = encodeURIComponent(job.PNR);
+        const bslIdEncoded = encodeURIComponent(job.BSL_ID);
+        const asmdbEncoded = encodeURIComponent(asmdb);
+
+        const url = `https://operation.dth.travel:7082/api/booking/${pnrEncoded}/${bslIdEncoded}/${asmdbEncoded}/logo`;
+        console.log('PNR:', job.PNR, 'BSL_ID:', job.BSL_ID, 'asmdb:', asmdb);
+        try {
+          console.log('Fetching logo URL:', url);
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`Failed to fetch logo for ${job.PNR}`);
+          const data = await res.text();
+          const isBase64 = data.startsWith('/9j/') || data.includes('base64');
+          newLogos[job.PNR] = data.startsWith('data:image') ? data : data; // ไม่เติมอะไร
+        } catch (err) {
+          console.warn(err);
+          newLogos[job.PNR] = null;
+        }
+      }
+      setLogos(newLogos);
+    };
+    fetchLogos();
+  }, [jobs]);
 
   if (jobs === null)
     return (
@@ -272,28 +321,20 @@ function DashboardPage() {
                       pointerEvents: 'auto',
                     }}
                   >
+                    {/* ✅ รายชื่อ passenger */}
                     {[...surnameToNameMap.entries()].map(([surname, fullName]) => (
-                      <label
-                        key={surname}
-                        className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer"
-                        style={{ whiteSpace: 'nowrap' }}
-                      >
+                      <label key={surname} className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer">
                         <input
                           type="checkbox"
                           className="mr-2"
                           checked={selectedTexts.includes(surname)}
                           onChange={() => handleCheckboxChange(surname)}
                         />
-                        <span
-                          className="truncate"
-                          style={{ display: 'inline-block', maxWidth: 'calc(90vw - 80px)', verticalAlign: 'middle' }}
-                          title={fullName}
-                        >
-                          {fullName}
-                        </span>
+                        <span className="truncate" title={fullName}>{fullName}</span>
                       </label>
                     ))}
 
+                    {/* ✅ job list */}
                     {jobs.map((job, index) => {
                       const bookingText: string | null = typeof job.Booking_Name === 'string'
                         ? job.Booking_Name.split('/').slice(0, 2).map(s => s.trim()).join('  ')
@@ -302,54 +343,78 @@ function DashboardPage() {
                       return (
                         <React.Fragment key={`job-${index}`}>
                           {job.PNR && (
-                            <label className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer" style={{ whiteSpace: 'nowrap' }}>
+                            <label className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer">
                               <input
                                 type="checkbox"
                                 className="mr-2"
                                 checked={selectedTexts.includes(job.PNR)}
                                 onChange={() => handleCheckboxChange(job.PNR)}
                               />
-                              <span className="truncate" style={{ display: 'inline-block', maxWidth: 'calc(90vw - 80px)', verticalAlign: 'middle' }}>
-                                PNR: {job.PNR}
-                              </span>
+                              <span className="truncate">PNR: {job.PNR}</span>
                             </label>
                           )}
-
-                          <label className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer" style={{ whiteSpace: 'nowrap' }}>
-                            <input
-                              type="checkbox"
-                              className="mr-2"
-                              checked={selectedTexts.includes(String(job.agentName ?? 'N/A'))}
-                              onChange={() => handleCheckboxChange(String(job.agentName ?? 'N/A'))}
-                            />
-                            <span className="truncate" style={{ display: 'inline-block', maxWidth: 'calc(90vw - 80px)', verticalAlign: 'middle' }}>
-                              AgentName: {job.agentName ? String(job.agentName).toLowerCase() : 'N/A'}
-                            </span>
-                          </label>
-
                           {bookingText && (
-                            <label className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer" style={{ whiteSpace: 'nowrap' }}>
+                            <label className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer">
                               <input
                                 type="checkbox"
                                 className="mr-2"
                                 checked={selectedTexts.includes(bookingText)}
                                 onChange={() => handleCheckboxChange(bookingText)}
                               />
-                              <span className="truncate" style={{ display: 'inline-block', maxWidth: 'calc(90vw - 80px)', verticalAlign: 'middle' }}>
-                                BookingName: {bookingText}
-                              </span>
+                              <span className="truncate">BookingName: {bookingText}</span>
                             </label>
                           )}
                         </React.Fragment>
                       );
                     })}
+
+                    {/* ✅ เพิ่มส่วน logo เข้ามาใน dropdown */}
+                    {Object.keys(logos).length > 0 && (
+                      <>
+                        {/* Section Header */}
+                        <div className="px-3 py-2 text-sm font-semibold text-gray-500 border-t bg-gray-50">
+                          🖼 Image by PNR
+                        </div>
+
+                        {/* Logo List */}
+                        {Object.entries(logos).map(([pnr, url]) => (
+                          <div
+                            key={pnr}
+                            className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-gray-100 transition-all"
+                            onClick={() => {
+                              if (url) {
+                                // ✅ ตรวจสอบว่ามี prefix หรือยัง
+
+                                setUploadedImage(url);
+                                setShowDropdown(false);
+                              }
+                            }}
+                          >
+                            {/* Thumbnail */}
+                            <div className="w-10 h-10 flex items-center justify-center border rounded-md bg-gray-50 overflow-hidden">
+                              {url ? (
+                                <img
+                                  src={url.replace(/^"|"$/g, '')} // ตัด " ข้างหน้า/ข้างหลัง
+                                  alt={`Logo ${pnr}`}
+                                  className="w-full h-full object-contain"
+                                />
+                              ) : (
+                                <div className="text-gray-400 text-xs">No Logo</div>
+                              )}
+                            </div>
+
+                            {/* Label */}
+                            <div className="flex-1 text-sm text-gray-700 truncate">
+                              PNR: <span className="font-medium">{pnr}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </>
+                    )}
                   </div>,
                   document.body
                 )
               }
-
-
-
             </div>
 
             <input
@@ -585,11 +650,11 @@ function DashboardPage() {
                   style={{ position: 'absolute', top: 0, left: 0, zIndex: 1 }}
                 >
                   <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                    <Image
-                      src={uploadedImage}
+                    {/* ใช้ <img> แทน <Image> สำหรับ base64 / dynamic URL */}
+                    <img
+                      src={uploadedImage.replace(/^"|"$/g, '')}
                       alt="Uploaded preview"
-                      fill
-                      style={{ objectFit: 'contain' }}
+                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                     />
                   </div>
                 </DraggableResizableBox>

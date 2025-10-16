@@ -18,6 +18,7 @@ export type Job = {
   Booking_Name: ReactNode;
   agentName?: string; 
   serviceProductName: ReactNode;
+  BSL_ID?: string;
 };
 
 
