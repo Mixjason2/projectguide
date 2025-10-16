@@ -7,8 +7,8 @@ import FadeButtons from './fadeButtons';
 import DraggableResizableBox from './DraggableResizableBox';
 import { PaintBrushIcon, SunIcon, MoonIcon, CloudIcon } from '@heroicons/react/24/outline';
 import { createPortal } from 'react-dom';
-import Image from 'next/image';
 import Cookies from 'js-cookie';
+import Image from 'next/image';
 
 function DashboardPage() {
   const router = useRouter();
@@ -35,13 +35,6 @@ function DashboardPage() {
     { value: '#f59e0b', name: 'Orange' },
   ];
 
-
-  const normalizeBase64 = (data: string) => {
-    // ตัด prefix ถ้ามี
-    const base64 = data.replace(/^data:image\/(png|jpeg);base64,/, '');
-    // เติม prefix ใหม่
-    return `data:image/png;base64,${base64}`;
-  };
   const expandedHeight = 56;
   const collapsedHeight = 0;
 
@@ -223,7 +216,6 @@ function DashboardPage() {
           const res = await fetch(url);
           if (!res.ok) throw new Error(`Failed to fetch logo for ${job.PNR}`);
           const data = await res.text();
-          const isBase64 = data.startsWith('/9j/') || data.includes('base64');
           newLogos[job.PNR] = data.startsWith('data:image') ? data : data; // ไม่เติมอะไร
         } catch (err) {
           console.warn(err);
@@ -393,10 +385,12 @@ function DashboardPage() {
                             {/* Thumbnail */}
                             <div className="w-10 h-10 flex items-center justify-center border rounded-md bg-gray-50 overflow-hidden">
                               {url ? (
-                                <img
-                                  src={url.replace(/^"|"$/g, '')} // ตัด " ข้างหน้า/ข้างหลัง
+                                <Image
+                                  src={url.replace(/^"|"$/g, '')}
                                   alt={`Logo ${pnr}`}
-                                  className="w-full h-full object-contain"
+                                  width={40}
+                                  height={40}
+                                  style={{ objectFit: 'contain' }}
                                 />
                               ) : (
                                 <div className="text-gray-400 text-xs">No Logo</div>
@@ -651,11 +645,15 @@ function DashboardPage() {
                 >
                   <div style={{ width: '100%', height: '100%', position: 'relative' }}>
                     {/* ใช้ <img> แทน <Image> สำหรับ base64 / dynamic URL */}
-                    <img
-                      src={uploadedImage.replace(/^"|"$/g, '')}
-                      alt="Uploaded preview"
-                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                    />
+                    {uploadedImage && (
+                      <Image
+                        src={uploadedImage.replace(/^"|"$/g, '')}
+                        alt="Uploaded preview"
+                        width={500}
+                        height={300}
+                        style={{ objectFit: 'contain' }}
+                      />
+                    )}
                   </div>
                 </DraggableResizableBox>
               )}
