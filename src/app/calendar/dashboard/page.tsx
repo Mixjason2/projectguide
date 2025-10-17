@@ -369,40 +369,44 @@ function DashboardPage() {
                         </div>
 
                         {/* Logo List */}
-                        {Object.entries(logos).map(([pnr, url]) => (
-                          <div
-                            key={pnr}
-                            className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-gray-100 transition-all"
-                            onClick={() => {
-                              if (url) {
-                                // ✅ ตรวจสอบว่ามี prefix หรือยัง
+                        {Object.entries(logos)
+                          .filter(
+                            ([_, url]) =>
+                              typeof url === "string" &&
+                              !!url && // ไม่ให้เป็น null หรือ undefined
+                              url.trim() !== "" &&
+                              /^https?:|^\//.test(url)
+                          )
+                          .map(([pnr, url]) => {
+                            // ✅ TypeScript จะเข้าใจว่าถึงตรงนี้ url ไม่เป็น null แล้ว
+                            const safeUrl = url!.replace(/^"|"$/g, "");
 
-                                setUploadedImage(url);
-                                setShowDropdown(false);
-                              }
-                            }}
-                          >
-                            {/* Thumbnail */}
-                            <div className="w-10 h-10 flex items-center justify-center border rounded-md bg-gray-50 overflow-hidden">
-                              {url ? (
-                                <Image
-                                  src={url.replace(/^"|"$/g, '')}
-                                  alt={`Logo ${pnr}`}
-                                  width={40}
-                                  height={40}
-                                  style={{ objectFit: 'contain' }}
-                                />
-                              ) : (
-                                <div className="text-gray-400 text-xs">No Logo</div>
-                              )}
-                            </div>
+                            return (
+                              <div
+                                key={pnr}
+                                className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-gray-100 transition-all"
+                                onClick={() => {
+                                  setUploadedImage(safeUrl);
+                                  setShowDropdown(false);
+                                }}
+                              >
+                                <div className="w-10 h-10 flex items-center justify-center border rounded-md bg-gray-50 overflow-hidden">
+                                  <Image
+                                    src={safeUrl}
+                                    alt={`Logo ${pnr}`}
+                                    width={40}
+                                    height={40}
+                                    style={{ objectFit: "contain" }}
+                                    unoptimized
+                                  />
+                                </div>
 
-                            {/* Label */}
-                            <div className="flex-1 text-sm text-gray-700 truncate">
-                              PNR: <span className="font-medium">{pnr}</span>
-                            </div>
-                          </div>
-                        ))}
+                                <div className="flex-1 text-sm text-gray-700 truncate">
+                                  PNR: <span className="font-medium">{pnr}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
                       </>
                     )}
                   </div>,
@@ -631,9 +635,6 @@ function DashboardPage() {
               ))}
 
               {/* ใส่ CSS สำหรับ marquee */}
-
-
-
               {uploadedImage && (
                 <DraggableResizableBox
                   defaultWidth={500}
@@ -658,7 +659,6 @@ function DashboardPage() {
                 </DraggableResizableBox>
               )}
             </div>
-
 
             <style jsx>{`
             @keyframes marquee {
