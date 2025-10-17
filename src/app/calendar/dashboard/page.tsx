@@ -371,7 +371,7 @@ function DashboardPage() {
                         {/* Logo List */}
                         {Object.entries(logos)
                           .filter(
-                            ([_, url]) =>
+                            ([url]) =>
                               typeof url === "string" &&
                               !!url && // ไม่ให้เป็น null หรือ undefined
                               url.trim() !== "" &&
