@@ -363,23 +363,18 @@ function DashboardPage() {
                     {/* ✅ เพิ่มส่วน logo เข้ามาใน dropdown */}
                     {Object.keys(logos).length > 0 && (
                       <>
-                        {/* Section Header */}
                         <div className="px-3 py-2 text-sm font-semibold text-gray-500 border-t bg-gray-50">
                           🖼 Image by PNR
                         </div>
 
-                        {/* Logo List */}
                         {Object.entries(logos)
-                          .filter(
-                            ([url]) =>
-                              typeof url === "string" &&
-                              !!url && // ไม่ให้เป็น null หรือ undefined
-                              url.trim() !== "" &&
-                              /^https?:|^\//.test(url)
-                          )
+                          .filter(([, url]) => {
+                            if (typeof url !== "string") return false;
+                            const cleaned = url.replace(/^"|"$/g, "").trim();
+                            return cleaned.startsWith("data:image");
+                          })
                           .map(([pnr, url]) => {
-                            // ✅ TypeScript จะเข้าใจว่าถึงตรงนี้ url ไม่เป็น null แล้ว
-                            const safeUrl = url!.replace(/^"|"$/g, "");
+                            const safeUrl = url!.replace(/^"|"$/g, "").trim();
 
                             return (
                               <div
@@ -392,6 +387,7 @@ function DashboardPage() {
                               >
                                 <div className="w-10 h-10 flex items-center justify-center border rounded-md bg-gray-50 overflow-hidden">
                                   <Image
+                                    loader={({ src }) => src}
                                     src={safeUrl}
                                     alt={`Logo ${pnr}`}
                                     width={40}
