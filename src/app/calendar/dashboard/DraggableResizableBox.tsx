@@ -33,8 +33,6 @@ const DraggableResizableBox: React.FC<DraggableResizableBoxProps> = ({
   const childRef = useRef<HTMLDivElement>(null);
   const positionInitializedRef = useRef(false);
  
-const initialChildrenRef = useRef(children);
- 
 useEffect(() => {
   if (positionInitializedRef.current) return;
   if (!childRef.current) return;
