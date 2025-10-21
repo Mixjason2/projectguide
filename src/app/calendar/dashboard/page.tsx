@@ -585,15 +585,15 @@ function DashboardPage() {
 
           {/* Selected Texts Display */}
           <div
-            className="mt-6 px-4 w-full pt-[40px] relative"
-            // ถ้ามีรูป ให้ลด minHeight ลงเพื่อไม่ให้กันพื้นที่ (รูปวางแบบ absolute จะไม่ถูกดัน)
-            style={{ minHeight: uploadedImage ? '0' : '400px' }}
+            className="mt-6 px-4 w-full relative flex flex-col items-center"
+            style={{ minHeight: uploadedImage ? '400px' : '400px' }} // เพิ่ม minHeight เพื่อเว้นที่
           >
-            <div className="w-full flex flex-col items-center gap-4">
+            <div className="w-full flex flex-col items-center gap-15">
               {selectedTexts.length === 0 && (
                 <div className="text-sm text-gray-500"></div>
               )}
 
+              {/* ข้อความ draggable */}
               {selectedTexts.map((text, idx) => (
                 <div key={idx} className="w-full flex justify-center items-center">
                   <DraggableResizableBox
@@ -602,10 +602,7 @@ function DashboardPage() {
                     lockAspectRatio={false}
                     borderWidth={2}
                     style={{
-                      position: 'fixed',
-                      top: '80px',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
+                      position: 'relative', // เปลี่ยนจาก fixed -> relative
                       zIndex: 11000,
                     }}
                   >
@@ -615,13 +612,11 @@ function DashboardPage() {
                         fontSize: `${fontSize}px`,
                         color: textColor,
                         padding: '4px',
-                        whiteSpace: 'normal',        // เปลี่ยนจาก 'nowrap' -> 'normal'
+                        whiteSpace: 'normal',
                         display: 'inline-block',
-                        wordBreak: 'break-word',     // เพิ่มเพื่อให้ตัดบรรทัด
-                        overflowWrap: 'break-word',  // เพิ่มเพื่อให้ตัดบรรทัด
-                        animation: isRunning
-                          ? 'marquee 5s linear infinite'
-                          : 'none',
+                        wordBreak: 'break-word',
+                        overflowWrap: 'break-word',
+                        animation: isRunning ? 'marquee 5s linear infinite' : 'none',
                       }}
                     >
                       {text}
@@ -630,7 +625,7 @@ function DashboardPage() {
                 </div>
               ))}
 
-              {/* ใส่ CSS สำหรับ marquee */}
+              {/* รูปภาพ draggable */}
               {uploadedImage && (
                 <DraggableResizableBox
                   defaultWidth={500}
@@ -638,34 +633,31 @@ function DashboardPage() {
                   minWidth={100}
                   minHeight={100}
                   lockAspectRatio={false}
-                  style={{ position: 'absolute', top: 0, left: 0, zIndex: 1 }}
+                  style={{ position: 'relative', zIndex: 1 }}
                 >
                   <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                    {/* ใช้ <img> แทน <Image> สำหรับ base64 / dynamic URL */}
-                    {uploadedImage && (
-                      <Image
-                        src={uploadedImage.replace(/^"|"$/g, '')}
-                        alt="Uploaded preview"
-                        width={500}
-                        height={300}
-                        style={{ objectFit: 'contain' }}
-                      />
-                    )}
+                    <Image
+                      src={uploadedImage.replace(/^"|"$/g, '')}
+                      alt="Uploaded preview"
+                      width={500}
+                      height={300}
+                      style={{ objectFit: 'contain' }}
+                    />
                   </div>
                 </DraggableResizableBox>
               )}
             </div>
 
             <style jsx>{`
-            @keyframes marquee {
-              0% { transform: translateX(100%); }
-              100% { transform: translateX(-100%); }
-            }
-            .animate-marquee {
-              display: inline-block;
-              animation: marquee 10s linear infinite;
-            }
-          `}</style>
+    @keyframes marquee {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+    .animate-marquee {
+      display: inline-block;
+      animation: marquee 10s linear infinite;
+    }
+  `}</style>
           </div>
         </div>
       </div>
