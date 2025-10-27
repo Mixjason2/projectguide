@@ -259,11 +259,12 @@ function DashboardPage() {
       >
         {/* Top Bar */}
         <div
-          className="fixed top-0 left-0 w-full bg-white/90 backdrop-blur-md shadow-lg z-50 px-4 flex flex-wrap items-center justify-between gap-4 transition-all duration-300 ease-in-out"
+          className="fixed top-0 left-0 w-full bg-white/90 backdrop-blur-md shadow-lg z-50 px-4 flex flex-wrap items-center justify-between gap-4"
           style={{
             height: showTopBar ? expandedHeight : collapsedHeight,
-            overflow: showTopBar ? 'visible' : 'hidden', // changed: allow dropdown to overflow when bar expanded
-            position: 'relative',
+            overflow: 'visible',            // ✅ dropdown จะไม่ถูกตัด
+            pointerEvents: 'auto',          // ✅ ให้รับ event เฉพาะภายใน
+            position: 'relative',           // ✅ ให้ context แยกชัดเจน
           }}
         >
           {/* เนื้อหาบนบาร์ */}
@@ -279,11 +280,9 @@ function DashboardPage() {
             <div className="relative w-fit"> {/* เอา max-w ออกเพื่อให้ dropdown ขยายได้ */}
               <button
                 ref={dropdownButtonRef}
-                className={`px-4 py-2 text-base border rounded-lg shadow-sm w-full text-left focus:ring-2 focus:ring-blue-400 transition
-        ${bgColor === 'white' ? 'bg-white text-black border-gray-300' : 'bg-gray-800 text-white border-gray-600'}
-        truncate whitespace-nowrap overflow-hidden`}
+                className={`...`}
                 onClick={e => {
-                  // toggle and compute fixed position for portal-like overlay
+                  console.log('Select passengers clicked'); // ✅ เพิ่ม log
                   const btn = e.currentTarget as HTMLElement;
                   const r = btn.getBoundingClientRect();
                   setDropdownPos({ top: Math.round(r.bottom + 6), left: Math.round(r.left) });
@@ -292,15 +291,14 @@ function DashboardPage() {
                 }}
                 title={selectedTexts.length > 0 ? selectedTexts.join(', ') : 'Select passengers'}
               >
-                {selectedTexts.length > 0
-                  ? selectedTexts.join(', ')
-                  : 'Select passengers'}
+                {selectedTexts.length > 0 ? selectedTexts.join(', ') : 'Select passengers'}
               </button>
-              {showDropdown &&
-                createPortal(
+              {showDropdown && (() => {
+                console.log('🔹 Dropdown rendered, pos:', dropdownPos, 'showDropdown:', showDropdown);
+                console.log('Dropdown items:', [...surnameToNameMap.entries()], jobs);
+                return createPortal(
                   <div
                     ref={dropdownRef}
-                    className="bg-white border rounded-lg shadow-lg overflow-y-auto"
                     style={{
                       position: 'fixed',
                       top: dropdownPos ? `${dropdownPos.top}px` : '0px',
@@ -309,10 +307,12 @@ function DashboardPage() {
                       maxWidth: 'min(90vw, 900px)',
                       maxHeight: '400px',
                       overflowY: 'auto',
-                      zIndex: 9999,
+                      zIndex: 99999,
                       pointerEvents: 'auto',
                     }}
+                    className="bg-white border rounded-lg shadow-lg"
                   >
+
                     {/* ✅ รายชื่อ passenger */}
                     {[...surnameToNameMap.entries()].map(([surname, fullName]) => (
                       <label key={surname} className="flex items-center px-3 py-1 hover:bg-gray-100 cursor-pointer">
@@ -407,8 +407,8 @@ function DashboardPage() {
                     )}
                   </div>,
                   document.body
-                )
-              }
+                );
+              })()}
             </div>
 
             <input

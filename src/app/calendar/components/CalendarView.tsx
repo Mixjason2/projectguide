@@ -1,8 +1,6 @@
 'use client';
-
-import React, {
-  useMemo, useRef, useEffect, useState, useCallback
-} from 'react';
+ 
+import React, { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -11,19 +9,66 @@ import { Job, getTotalPax } from './types';
 import type { CalendarApi } from '@fullcalendar/core';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-
-
+import Cookies from 'js-cookie';
 import CalendarEventContent from './CalendarEventContent';
 import { generateICS, generateSingleICS } from './icsGenerator';
 import { getStatusDots } from './calendarUtils';
-
+ 
 dayjs.extend(utc);
-
+ 
+// Note: we reuse the same crypto helpers as in Page for decrypting debug cache in sessionStorage.
+// For simplicity and to avoid code duplication across files, we implement minimal helper here too.
+// In a real project you might export them to a shared util.
+ 
+async function getCryptoKeyFromSecret(secret: string) {
+  const enc = new TextEncoder();
+  const secretBytes = enc.encode(secret);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', secretBytes);
+  return crypto.subtle.importKey('raw', hashBuffer, 'AES-GCM', false, ['encrypt', 'decrypt']);
+}
+function arrayBufferToBase64(buffer: ArrayBuffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+function base64ToArrayBuffer(base64: string) {
+  const binary = atob(base64);
+  const len = binary.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes.buffer;
+}
+async function decryptObjectFromBase64(payloadStr: string): Promise<any | null> {
+  try {
+    const payload = JSON.parse(payloadStr);
+    const secret = process.env.NEXT_PUBLIC_CACHE_SECRET || '';
+    const key = await getCryptoKeyFromSecret(secret || 'fallback_secret_use_env');
+    const iv = new Uint8Array(base64ToArrayBuffer(payload.iv));
+    const ct = base64ToArrayBuffer(payload.ct);
+    const plainBuffer = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+    const dec = new TextDecoder();
+    const json = dec.decode(plainBuffer);
+    return JSON.parse(json);
+  } catch (e) {
+    return null;
+  }
+}
+async function getEncryptedSession(key: string) {
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+    return await decryptObjectFromBase64(raw);
+  } catch {
+    return null;
+  }
+}
+ 
 type JobWithDate = Omit<Job, 'PickupDate' | 'DropoffDate'> & {
   PickupDate: string;
   DropoffDate: string;
 };
-
+ 
 type CalendarViewProps = {
   jobs: Job[];
   onDatesSet?: (arg: DatesSetArg) => void;
@@ -31,8 +76,9 @@ type CalendarViewProps = {
   currentViewProp?: string;
   loading?: boolean;
   calendarApiRef?: React.RefObject<CalendarApi | null>;
+  onDashboardClick?: (jobOrJobs: Job | Job[]) => void;
 };
-
+ 
 const CalendarView: React.FC<CalendarViewProps> = ({
   jobs,
   onDatesSet,
@@ -40,124 +86,50 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   currentViewProp = 'dayGridMonth',
   loading = false,
   calendarApiRef,
+  onDashboardClick,
 }) => {
   const calendarRef = useRef<FullCalendar>(null);
   const icsFilename = 'dth-calendar.ics';
-
-  // ใช้ Set แทน Array เพื่อป้องกัน key ซ้ำ
+ 
+  // fetchedRangesRef is debug-only; authoritative cache is in Page sessionStorage
   const fetchedRangesRef = useRef<Set<string>>(new Set());
-  const [stepTarget, setStepTarget] = useState<string | null>(null);
-  const [isStepping, setIsStepping] = useState(false);
-  const stepLockRef = useRef(false);
-
-  // เพิ่ม useRef เก็บสถานะจริงเพื่อช่วยป้องกัน effect loop
-  const stepTargetRef = useRef<string | null>(null);
-  const isSteppingRef = useRef(false);
-
-  const stepwiseGotoDate = useCallback((targetDateStr: string) => {
-    console.log('[stepwiseGotoDate] set stepTarget and isStepping true:', targetDateStr);
-    setStepTarget(targetDateStr);
-    stepTargetRef.current = targetDateStr;
-
-    setIsStepping(true);
-    isSteppingRef.current = true;
-  }, []);
-
-  useEffect(() => {
-  console.log('stepTarget value changed:', stepTarget);
-}, [stepTarget]);
-
-  useEffect(() => {
-    if (!gotoDate) return;
-
-    // ใช้ ref ตรวจสอบเพื่อป้องกัน set ซ้ำ
-    if (isSteppingRef.current && stepTargetRef.current === gotoDate) {
-      console.log('[useEffect gotoDate] skip set stepwise goto (already stepping to this date)', gotoDate);
-      return;
-    }
-
-    console.log('[useEffect gotoDate] set stepwise goto', gotoDate);
-    stepwiseGotoDate(gotoDate);
-    fetchedRangesRef.current.clear();
-  }, [gotoDate, stepwiseGotoDate]);
-
+ 
   const handleDatesSet = useCallback(
-  async (arg: DatesSetArg) => {
-    const key = `${arg.startStr}::${arg.endStr}`;
-
-    if (jobs.length === 0 && fetchedRangesRef.current.has(key)) {
-      fetchedRangesRef.current.delete(key);
-    }
-
-    const shouldFetch = !fetchedRangesRef.current.has(key) || jobs.length === 0;
-
-    console.log('[handleDatesSet] computed', { key, shouldFetch });
-    console.log('[handleDatesSet] before fetch:', {
-      isStepping: isSteppingRef.current,
-      stepTarget: stepTargetRef.current,
-      stepLock: stepLockRef.current
-    });
-
-    if (shouldFetch) {
-      if (!fetchedRangesRef.current.has(key)) {
-        fetchedRangesRef.current.add(key);
-        console.log('[handleDatesSet] add key', key);
-      }
-
-      stepLockRef.current = true;
+    async (arg: DatesSetArg) => {
+      const key = `${arg.startStr}::${arg.endStr}`;
+      fetchedRangesRef.current.add(key);
       try {
-        console.log('[handleDatesSet] before await onDatesSet');
         await onDatesSet?.(arg);
-        console.log('[handleDatesSet] after await onDatesSet');
-      } finally {
-        stepLockRef.current = false;
-        console.log('[handleDatesSet] stepLockRef cleared');
+      } catch (err) {
+        console.error('[CalendarView] onDatesSet threw', err);
       }
-    }
-
-    
-    if (isSteppingRef.current && stepTargetRef.current) {
-      const calendarApi = calendarApiRef?.current;
-      if (!calendarApi) {
-        console.warn('[handleDatesSet] calendarApi is null');
-        return;
+    },
+    [onDatesSet]
+  );
+ 
+  // restore debug ranges from sessionStorage (encrypted) if available (not authoritative)
+  useEffect(() => {
+    (async () => {
+      try {
+        const raw = await getEncryptedSession('calendar_cachedMonths');
+        if (Array.isArray(raw)) {
+          const arr: string[] = raw;
+          // convert to the same range key format for debug visibility
+          arr.forEach(mk => {
+            const start = `${mk}-01T00:00:00Z`;
+            const endMonth = new Date(parseInt(mk.slice(0, 4), 10), parseInt(mk.slice(5, 7), 10), 1);
+            endMonth.setMonth(endMonth.getMonth() + 1);
+            const end = endMonth.toISOString();
+            fetchedRangesRef.current.add(`${start}::${end}`);
+          });
+          if (process.env.NODE_ENV === 'development') console.debug('[CalendarView] restored debug ranges from session storage', Array.from(fetchedRangesRef.current));
+        }
+      } catch (e) {
+        // ignore
       }
-
-      const currentDate = dayjs(calendarApi.getDate());
-      const targetDate = dayjs(stepTargetRef.current);
-
-      console.log('[handleDatesSet] stepping check', {
-        currentDate: currentDate.format(),
-        targetDate: targetDate.format(),
-        sameMonth: currentDate.isSame(targetDate, 'month'),
-        stepLockRef: stepLockRef.current,
-      });
-
-      if (currentDate.isSame(targetDate, 'month')) {
-        console.log('[handleDatesSet] reached target month, stop stepping');
-        setIsStepping(false);
-        isSteppingRef.current = false;
-        setStepTarget(null);
-        stepTargetRef.current = null;
-        return;
-      }
-
-      if (!stepLockRef.current) {
-        const nextDate = currentDate.isBefore(targetDate)
-          ? currentDate.add(1, 'month')
-          : currentDate.subtract(1, 'month');
-
-        console.log('[handleDatesSet] goto next step date', nextDate.format());
-        calendarApi.gotoDate(nextDate.toDate());
-      } else {
-        console.log('[handleDatesSet] skip gotoDate because stepLock');
-      }
-    }
-  },
-  [calendarApiRef, onDatesSet, jobs.length] 
-);
-
-
+    })();
+  }, []);
+ 
   const jobsWithDate: JobWithDate[] = useMemo(() => {
     return jobs.map(job => ({
       ...job,
@@ -165,17 +137,17 @@ const CalendarView: React.FC<CalendarViewProps> = ({
       DropoffDate: dayjs(job.DropoffDate).utc().toISOString(),
     }));
   }, [jobs]);
-
+ 
   const handleDownloadICS = () => {
     const calendarApi = calendarRef.current?.getApi();
     if (!calendarApi) return;
-
+ 
     const viewStart = calendarApi.view.currentStart;
     const viewEnd = calendarApi.view.currentEnd;
-
+ 
     const viewStartStr = dayjs(viewStart).toISOString();
     const viewEndStr = dayjs(viewEnd).toISOString();
-
+ 
     const confirmedJobs = jobsWithDate.filter((job: JobWithDate) => {
       return (
         job.IsConfirmed &&
@@ -183,7 +155,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         job.PickupDate < viewEndStr
       );
     });
-
+ 
     const icsContent = generateICS(confirmedJobs);
     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -195,24 +167,24 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
-
+ 
   useEffect(() => {
     const timeout = setTimeout(() => {
       const calendarApi = calendarRef.current?.getApi();
       if (!calendarApi) return;
-
+ 
       if (calendarApiRef) {
         calendarApiRef.current = calendarApi;
       }
-
+ 
       if (calendarApi.view.type !== currentViewProp) {
         calendarApi.changeView(currentViewProp);
       }
-
+ 
       if (gotoDate) {
         console.log('[useEffect] calendarApi.gotoDate', gotoDate);
         calendarApi.gotoDate(gotoDate);
-
+ 
         onDatesSet?.({
           start: calendarApi.view.currentStart,
           end: calendarApi.view.currentEnd,
@@ -223,39 +195,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         });
       }
     }, 0);
-
+ 
     return () => clearTimeout(timeout);
   }, [currentViewProp, gotoDate, calendarApiRef, onDatesSet]);
-
-  useEffect(() => {
-    const disableNavButtons = () => {
-      console.log('[disableNavButtons]', { loading, isStepping });
-      const prevBtn = document.querySelector('.fc-prev-button') as HTMLButtonElement | null;
-      const nextBtn = document.querySelector('.fc-next-button') as HTMLButtonElement | null;
-      const todayBtn = document.querySelector('.fc-today-button') as HTMLButtonElement | null;
-
-      const shouldDisable = loading || isStepping;
-
-      [prevBtn, nextBtn, todayBtn].forEach((btn) => {
-        if (btn) {
-          btn.disabled = shouldDisable;
-          btn.style.opacity = shouldDisable ? '0.5' : '1';
-          btn.style.cursor = shouldDisable ? 'not-allowed' : 'pointer';
-        }
-      });
-    };
-
-    disableNavButtons();
-    const calendarEl = document.querySelector('.fc-header-toolbar');
-    const observer = new MutationObserver(disableNavButtons);
-
-    if (calendarEl) {
-      observer.observe(calendarEl, { childList: true, subtree: true });
-    }
-
-    return () => observer.disconnect();
-  }, [loading, isStepping]);
-
+ 
   const events = useMemo(() => {
     if (currentViewProp === 'dayGridMonth') {
       const grouped: Record<string, JobWithDate[]> = {};
@@ -264,7 +207,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         const dateStr = job.PickupDate.split('T')[0];
         (grouped[dateStr] ??= []).push(job);
       });
-
+ 
       return Object.entries(grouped).map(([date, jobsOnDate]) => ({
         title: `(${jobsOnDate.length}) job`,
         start: date,
@@ -278,7 +221,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         },
       }));
     }
-
+ 
     return jobsWithDate.map(job => ({
       id: `job-${job.key}`,
       title: '',
@@ -289,12 +232,12 @@ const CalendarView: React.FC<CalendarViewProps> = ({
       extendedProps: { job },
     }));
   }, [jobsWithDate, currentViewProp]);
-
+ 
   const handleEventClick = (info: EventClickArg) => {
     const jobs: Job[] = info.event.extendedProps.jobs;
     const job: Job = info.event.extendedProps.job;
     const clickedDate = info.event.startStr.split('T')[0];
-
+ 
     if (jobs) {
       const details = jobs
         .map((j, i) => {
@@ -303,20 +246,16 @@ const CalendarView: React.FC<CalendarViewProps> = ({
           return `${i + 1}. 🕒 ${pickupTime} 📍 ${j.Pickup} | 👤 ${totalPax} Pax | 🎫 PNR: ${j.PNR}`;
         })
         .join('\n');
-
+ 
       alert(`📅 Date: ${clickedDate}\n📌 Jobs:\n${details}`);
     } else if (job) {
       const pickupTime = dayjs.utc(job.PickupDate).format('DD/MM/YYYY HH:mm');
       const totalPax = getTotalPax(job);
-
-      alert(`🎫 PNR: ${job.PNR}
-🕒 Pickup: ${pickupTime}
-📍 Location: ${job.Pickup}
-👤 Pax: ${totalPax} (Adult: ${job.AdultQty}, Child: ${job.ChildQty}, Share: ${job.ChildShareQty}, Infant: ${job.InfantQty})
-👤 Name: ${job.pax_name}`);
+ 
+      alert(`🎫 PNR: ${job.PNR}\n🕒 Pickup: ${pickupTime}\n📍 Location: ${job.Pickup}\n👤 Pax: ${totalPax} (Adult: ${job.AdultQty}, Child: ${job.ChildQty}, Share: ${job.ChildShareQty}, Infant: ${job.InfantQty})\n👤 Name: ${job.pax_name}`);
     }
   };
-
+ 
   const handleDownloadSingleICS = (job: Job) => {
     const icsContent = generateSingleICS(job);
     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
@@ -330,18 +269,17 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
-
-
-const handleDashboardClick = (jobOrJobs: Job | Job[]) => {
-  try {
-    sessionStorage.setItem('dashboardJobsData', JSON.stringify(jobOrJobs));
-    window.open('/calendar/dashboard', '_blank');  // เปิดแท็บใหม่
-  } catch (error) {
-    console.error('Failed to store data or open new tab:', error);
-  }
-};
-
-
+ 
+  const handleDashboardClick = (jobOrJobs: Job | Job[]) => {
+    try {
+      // to be compatible with new storage scheme: store encrypted in sessionStorage by Page,
+      // but for safety here we just call the callback if provided (parent handles storage).
+      onDashboardClick?.(jobOrJobs);
+    } catch (error) {
+      console.error('Failed to open dashboard:', error);
+    }
+  };
+ 
   return (
     <>
       <div className="mb-2">
@@ -354,7 +292,7 @@ const handleDashboardClick = (jobOrJobs: Job | Job[]) => {
           📥 Download ({icsFilename})
         </button>
       </div>
-
+ 
       <FullCalendar
         timeZone='UTC'
         ref={calendarRef}
@@ -401,5 +339,5 @@ const handleDashboardClick = (jobOrJobs: Job | Job[]) => {
     </>
   );
 };
-
+ 
 export default CalendarView;
