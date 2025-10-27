@@ -39,7 +39,7 @@ function base64ToArrayBuffer(base64: string) {
   return bytes.buffer;
 }
 
-async function encryptObjectToBase64(obj: any): Promise<string> {
+async function encryptObjectToBase64(obj: unknown): Promise<string> {
   const secret = process.env.NEXT_PUBLIC_CACHE_SECRET || '';
   if (!secret) {
     console.warn('[encrypt] NEXT_PUBLIC_CACHE_SECRET is empty — insecure fallback (not recommended in production)');
@@ -57,7 +57,7 @@ async function encryptObjectToBase64(obj: any): Promise<string> {
   return JSON.stringify(payload);
 }
 
-async function decryptObjectFromBase64(payloadStr: string): Promise<any | null> {
+async function decryptObjectFromBase64(payloadStr: string): Promise<string | null> {
   try {
     const payload = JSON.parse(payloadStr);
     const secret = process.env.NEXT_PUBLIC_CACHE_SECRET || '';
@@ -78,7 +78,7 @@ async function decryptObjectFromBase64(payloadStr: string): Promise<any | null> 
 }
 
 // encrypted sessionStorage helpers
-async function setEncryptedSession(key: string, obj: any) {
+async function setEncryptedSession(key: string, obj: unknown): Promise<void> {
   try {
     // ✅ ยกเว้น dashboardJobsData ไม่ต้องเข้ารหัส
     if (key === 'dashboardJobsData') {
@@ -130,16 +130,6 @@ export default function Page() {
   const [, setLoadingInitial] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const [dataStartDate] = useState(() => {
-    const today = new Date();
-    return formatISO(today);
-  });
-
-  const [dataEndDate] = useState(() => {
-    const d = addMonths(new Date(), 2);
-    return formatISO(d);
-  });
 
   const [currentView, setCurrentView] = useState('dayGridMonth');
   const [currentCenterDate, setCurrentCenterDate] = useState<Date | null>(null);
@@ -280,13 +270,19 @@ export default function Page() {
       // rebuild jobs keeping around this monthKey
       rebuildJobs(monthKey);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.timeEnd('⏱️ fetchJobs');
-      if (err.name === 'AbortError') {
-        console.log('🛑 Fetch aborted');
-        return;
+
+      if (err instanceof Error) {
+        if (err.name === 'AbortError') {
+          console.log('🛑 Fetch aborted');
+          return;
+        }
+        setError(err.message || 'Failed to fetch');
+      } else {
+        // กรณีไม่ใช่ Error object
+        setError('Failed to fetch');
       }
-      setError(err.message || 'Failed to fetch');
     } finally {
       isFetchingRef.current = false;
       abortControllerRef.current = null;
@@ -319,7 +315,7 @@ export default function Page() {
           const monthKey = start.slice(0, 7);
           try { await setEncryptedSession('calendar_cachedMonths', [monthKey]); } catch { }
         }
-      } catch (e) {
+      } catch {
         // fallback: load current month
         const start = formatISO(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
         const end = formatISO(addMonths(new Date(start), 1));
@@ -327,7 +323,6 @@ export default function Page() {
         try { await setEncryptedSession('calendar_cachedMonths', [start.slice(0, 7)]); } catch { }
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchJobs, rebuildJobs]);
 
   // handleDatesSet — debounce + check cachedMonths in sessionStorage
@@ -345,7 +340,7 @@ export default function Page() {
       let cachedMonths: string[] = [];
       try {
         cachedMonths = (await getEncryptedSession('calendar_cachedMonths')) || [];
-      } catch (e) {
+      } catch {
         cachedMonths = [];
       }
 

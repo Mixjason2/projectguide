@@ -1,6 +1,6 @@
 'use client';
  
-import React, { useMemo, useRef, useEffect, useState, useCallback } from 'react';
+import React, { useMemo, useRef, useEffect, useCallback } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -9,7 +9,6 @@ import { Job, getTotalPax } from './types';
 import type { CalendarApi } from '@fullcalendar/core';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-import Cookies from 'js-cookie';
 import CalendarEventContent from './CalendarEventContent';
 import { generateICS, generateSingleICS } from './icsGenerator';
 import { getStatusDots } from './calendarUtils';
@@ -26,12 +25,7 @@ async function getCryptoKeyFromSecret(secret: string) {
   const hashBuffer = await crypto.subtle.digest('SHA-256', secretBytes);
   return crypto.subtle.importKey('raw', hashBuffer, 'AES-GCM', false, ['encrypt', 'decrypt']);
 }
-function arrayBufferToBase64(buffer: ArrayBuffer) {
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-  return btoa(binary);
-}
+
 function base64ToArrayBuffer(base64: string) {
   const binary = atob(base64);
   const len = binary.length;
@@ -39,7 +33,7 @@ function base64ToArrayBuffer(base64: string) {
   for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
   return bytes.buffer;
 }
-async function decryptObjectFromBase64(payloadStr: string): Promise<any | null> {
+async function decryptObjectFromBase64(payloadStr: string): Promise<string | null> {
   try {
     const payload = JSON.parse(payloadStr);
     const secret = process.env.NEXT_PUBLIC_CACHE_SECRET || '';
@@ -50,7 +44,7 @@ async function decryptObjectFromBase64(payloadStr: string): Promise<any | null> 
     const dec = new TextDecoder();
     const json = dec.decode(plainBuffer);
     return JSON.parse(json);
-  } catch (e) {
+  } catch  {
     return null;
   }
 }
@@ -124,7 +118,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
           });
           if (process.env.NODE_ENV === 'development') console.debug('[CalendarView] restored debug ranges from session storage', Array.from(fetchedRangesRef.current));
         }
-      } catch (e) {
+      } catch {
         // ignore
       }
     })();
