@@ -259,12 +259,20 @@ function DashboardPage() {
       >
         {/* Top Bar */}
         <div
-          className="fixed top-0 left-0 w-full bg-white/90 backdrop-blur-md shadow-lg z-50 px-4 flex flex-wrap items-center justify-between gap-4"
+          className="
+    fixed top-0 left-0 w-full
+    bg-white/90 backdrop-blur-md shadow-lg z-50
+    px-2 sm:px-4
+    flex flex-row flex-nowrap items-center justify-between
+    gap-2 sm:gap-4
+    overflow-x-auto
+  "
           style={{
-            height: showTopBar ? expandedHeight : collapsedHeight,
-            overflow: 'visible',            // ✅ dropdown จะไม่ถูกตัด
-            pointerEvents: 'auto',          // ✅ ให้รับ event เฉพาะภายใน
-            position: 'relative',           // ✅ ให้ context แยกชัดเจน
+            height: showTopBar ? 'auto' : collapsedHeight,
+            overflow: 'visible',
+            pointerEvents: 'auto',
+            position: 'relative',
+            maxWidth: '100vw',
           }}
         >
           {/* เนื้อหาบนบาร์ */}
